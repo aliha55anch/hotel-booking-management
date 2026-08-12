@@ -9,6 +9,7 @@ const hotelRoutes = require('./routes/hotelRoutes')
 const roomRoutes = require('./routes/roomRoutes')
 const bookingRoutes = require('./routes/bookingRoutes')
 const reviewRoutes = require('./routes/reviewRoutes')
+const stripeRoutes = require('./routes/stripeRoutes')
 const { notFound, errorHandler } = require('./middleware/errorMiddleware')
 
 dotenv.config()
@@ -20,6 +21,7 @@ const app = express()
 app.use(cors())
 
 app.use('/api/webhooks', webhookRoutes)
+app.use('/api/stripe', stripeRoutes.webhookRouter)
 
 if (process.env.CLERK_SECRET_KEY) {
   app.use(clerkMiddleware())
@@ -33,6 +35,7 @@ app.use('/api/hotels', hotelRoutes)
 app.use('/api/rooms', roomRoutes)
 app.use('/api/bookings', bookingRoutes)
 app.use('/api/reviews', reviewRoutes)
+app.use('/api/stripe', stripeRoutes.router)
 
 app.get('/', (req, res) => {
   res.send('Hotel Booking API is running...')

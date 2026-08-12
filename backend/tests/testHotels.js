@@ -1,5 +1,6 @@
 const connectDB = require('../config/db')
-const { createHotel, updateHotel, deleteHotel } = require('../controllers/hotelController')
+const { createHotel, updateHotel, deleteHotel, getAllHotels } = require('../controllers/hotelController')
+const { createRoom } = require('../controllers/roomController')
 const Hotel = require('../models/Hotel')
 const User = require('../models/User')
 const dotenv = require('dotenv')
@@ -47,7 +48,16 @@ const run = async () => {
   const hotelId = hotel._id.toString()
 
   res = mockRes()
-  await updateHotel({ params: { id: hotelId }, body: { description: 'Updated desc', city: 'Rawalpindi' } }, res)
+  await createRoom({ body: { hotel: hotelId, roomType: 'Deluxe', pricePerNight: 150, capacity: 2 } }, res, res.next)
+  console.log('ROOM CREATE:', res.statusCode, '| price:', res.body.room.pricePerNight)
+
+  res = mockRes()
+  await getAllHotels({ query: {} }, res, res.next)
+  const listed = res.body.hotels.find((h) => h._id.toString() === hotelId)
+  console.log('LIST WITH PRICEFROM:', res.statusCode, '| priceFrom:', listed.priceFrom, '| matches room price:', listed.priceFrom === 150)
+
+  res = mockRes()
+  await updateHotel({ params: { id: hotelId }, body: { description: 'Updated desc', city: 'Rawalpindi' } }, res, res.next)
   console.log('UPDATE:', res.statusCode, '| city:', res.body.hotel.city, '| desc:', res.body.hotel.description)
 
   res = mockRes()

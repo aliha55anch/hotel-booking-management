@@ -25,13 +25,25 @@ const getAllHotels = asyncHandler(async (req, res) => {
     Hotel.countDocuments(filter),
   ])
 
+  const hotelIds = hotels.map((hotel) => hotel._id)
+  const priceGroups = await Room.aggregate([
+    { $match: { hotel: { $in: hotelIds }, isAvailable: { $ne: false } } },
+    { $group: { _id: '$hotel', minPrice: { $min: '$pricePerNight' } } },
+  ])
+  const priceMap = new Map(priceGroups.map((group) => [group._id.toString(), group.minPrice]))
+
+  const hotelsWithPrice = hotels.map((hotel) => ({
+    ...hotel.toObject(),
+    priceFrom: priceMap.get(hotel._id.toString()) || null,
+  }))
+
   res.status(200).json({
     success: true,
     count: hotels.length,
     total,
     page: pageNum,
     totalPages: Math.ceil(total / limitNum),
-    hotels,
+    hotels: hotelsWithPrice,
   })
 })
 
