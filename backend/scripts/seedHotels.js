@@ -7,8 +7,19 @@ const User = require('../models/User')
 const dotenv = require('dotenv')
 dotenv.config()
 
-const img = (seed) => `https://picsum.photos/seed/${seed}/800/500`
 const roomImg = (name) => `/images/${name}`
+
+const hotelPhotos = {
+  serena: [roomImg('roomImg1.png'), roomImg('roomImg2.png')],
+  lahore: [roomImg('exclusiveOfferCardImg1.png')],
+  karachi: [roomImg('roomImg3.png')],
+  saddar: [roomImg('exclusiveOfferCardImg2.png')],
+  clocktower: [roomImg('roomImg2.png')],
+  peshawar: [roomImg('exclusiveOfferCardImg3.png')],
+  multan: [roomImg('roomImg4.png')],
+  quetta: [roomImg('roomImg1.png')],
+  murree: [roomImg('roomImg3.png')],
+}
 
 const hotels = [
   {
@@ -16,7 +27,7 @@ const hotels = [
     description: 'A five-star escape in the heart of the capital with skyline views and a rooftop pool.',
     city: 'Islamabad',
     address: 'Blue Area, Main Jinnah Avenue',
-    images: [img('serena-heights-1'), img('serena-heights-2')],
+    images: hotelPhotos.serena,
     amenities: ['Free WiFi', 'Pool Access', 'Parking', 'Restaurant', 'Gym'],
     rating: 4.6,
     rooms: [
@@ -30,7 +41,7 @@ const hotels = [
     description: 'A restored colonial-era guesthouse close to the old city and its famous bazaars.',
     city: 'Lahore',
     address: '22 Egerton Road, Garhi Shahu',
-    images: [img('lahore-heritage-1')],
+    images: hotelPhotos.lahore,
     amenities: ['Free WiFi', 'Restaurant', 'Airport Shuttle'],
     rating: 4.2,
     rooms: [
@@ -43,7 +54,7 @@ const hotels = [
     description: 'Waterfront comfort on Clifton beachfront with sea-view suites and a rooftop restaurant.',
     city: 'Karachi',
     address: 'Marine Drive, Clifton Block 5',
-    images: [roomImg('exclusiveOfferCardImg1.png')],
+    images: hotelPhotos.karachi,
     amenities: ['Free WiFi', 'Pool Access', 'Restaurant', 'Room Service'],
     rating: 4.4,
     rooms: [
@@ -56,7 +67,7 @@ const hotels = [
     description: 'Central and business-friendly stays in the heart of Rawalpindi, minutes from the garrison district.',
     city: 'Rawalpindi',
     address: 'The Mall Road, Saddar',
-    images: [roomImg('exclusiveOfferCardImg2.png')],
+    images: hotelPhotos.saddar,
     amenities: ['Free WiFi', 'Parking', 'Room Service'],
     rating: 4.0,
     rooms: [
@@ -69,7 +80,7 @@ const hotels = [
     description: 'A friendly budget stay overlooking Faisalabad\'s famous Clock Tower with easy bazaar access.',
     city: 'Faisalabad',
     address: 'Clock Tower Road, Aminpur Bazar',
-    images: [img('faisalabad-clock-1')],
+    images: hotelPhotos.clocktower,
     amenities: ['Free WiFi', 'Parking', 'Restaurant'],
     rating: 3.9,
     rooms: [
@@ -82,7 +93,7 @@ const hotels = [
     description: 'Old-city charm near Qissa Khwani Bazaar with traditional hospitality and rooftop dining.',
     city: 'Peshawar',
     address: 'University Road, near Qissa Khwani',
-    images: [roomImg('exclusiveOfferCardImg3.png')],
+    images: hotelPhotos.peshawar,
     amenities: ['Free WiFi', 'Restaurant', 'Room Service'],
     rating: 4.1,
     rooms: [
@@ -95,7 +106,7 @@ const hotels = [
     description: 'Comfortable rooms close to the shrines and the bustling Nishtar Road markets.',
     city: 'Multan',
     address: 'Nishtar Road, near General Bus Stand',
-    images: [img('multan-guest-1')],
+    images: hotelPhotos.multan,
     amenities: ['Free WiFi', 'Parking', 'Room Service'],
     rating: 3.7,
     rooms: [
@@ -108,7 +119,7 @@ const hotels = [
     description: 'Cool mountain air and simple, warm stays on Zarghoon Road with views toward the hills.',
     city: 'Quetta',
     address: 'Zarghoon Road, near Jinnah Road',
-    images: [img('quetta-hills-1')],
+    images: hotelPhotos.quetta,
     amenities: ['Free WiFi', 'Parking', 'Fireplace'],
     rating: 3.6,
     rooms: [
@@ -121,7 +132,7 @@ const hotels = [
     description: 'Cozy pine-wood cabins with mountain views, walking distance from Mall Road.',
     city: 'Murree',
     address: 'Mall Road, GPO Chowk',
-    images: [],
+    images: hotelPhotos.murree,
     amenities: ['Free WiFi', 'Parking', 'Fireplace', 'Mountain View'],
     rating: 3.8,
     rooms: [

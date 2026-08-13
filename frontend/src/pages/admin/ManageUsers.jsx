@@ -73,13 +73,9 @@ export default function ManageUsers() {
                 <tr key={user._id} className="hover:bg-surface/60">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      {user.image ? (
-                        <img src={user.image} alt="" className="h-9 w-9 rounded-full object-cover" />
-                      ) : (
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary">
-                          {(user.name || 'U').charAt(0).toUpperCase()}
-                        </span>
-                      )}
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary">
+                        {(user.name || 'U').charAt(0).toUpperCase()}
+                      </span>
                       <p className="font-medium text-ink">{user.name || '—'}</p>
                     </div>
                   </td>

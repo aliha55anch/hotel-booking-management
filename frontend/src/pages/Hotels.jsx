@@ -5,6 +5,7 @@ import Button from '../components/ui/Button.jsx'
 import HotelCard from '../components/hotel/HotelCard.jsx'
 import { HotelIcon, SearchIcon, ChevronLeftIcon, ChevronRightIcon } from '../components/ui/icons.jsx'
 import { getHotels } from '../services/hotelService.js'
+import { hotelRoomImages } from '../lib/siteImages.js'
 
 const LIMIT = 9
 
@@ -177,8 +178,12 @@ export default function Hotels() {
       ) : hotels.length > 0 ? (
         <>
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {hotels.map((hotel) => (
-              <HotelCard key={hotel._id} hotel={hotel} />
+            {hotels.map((hotel, index) => (
+              <HotelCard
+                key={hotel._id}
+                hotel={hotel}
+                image={hotelRoomImages[index % hotelRoomImages.length]}
+              />
             ))}
           </div>
 

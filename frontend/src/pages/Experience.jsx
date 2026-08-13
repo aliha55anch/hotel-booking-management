@@ -1,7 +1,6 @@
 import Button from '../components/ui/Button.jsx'
 import { StarIcon, CalendarIcon, CheckIcon } from '../components/ui/icons.jsx'
 import { exclusiveOffers, testimonials } from '../assets/assets.js'
-import heroImage from '../assets/images/heroImage.png'
 
 function Stars({ rating }) {
   return (
@@ -16,15 +15,8 @@ function Stars({ rating }) {
 export default function Experience() {
   return (
     <>
-      <section className="relative overflow-hidden">
-        <img
-          src={heroImage}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-linear-to-b from-primary-soft/80 via-background/60 to-background" />
-        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-20 text-center sm:px-6 lg:px-8">
+      <section className="relative -mt-18 overflow-hidden bg-linear-to-b from-primary-soft/70 via-background/50 to-background">
+        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-24 text-center sm:px-6 lg:px-8">
           <h1 className="font-heading text-4xl font-semibold text-ink sm:text-5xl">Experience StayHub</h1>
           <p className="max-w-xl text-base text-muted">
             Explore exclusive offers and hear from travellers who found their perfect stay with us.
@@ -47,12 +39,15 @@ export default function Experience() {
               key={offer._id}
               className="flex flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card"
             >
-              <div className="relative">
-                <img
-                  src={offer.image}
-                  alt={offer.title}
-                  className="h-48 w-full object-cover"
-                />
+              <div className="relative h-40 overflow-hidden bg-surface">
+                {offer.image && (
+                  <img
+                    src={offer.image}
+                    alt={offer.title}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                )}
                 <span className="absolute left-4 top-4 rounded-btn bg-error px-3 py-1 text-sm font-semibold text-white">
                   Save {offer.priceOff}%
                 </span>
@@ -91,11 +86,13 @@ export default function Experience() {
                   “{t.review}”
                 </blockquote>
                 <figcaption className="flex items-center gap-3 border-t border-line pt-4">
-                  <img
-                    src={t.image}
-                    alt={t.name}
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+                    {t.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join('')}
+                  </span>
                   <div>
                     <p className="text-sm font-semibold text-ink">{t.name}</p>
                     <p className="text-xs text-muted">{t.address}</p>

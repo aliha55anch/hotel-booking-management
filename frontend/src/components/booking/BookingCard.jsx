@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import Button from '../ui/Button.jsx'
-import { HotelIcon, CalendarIcon } from '../ui/icons.jsx'
+import { BedIcon, CalendarIcon } from '../ui/icons.jsx'
 import { formatPrice } from '../../lib/format.js'
-import { resolveImageUrl } from '../../lib/images.js'
+import { imageFor } from '../../lib/siteImages.js'
 
 const formatDate = (iso) => {
   if (!iso) return ''
@@ -27,16 +27,21 @@ export default function BookingCard({ booking, onCancel, cancelling }) {
   const status = booking.status || 'pending'
   const paymentStatus = booking.paymentStatus || 'unpaid'
   const cancelled = status === 'cancelled'
-  const image = resolveImageUrl(booking.room?.images?.[0] || booking.hotel?.images?.[0])
+  const image = imageFor(booking._id)
 
   return (
     <div className="flex flex-col gap-4 rounded-card border border-line bg-background p-4 shadow-card sm:flex-row sm:p-5">
-      <div className="aspect-16/10 w-full shrink-0 overflow-hidden rounded-card bg-surface sm:w-52">
+      <div className="relative aspect-16/10 w-full shrink-0 overflow-hidden rounded-card bg-surface sm:w-52">
         {image ? (
-          <img src={image} alt={booking.hotel?.name || 'Room'} loading="lazy" className="h-full w-full object-cover" />
+          <img
+            src={image}
+            alt={booking.hotel?.name || 'Room'}
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-muted">
-            <HotelIcon className="h-10 w-10" />
+            <BedIcon className="h-10 w-10" />
           </div>
         )}
       </div>

@@ -1,47 +1,186 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import Button from '../components/ui/Button.jsx'
-import HotelCard from '../components/hotel/HotelCard.jsx'
-import { HotelIcon, SearchIcon, CalendarIcon, MapPinIcon } from '../components/ui/icons.jsx'
+import { useNavigate, Link } from 'react-router-dom'
+import { assets, exclusiveOffers, testimonials } from '../assets/assets.js'
 import { getHotels } from '../services/hotelService.js'
-import heroImage from '../assets/images/heroImage.png'
+import { hotelRoomImages } from '../lib/siteImages.js'
+import { formatPrice } from '../lib/format.js'
 
-const inputClass =
-  'h-11 rounded-btn border border-line bg-background px-4 text-sm text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
+const cities = [
+  'Islamabad',
+  'Lahore',
+  'Karachi',
+  'Murree',
+  'Peshawar',
+  'Quetta',
+  'Multan',
+  'Hyderabad',
+  'Gilgit',
+  'Skardu',
+  'Naran',
+  'Kaghan',
+]
+
+const SectionTitle = ({ title, subtitle, align }) => (
+  <div
+    className={`flex flex-col justify-center text-center ${align === 'left' ? 'md:items-start md:text-left' : 'items-center'}`}
+  >
+    <h1 className="font-display text-4xl text-gray-900 md:text-[40px] md:leading-12">{title}</h1>
+    <p className="mt-2 max-w-174 text-sm text-gray-500/90 md:text-base">{subtitle}</p>
+  </div>
+)
+
+const searchFieldClass =
+  'mt-2 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-800 outline-none transition-all duration-200 placeholder:font-normal placeholder:text-gray-400 focus:border-[#49B9FF] focus:bg-white focus:ring-2 focus:ring-[#49B9FF]/25'
 
 function HeroSearch() {
   const navigate = useNavigate()
-  const { register, handleSubmit } = useForm({
-    defaultValues: { city: '', checkIn: '', checkOut: '' },
-  })
+  const [destination, setDestination] = useState('')
 
-  const onSubmit = ({ city, checkIn, checkOut }) => {
+  const onSubmit = (e) => {
+    e.preventDefault()
     const params = new URLSearchParams()
-    if (city?.trim()) params.set('city', city.trim())
-    if (checkIn) params.set('checkIn', checkIn)
-    if (checkOut) params.set('checkOut', checkOut)
+    if (destination.trim()) params.set('city', destination.trim())
     const qs = params.toString()
     navigate(qs ? `/hotels?${qs}` : '/hotels')
   }
 
+  const SearchLabel = ({ icon, htmlFor, children }) => (
+    <label
+      htmlFor={htmlFor}
+      className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500"
+    >
+      <img src={icon} alt="" className="h-3.5" />
+      {children}
+    </label>
+  )
+
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="grid w-full max-w-3xl grid-cols-1 gap-2 rounded-card border border-line bg-background p-3 shadow-card sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto]"
+      onSubmit={onSubmit}
+      className="mx-auto mt-8 grid w-full max-w-4xl grid-cols-1 gap-4 rounded-2xl bg-white/95 p-5 text-left text-gray-500 shadow-2xl shadow-black/30 backdrop-blur-md sm:grid-cols-2 lg:grid-cols-12 lg:items-end lg:gap-3 lg:rounded-3xl lg:p-4"
     >
-      <input type="text" placeholder="Where to? (e.g., Islamabad)" className={inputClass} {...register('city')} />
-      <input type="date" aria-label="Check-in" className={inputClass} {...register('checkIn')} />
-      <input type="date" aria-label="Check-out" className={inputClass} {...register('checkOut')} />
-      <Button type="submit" size="md" className="sm:col-span-2 lg:col-span-1">
-        <SearchIcon className="h-4 w-4" />
-        Search
-      </Button>
+      <div className="sm:col-span-1 lg:col-span-3">
+        <SearchLabel icon={assets.locationIcon} htmlFor="destinationInput">
+          Destination
+        </SearchLabel>
+        <input
+          list="destinations"
+          id="destinationInput"
+          value={destination}
+          onChange={(e) => setDestination(e.target.value)}
+          type="text"
+          className={searchFieldClass}
+          placeholder="Where to?"
+          required
+        />
+        <datalist id="destinations">
+          {cities.map((city) => (
+            <option key={city} value={city} />
+          ))}
+        </datalist>
+      </div>
+
+      <div className="sm:col-span-1 lg:col-span-2">
+        <SearchLabel icon={assets.calenderIcon} htmlFor="checkIn">
+          Check in
+        </SearchLabel>
+        <input id="checkIn" type="date" className={searchFieldClass} />
+      </div>
+
+      <div className="sm:col-span-1 lg:col-span-2">
+        <SearchLabel icon={assets.calenderIcon} htmlFor="checkOut">
+          Check out
+        </SearchLabel>
+        <input id="checkOut" type="date" className={searchFieldClass} />
+      </div>
+
+      <div className="sm:col-span-1 lg:col-span-2">
+        <SearchLabel icon={assets.guestsIcon} htmlFor="guests">
+          Guests
+        </SearchLabel>
+        <input
+          id="guests"
+          min={1}
+          max={4}
+          type="number"
+          className={searchFieldClass}
+          placeholder="0"
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="group flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-linear-to-r from-[#49B9FF] to-[#1f6feb] px-6 py-2.5 font-medium text-white shadow-lg shadow-[#49B9FF]/40 transition-all duration-300 hover:shadow-xl hover:shadow-[#49B9FF]/50 hover:brightness-110 active:scale-95 sm:col-span-2 lg:col-span-3 lg:h-10.5 lg:px-4"
+      >
+        <img src={assets.searchIcon} alt="searchIcon" className="h-4.5 invert transition-transform duration-300 group-hover:scale-110" />
+        <span>Search</span>
+      </button>
     </form>
   )
 }
 
-function FeaturedHotels() {
+function Hero() {
+  return (
+    <section className="relative -mt-18 flex min-h-screen items-center justify-center bg-[url('/background.webp')] bg-cover bg-center bg-no-repeat text-white">
+      <div className="absolute inset-0 bg-black/50" />
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center justify-center px-4 text-center sm:px-6 lg:px-8">
+        <span className="rounded-full bg-[#49B9FF]/50 px-3.5 py-1">
+          The Ultimate Hotel Experience
+        </span>
+        <h1 className="mt-4 max-w-xl font-display text-2xl font-bold md:text-[56px] md:leading-14 md:font-extrabold">
+          Discover Your Perfect Gateway Destination
+        </h1>
+        <p className="mt-4 max-w-130 text-sm md:text-base">
+          Unparalleled luxury and comfort await at the world&apos;s most exclusive hotels and resorts. Start your
+          journey today.
+        </p>
+        <HeroSearch />
+      </div>
+    </section>
+  )
+}
+
+function RoomCard({ hotel, index }) {
+  const src = hotelRoomImages[index % hotelRoomImages.length]
+
+  return (
+    <Link
+      to={`/hotels/${hotel._id}`}
+      className="relative block w-full max-w-70 overflow-hidden rounded-xl bg-white text-gray-500/90 shadow-[0px_4px_4px_rgba(0,0,0,0.05)]"
+    >
+      <img src={src} alt={hotel.name} draggable="false" loading="lazy" className="h-auto w-full object-cover" />
+      {index % 2 === 0 && (
+        <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800">
+          Best Seller
+        </span>
+      )}
+      <div className="p-4 pt-5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="truncate font-display text-xl font-medium text-gray-800">{hotel.name}</p>
+          <div className="flex shrink-0 items-center gap-1">
+            <img src={assets.starIconFilled} alt="star-icon" />
+            {hotel.rating || '4.5'}
+          </div>
+        </div>
+        <div className="mt-1 flex items-center gap-1 text-sm">
+          <img src={assets.locationIcon} alt="location-icon" />
+          <span className="truncate">{hotel.city || hotel.address}</span>
+        </div>
+        <div className="mt-4 flex items-center justify-between">
+          <p>
+            <span className="text-xl text-gray-800">{hotel.priceFrom ? formatPrice(hotel.priceFrom) : 'Rs ---'}</span>
+            /night
+          </p>
+          <span className="cursor-pointer rounded border border-gray-300 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-50">
+            Book Now
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+function FeaturedDestinations() {
   const [hotels, setHotels] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -49,7 +188,7 @@ function FeaturedHotels() {
   useEffect(() => {
     let cancelled = false
 
-    getHotels({ limit: 4 })
+    getHotels({ limit: 8 })
       .then((data) => {
         if (!cancelled) setHotels(data.hotels || [])
       })
@@ -66,84 +205,182 @@ function FeaturedHotels() {
   }, [])
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="flex items-center justify-between">
-        <h2 className="font-heading text-2xl font-semibold text-ink">Featured hotels</h2>
-        <Button to="/hotels" variant="ghost" size="sm">
-          View all
-        </Button>
-      </div>
+    <section className="flex flex-col items-center bg-slate-50 py-12">
+      <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4 sm:px-6 lg:px-8">
+        <SectionTitle
+          title="Featured Destination"
+          subtitle="Discover our handpicked selection of exceptional properties around the world, offering unparalleled luxury and unforgettable experiences."
+        />
 
-      {error && (
-        <div className="mt-6 flex items-center justify-between rounded-card border border-line bg-surface p-4">
-          <p className="text-sm text-error">Couldn't load hotels: {error}</p>
-          <Button size="sm" onClick={() => window.location.reload()}>
-            Retry
-          </Button>
-        </div>
-      )}
+        {error && <p className="mt-8 text-sm text-red-500">Couldn&apos;t load hotels: {error}</p>}
 
-      {loading ? (
-        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse overflow-hidden rounded-card border border-line bg-background">
-              <div className="aspect-16/10 bg-surface" />
-              <div className="space-y-3 p-4">
-                <div className="h-5 w-3/4 rounded bg-surface" />
-                <div className="h-4 w-1/2 rounded bg-surface" />
-                <div className="h-4 w-1/3 rounded bg-surface" />
+        {loading ? (
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="w-full max-w-70 animate-pulse overflow-hidden rounded-xl bg-white shadow-[0px_4px_4px_rgba(0,0,0,0.05)]">
+                <div className="aspect-4/3 bg-slate-200" />
+                <div className="space-y-3 p-4 pt-5">
+                  <div className="h-5 w-3/4 rounded bg-slate-200" />
+                  <div className="h-4 w-1/2 rounded bg-slate-200" />
+                  <div className="h-4 w-1/3 rounded bg-slate-200" />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        hotels.length > 0 && (
-          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {hotels.map((hotel) => (
-              <HotelCard key={hotel._id} hotel={hotel} />
             ))}
           </div>
-        )
-      )}
+        ) : hotels.length > 0 ? (
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-6">
+            {hotels.slice(0, 4).map((hotel, index) => (
+              <RoomCard key={hotel._id} hotel={hotel} index={index} />
+            ))}
+          </div>
+        ) : (
+          <p className="mt-10 text-sm text-gray-500">No hotels listed yet — check back soon.</p>
+        )}
+
+        <Link
+          to="/hotels"
+          className="mt-10 cursor-pointer rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium transition-all hover:bg-gray-50"
+        >
+          View All Destinations
+        </Link>
+      </div>
     </section>
   )
 }
 
-const steps = [
-  {
-    icon: HotelIcon,
-    title: 'Browse hotels',
-    text: 'Explore hotels across the country and filter by city and rating.',
-  },
-  {
-    icon: CalendarIcon,
-    title: 'Book instantly',
-    text: 'Pick your dates, choose a room, and pay securely in minutes.',
-  },
-  {
-    icon: MapPinIcon,
-    title: 'Manage your trips',
-    text: 'Track bookings and get confirmation emails for every stay.',
-  },
-]
-
-function HowItWorks() {
+function ExclusiveOffers() {
   return (
-    <section className="bg-surface">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <h2 className="text-center font-heading text-2xl font-semibold text-ink">How it works</h2>
-        <div className="mt-8 grid gap-6 sm:grid-cols-3">
-          {steps.map((step) => (
-            <div key={step.title} className="flex flex-col items-center gap-3 rounded-card border border-line bg-background p-6 text-center shadow-card">
-              <span className="flex h-12 w-12 items-center justify-center rounded-btn bg-primary-soft text-primary">
-                <step.icon />
+    <section className="py-12">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex w-full flex-col items-center justify-between md:flex-row">
+          <SectionTitle
+            align="left"
+            title="Exclusive Offers"
+            subtitle="Take advantage of our limited-time offers and special packages to enhance your stay and create unforgettable memories."
+          />
+          <Link to="/experience" className="group flex cursor-pointer items-center gap-2 font-medium max-md:mt-10">
+            View All Offers
+            <img className="transition-all group-hover:translate-x-1" src={assets.arrowIcon} alt="arrow-icon" />
+          </Link>
+        </div>
+
+        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {exclusiveOffers.map((offer) => (
+            <div
+              key={offer._id}
+              className="group relative flex min-h-64 flex-col items-start justify-between gap-1 rounded-xl bg-cover bg-center bg-no-repeat px-4 pt-12 text-white md:pt-18"
+              style={{ backgroundImage: `url(${offer.image})` }}
+            >
+              <span className="absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800">
+                {offer.priceOff}% OFF
               </span>
-              <h3 className="font-heading text-lg font-semibold text-ink">{step.title}</h3>
-              <p className="text-sm text-muted">{step.text}</p>
+              <div>
+                <p className="font-display text-2xl font-medium">{offer.title}</p>
+                <p>{offer.description}</p>
+                <p className="mt-3 text-xs text-white/70">Expires {offer.expiryDate}</p>
+              </div>
+              <Link
+                to="/hotels"
+                className="mb-5 mt-4 flex cursor-pointer items-center gap-2 font-medium"
+              >
+                View Offers
+                <img className="invert transition-all group-hover:translate-x-1" src={assets.arrowIcon} alt="arrow-icon" />
+              </Link>
             </div>
           ))}
         </div>
       </div>
+    </section>
+  )
+}
+
+function Stars({ rating }) {
+  return (
+    <div className="flex items-center gap-1">
+      {Array.from({ length: 5 }, (_, i) => (
+        <img
+          key={i}
+          alt="star-icon"
+          className="h-4.5 w-4.5"
+          src={rating > i ? assets.starIconFilled : assets.starIconOutlined}
+        />
+      ))}
+    </div>
+  )
+}
+
+function Testimonials() {
+  return (
+    <section className="flex flex-col items-center bg-slate-50 py-12">
+      <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4 sm:px-6 lg:px-8">
+        <SectionTitle
+          title="What Our Guests Say"
+          subtitle="Discover why discerning travelers consistently choose StayHub for their exclusive and luxurious accommodations around the world."
+        />
+
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-6">
+          {testimonials.map((t) => (
+            <figure key={t.id} className="w-full max-w-90 rounded-xl bg-white p-6 shadow">
+              <div className="flex items-center gap-3">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 font-display text-sm font-semibold text-gray-600">
+                  {t.name
+                    .split(' ')
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join('')}
+                </span>
+                <div>
+                  <p className="font-display text-xl text-gray-900">{t.name}</p>
+                  <p className="text-gray-500">{t.address}</p>
+                </div>
+              </div>
+              <Stars rating={t.rating} />
+              <p className="mt-4 max-w-90 text-gray-500">&quot;{t.review}&quot;</p>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function StayInspired() {
+  const [email, setEmail] = useState('')
+
+  const onSubmit = (e) => {
+    e.preventDefault()
+    setEmail('')
+  }
+
+  return (
+    <section className="mx-2 my-12 flex flex-col items-center rounded-2xl bg-gray-900 px-4 py-10 text-white md:py-12 lg:mx-auto lg:w-full lg:max-w-5xl">
+      <SectionTitle
+        title="Stay Inspired"
+        subtitle="Join our newsletter and be the first to discover new destinations, exclusive offers, and travel inspiration."
+      />
+      <form
+        onSubmit={onSubmit}
+        className="mt-6 flex w-full max-w-lg flex-col items-center justify-center gap-4 md:flex-row"
+      >
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full max-w-66 rounded border border-white/20 bg-white/10 px-4 py-2.5 text-white outline-none"
+          placeholder="Enter your email"
+          required
+        />
+        <button
+          type="submit"
+          className="group flex cursor-pointer items-center justify-center gap-2 rounded bg-black px-4 py-2.5 transition-all active:scale-95 md:px-7"
+        >
+          Subscribe
+          <img className="w-3.5 invert transition-all group-hover:translate-x-1" src={assets.arrowIcon} alt="arrow-icon" />
+        </button>
+      </form>
+      <p className="mt-6 text-center text-xs text-gray-500">
+        By subscribing, you agree to our Privacy Policy and consent to receive updates.
+      </p>
     </section>
   )
 }
@@ -151,26 +388,11 @@ function HowItWorks() {
 export default function Home() {
   return (
     <>
-      <section className="relative overflow-hidden">
-        <img
-          src={heroImage}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-linear-to-b from-primary-soft/80 via-background/60 to-background" />
-        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-20 text-center sm:px-6 lg:px-8">
-          <h1 className="font-heading text-4xl font-semibold text-ink sm:text-5xl">
-            Find your perfect stay
-          </h1>
-          <p className="max-w-xl text-base text-muted">
-            Browse hotels across Pakistan, compare rooms, and book your next trip in a few clicks.
-          </p>
-          <HeroSearch />
-        </div>
-      </section>
-      <FeaturedHotels />
-      <HowItWorks />
+      <Hero />
+      <FeaturedDestinations />
+      <ExclusiveOffers />
+      <Testimonials />
+      <StayInspired />
     </>
   )
 }

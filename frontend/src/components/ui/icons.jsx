@@ -18,6 +18,19 @@ export function HotelIcon({ className = 'h-5 w-5' }) {
   )
 }
 
+export function FaviconIcon({ className = 'h-5 w-5' }) {
+  return (
+    <svg className={className} viewBox="0 0 33 33" fill="none" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        fill="currentColor"
+        d="M2.75284 10.443C2 11.8184 2 13.4775 2 16.7957V19.0013C2 24.6574 2 27.4856 3.69878 29.2427C5.39757 31 8.1317 31 13.6 31H19.4C24.8682 31 27.6025 31 29.3012 29.2427C31 27.4856 31 24.6574 31 19.0013V16.7957C31 13.4775 31 11.8184 30.2472 10.443C29.4943 9.0676 28.119 8.21399 25.3682 6.50677L22.4682 4.70696C19.5604 2.90232 18.1065 2 16.5 2C14.8935 2 13.4396 2.90232 10.5318 4.70696L7.63184 6.50679C4.88108 8.21399 3.50568 9.0676 2.75284 10.443ZM12.7976 21.4264C12.3151 21.0687 11.634 21.1699 11.2763 21.6524C10.9187 22.135 11.0199 22.8161 11.5024 23.1736C12.9124 24.2188 14.6368 24.8375 16.5 24.8375C18.3633 24.8375 20.0876 24.2188 21.4976 23.1736C21.9801 22.8161 22.0813 22.135 21.7236 21.6524C21.3661 21.1699 20.685 21.0687 20.2024 21.4264C19.1463 22.2091 17.8716 22.6625 16.5 22.6625C15.1284 22.6625 13.8538 22.2091 12.7976 21.4264Z"
+      />
+    </svg>
+  )
+}
+
 export function MenuIcon({ className = 'h-6 w-6' }) {
   return (
     <svg
@@ -99,6 +112,59 @@ export function CalendarIcon({ className = 'h-5 w-5' }) {
     >
       <rect x="3" y="4" width="18" height="18" rx="2" />
       <path d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+  )
+}
+
+export function ArrowRightIcon({ className = 'h-5 w-5' }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </svg>
+  )
+}
+
+export function MailIcon({ className = 'h-5 w-5' }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-10 6L2 7" />
+    </svg>
+  )
+}
+
+export function PhoneIcon({ className = 'h-5 w-5' }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
     </svg>
   )
 }

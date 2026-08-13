@@ -7,7 +7,6 @@ import { getApiErrorMessage } from '../../lib/errors.js'
 import { CLERK_PUBLISHABLE_KEY } from '../../lib/config.js'
 import { OwnerContext } from './ownerContext.js'
 import { MenuIcon, CloseIcon, GridIcon, HotelIcon, BedIcon, AlertIcon, LogoutIcon } from '../ui/icons.jsx'
-import logo from '../../assets/icons/logo.svg'
 
 const navItems = [
   { to: '/owner', label: 'Overview', icon: GridIcon, end: true },
@@ -50,7 +49,7 @@ function SidebarContent({ user, onClose }) {
     <>
       <div className="flex h-16 items-center gap-2 border-b border-line px-4">
         <span className="flex h-9 items-center justify-center rounded-btn bg-primary px-2.5">
-          <img src={logo} alt="StayHub" className="h-5 w-auto" />
+          <HotelIcon className="h-5 w-5 text-white" />
         </span>
         <div>
           <p className="text-sm font-semibold text-ink">StayHub</p>
@@ -137,7 +136,7 @@ function OwnerShell({ token }) {
         <header className="flex h-16 items-center justify-between border-b border-line px-4 lg:hidden">
           <Link to="/" className="flex items-center gap-2">
             <span className="flex h-9 items-center justify-center rounded-btn bg-primary px-2.5">
-              <img src={logo} alt="StayHub" className="h-5 w-auto" />
+              <HotelIcon className="h-5 w-5 text-white" />
             </span>
           </Link>
           <button

@@ -1,57 +1,53 @@
 import { Link } from 'react-router-dom'
 import { HotelIcon, MapPinIcon, StarIcon } from '../ui/icons.jsx'
 import { formatPrice } from '../../lib/format.js'
-import { resolveImageUrl } from '../../lib/images.js'
+import { hotelImageFor } from '../../lib/siteImages.js'
 
-export default function HotelCard({ hotel }) {
-  const image = resolveImageUrl(hotel.images?.[0])
+export default function HotelCard({ hotel, image }) {
+  const src = image || hotelImageFor(hotel)
 
   return (
     <Link
       to={`/hotels/${hotel._id}`}
-      className="group block overflow-hidden rounded-card border border-line bg-background shadow-card transition-shadow hover:shadow-card-hover"
+      className="group flex h-full flex-col overflow-hidden rounded-card border border-line bg-background shadow-card transition-shadow hover:shadow-card-hover"
     >
-      <div className="aspect-16/10 w-full overflow-hidden bg-surface">
-        {image ? (
+      <div className="relative aspect-16/10 w-full overflow-hidden bg-surface">
+        {src ? (
           <img
-            src={image}
+            src={src}
             alt={hotel.name}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted">
+          <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-primary-soft to-primary/10 text-primary">
             <HotelIcon className="h-10 w-10" />
           </div>
         )}
+        {hotel.rating > 0 && (
+          <span className="absolute right-2 top-2 flex items-center gap-1 rounded-btn bg-background/90 px-2 py-0.5 text-xs font-semibold text-ink shadow-sm backdrop-blur-sm">
+            <StarIcon className="h-3.5 w-3.5 text-accent" />
+            {hotel.rating}
+          </span>
+        )}
       </div>
 
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-heading text-lg font-semibold text-ink">{hotel.name}</h3>
-          {hotel.rating > 0 && (
-            <span className="flex shrink-0 items-center gap-1 rounded-btn bg-accent px-2 py-0.5 text-xs font-semibold text-ink">
-              <StarIcon className="h-3.5 w-3.5" />
-              {hotel.rating}
-            </span>
-          )}
-        </div>
-
-        <p className="mt-1 flex items-center gap-1 text-sm text-muted">
-          <MapPinIcon className="h-4 w-4" />
+      <div className="flex flex-1 flex-col gap-1.5 p-4">
+        <h3 className="truncate font-heading text-base font-semibold text-ink">{hotel.name}</h3>
+        <p className="flex items-center gap-1 text-xs text-muted">
+          <MapPinIcon className="h-3.5 w-3.5" />
           {hotel.city}
         </p>
-
-        <p className="mt-3 text-sm">
+        <div className="mt-auto flex items-baseline justify-between border-t border-line pt-3">
           {hotel.priceFrom ? (
             <>
               <span className="text-lg font-semibold text-primary">{formatPrice(hotel.priceFrom)}</span>
-              <span className="text-muted"> / night</span>
+              <span className="text-xs text-muted"> / night</span>
             </>
           ) : (
-            <span className="text-muted">View rooms</span>
+            <span className="text-sm text-muted">View rooms</span>
           )}
-        </p>
+        </div>
       </div>
     </Link>
   )

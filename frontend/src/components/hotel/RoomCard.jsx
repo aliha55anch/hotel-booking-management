@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { useAuth, useClerk } from '@clerk/clerk-react'
 import Button from '../ui/Button.jsx'
 import AmenitiesList from './AmenitiesList.jsx'
-import { BedIcon, UsersIcon, HotelIcon, CheckIcon } from '../ui/icons.jsx'
+import { BedIcon, UsersIcon, CheckIcon } from '../ui/icons.jsx'
 import { createBooking } from '../../services/bookingService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { formatPrice } from '../../lib/format.js'
-import { resolveImageUrl } from '../../lib/images.js'
 import { CLERK_PUBLISHABLE_KEY } from '../../lib/config.js'
+import { imageFor } from '../../lib/siteImages.js'
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24
 
@@ -117,17 +117,17 @@ export default function RoomCard({ room }) {
     validDates && checkInDate && checkOutDate ? Math.round((checkOutDate - checkInDate) / MS_PER_DAY) : 0
   const total = nights * room.pricePerNight
 
-  const image = resolveImageUrl(room.images?.[0])
   const unavailable = room.isAvailable === false
+  const image = imageFor(room._id)
 
   return (
     <div className="flex flex-col gap-4 rounded-card border border-line bg-background p-4 shadow-card sm:flex-row sm:p-5">
-      <div className="aspect-16/10 w-full shrink-0 overflow-hidden rounded-card bg-surface sm:w-56">
+      <div className="relative aspect-16/10 w-full shrink-0 overflow-hidden rounded-card bg-surface sm:w-56">
         {image ? (
           <img src={image} alt={room.roomType} loading="lazy" className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-muted">
-            <HotelIcon className="h-10 w-10" />
+            <BedIcon className="h-10 w-10" />
           </div>
         )}
       </div>

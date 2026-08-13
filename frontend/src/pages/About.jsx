@@ -8,7 +8,6 @@ import {
   StarIcon,
   WalletIcon,
 } from '../components/ui/icons.jsx'
-import heroImage from '../assets/images/heroImage.png'
 
 const values = [
   {
@@ -43,15 +42,8 @@ const stats = [
 export default function About() {
   return (
     <>
-      <section className="relative overflow-hidden">
-        <img
-          src={heroImage}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-linear-to-b from-primary-soft/80 via-background/60 to-background" />
-        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-20 text-center sm:px-6 lg:px-8">
+      <section className="relative -mt-18 overflow-hidden bg-linear-to-b from-primary-soft/70 via-background/50 to-background">
+        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-24 text-center sm:px-6 lg:px-8">
           <span className="flex h-14 w-14 items-center justify-center rounded-btn bg-primary text-white">
             <HotelIcon className="h-7 w-7" />
           </span>
@@ -82,7 +74,22 @@ export default function About() {
             </p>
           </div>
 
-          <div className="flex items-center rounded-card border border-line bg-surface p-6">
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <img
+                src="/hotelrooms/9.webp"
+                alt="Inside a StayHub partner hotel room"
+                loading="lazy"
+                className="aspect-4/3 w-full rounded-card border border-line object-cover shadow-card"
+              />
+              <img
+                src="/hotelrooms/10.webp"
+                alt="StayHub partner hotel amenities"
+                loading="lazy"
+                className="aspect-4/3 w-full rounded-card border border-line object-cover shadow-card"
+              />
+            </div>
+            <div className="flex items-center rounded-card border border-line bg-surface p-6">
             <ul className="w-full space-y-4">
               {stats.map((stat) => (
                 <li key={stat.label} className="flex items-center justify-between gap-4 border-b border-line pb-4 last:border-b-0 last:pb-0">
@@ -91,6 +98,7 @@ export default function About() {
                 </li>
               ))}
             </ul>
+            </div>
           </div>
         </div>
       </section>

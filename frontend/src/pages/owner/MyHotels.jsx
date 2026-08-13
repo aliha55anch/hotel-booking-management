@@ -7,22 +7,15 @@ import { PlusIcon, PencilIcon, TrashIcon, HotelIcon, StarIcon, BedIcon, MapPinIc
 import { getMyHotels, deleteHotel } from '../../services/hotelService.js'
 import { getRoomsByHotel } from '../../services/roomService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
-import { resolveImageUrl } from '../../lib/images.js'
 import { useOwner } from '../../components/owner/ownerContext.js'
 
 function MyHotelRow({ hotel, roomCount, onEdit, onDelete }) {
-  const image = resolveImageUrl(hotel.images?.[0])
-
   return (
     <tr className="hover:bg-surface/60">
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-16 shrink-0 items-center justify-center overflow-hidden rounded-btn bg-surface">
-            {image ? (
-              <img src={image} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <HotelIcon className="h-5 w-5 text-muted" />
-            )}
+          <span className="flex h-11 w-16 shrink-0 items-center justify-center rounded-btn bg-linear-to-br from-primary-soft to-primary/10 text-primary">
+            <HotelIcon className="h-5 w-5" />
           </span>
           <div className="min-w-0">
             <p className="truncate font-semibold text-ink">{hotel.name}</p>

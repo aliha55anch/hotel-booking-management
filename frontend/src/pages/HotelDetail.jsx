@@ -10,8 +10,8 @@ import { getRoomsByHotel } from '../services/roomService.js'
 import { getReviewsByHotel, createReview } from '../services/reviewService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
 import { formatPrice } from '../lib/format.js'
-import { resolveImageUrl } from '../lib/images.js'
 import { CLERK_PUBLISHABLE_KEY } from '../lib/config.js'
+import { galleryFor } from '../lib/siteImages.js'
 
 const formatDate = (iso) => {
   if (!iso) return ''
@@ -137,17 +137,9 @@ function ReviewList({ reviews }) {
       {reviews.map((review) => (
         <li key={review._id} className="rounded-card border border-line bg-background p-4">
           <div className="flex items-center gap-3">
-            {review.user?.image ? (
-              <img
-                src={review.user.image}
-                alt={review.user.name || 'Reviewer'}
-                className="h-9 w-9 rounded-full object-cover"
-              />
-            ) : (
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary">
-                {(review.user?.name || 'R').charAt(0).toUpperCase()}
-              </span>
-            )}
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary">
+              {(review.user?.name || 'R').charAt(0).toUpperCase()}
+            </span>
             <div className="flex-1">
               <p className="text-sm font-semibold text-ink">{review.user?.name || 'Guest'}</p>
               <p className="text-xs text-muted">{formatDate(review.createdAt)}</p>
@@ -186,7 +178,6 @@ export default function HotelDetail() {
       .then(([hotelRes, roomRes, reviewRes]) => {
         if (cancelled) return
         setHotel(hotelRes.hotel)
-        setActiveImage(resolveImageUrl(hotelRes.hotel.images?.[0]) || '')
         setRooms(roomRes.rooms || [])
         setReviews(reviewRes.reviews || [])
       })
@@ -242,8 +233,9 @@ export default function HotelDetail() {
     )
   }
 
-  const images = hotel.images || []
   const minPrice = rooms.length ? Math.min(...rooms.map((room) => room.pricePerNight)) : null
+  const gallery = galleryFor(hotel)
+  const activeImageSrc = activeImage || gallery[0]
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -255,32 +247,29 @@ export default function HotelDetail() {
       <div className="mt-4 grid items-start gap-8 lg:grid-cols-[1.6fr_1fr]">
         <div className="overflow-hidden rounded-card border border-line bg-surface">
           <div className="aspect-16/9">
-            {activeImage ? (
-              <img src={activeImage} alt={hotel.name} className="h-full w-full object-cover" />
+            {activeImageSrc ? (
+              <img src={activeImageSrc} alt={hotel.name} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-muted">
                 <HotelIcon className="h-16 w-16" />
               </div>
             )}
           </div>
-          {images.length > 1 && (
+          {gallery.length > 1 && (
             <div className="flex flex-wrap gap-2 p-3">
-              {images.map((src, i) => {
-                const resolved = resolveImageUrl(src)
-                return (
-                  <button
-                    key={src}
-                    type="button"
-                    onClick={() => setActiveImage(resolved)}
-                    aria-label={`View image ${i + 1}`}
-                    className={`overflow-hidden rounded-card border-2 transition-colors ${
-                      resolved === activeImage ? 'border-primary' : 'border-transparent hover:border-line'
-                    }`}
-                  >
-                    <img src={resolved} alt="" className="h-16 w-24 object-cover" />
-                  </button>
-                )
-              })}
+              {gallery.map((src, i) => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => setActiveImage(src)}
+                  aria-label={`View image ${i + 1}`}
+                  className={`overflow-hidden rounded-card border-2 transition-colors ${
+                    src === activeImageSrc ? 'border-primary' : 'border-transparent hover:border-line'
+                  }`}
+                >
+                  <img src={src} alt="" className="h-16 w-24 object-cover" />
+                </button>
+              ))}
             </div>
           )}
         </div>

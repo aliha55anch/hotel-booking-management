@@ -29,14 +29,6 @@ import listIcon from './icons/listIcon.svg'
 import uploadArea from './icons/uploadArea.svg'
 import totalBookingIcon from './icons/totalBookingIcon.svg'
 import totalRevenueIcon from './icons/totalRevenueIcon.svg'
-import roomImg1 from './images/roomImg1.png'
-import roomImg2 from './images/roomImg2.png'
-import roomImg3 from './images/roomImg3.png'
-import roomImg4 from './images/roomImg4.png'
-import regImage from './images/regImage.png'
-import exclusiveOfferCardImg1 from './images/exclusiveOfferCardImg1.png'
-import exclusiveOfferCardImg2 from './images/exclusiveOfferCardImg2.png'
-import exclusiveOfferCardImg3 from './images/exclusiveOfferCardImg3.png'
 
 
 export const assets = {
@@ -65,7 +57,6 @@ export const assets = {
     menuIcon,
     closeMenu,
     guestsIcon,
-    regImage,
     addIcon,
     dashboardIcon,
     listIcon,
@@ -83,16 +74,16 @@ export const cities = [
 
 // Exclusive Offers Dummy Data
 export const exclusiveOffers = [
-    { _id: 1, title: "Summer Escape Package", description: "Enjoy a complimentary night and daily breakfast", priceOff: 25, expiryDate: "Aug 31", image: exclusiveOfferCardImg1 },
-    { _id: 2, title: "Romantic Getaway", description: "Special couples package including spa treatment", priceOff: 20, expiryDate: "Sep 20", image: exclusiveOfferCardImg2 },
-    { _id: 3, title: "Luxury Retreat", description: "Book 60 days in advance and save on your stay at any of our luxury properties worldwide.", priceOff: 30, expiryDate: "Sep 25", image: exclusiveOfferCardImg3 },
+    { _id: 1, title: "Summer Escape Package", description: "Enjoy a complimentary night and daily breakfast", priceOff: 25, expiryDate: "Aug 31", image: "/packages/p1.webp" },
+    { _id: 2, title: "Romantic Getaway", description: "Special couples package including spa treatment", priceOff: 20, expiryDate: "Sep 20", image: "/packages/p2.webp" },
+    { _id: 4, title: "Family Adventure Package", description: "Fun-filled stay with activities, breakfast, and late checkout for the whole family.", priceOff: 18, expiryDate: "Sep 30", image: "/packages/p4.webp" },
 ]
 
 // Testimonials Dummy Data
 export const testimonials = [
-    { id: 1, name: "Emma Rodriguez", address: "Barcelona, Spain", image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=200", rating: 5, review: "I've used many booking platforms before, but none compare to the personalized experience and attention to detail that QuickStay provides." },
-    { id: 2, name: "Liam Johnson", address: "New York, USA", image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200", rating: 4, review: "QuickStay exceeded my expectations. The booking process was seamless, and the hotels were absolutely top-notch. Highly recommended!" },
-    { id: 3, name: "Sophia Lee", address: "Seoul, South Korea", image: "https://images.unsplash.com/photo-1701615004837-40d8573b6652?q=80&w=200", rating: 5, review: "Amazing service! I always find the best luxury accommodations through QuickStay. Their recommendations never disappoint!" }
+    { id: 1, name: "Ayesha Khan", address: "Karachi, Pakistan", rating: 5, review: "I've used many booking platforms before, but none compare to the personalized experience and attention to detail that StayHub provides for hotels across Pakistan." },
+    { id: 2, name: "Ahmed Raza", address: "Lahore, Pakistan", rating: 4, review: "StayHub exceeded my expectations. The booking process was seamless, and the hotels in Murree and Naran were absolutely top-notch. Highly recommended!" },
+    { id: 3, name: "Fatima Malik", address: "Islamabad, Pakistan", rating: 5, review: "Amazing service! I always find the best luxury accommodations through StayHub, from Gilgit to Skardu. Their recommendations never disappoint!" }
 ];
 
 // Facility Icon
@@ -117,7 +108,6 @@ export const userDummyData = {
     "_id": "user_2unqyL4diJFP1E3pIBnasc7w8hP",
     "username": "Great Stack",
     "email": "user.greatstack@gmail.com",
-    "image": "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvdXBsb2FkZWQvaW1nXzJ2N2c5YVpSSEFVYVUxbmVYZ2JkSVVuWnFzWSJ9",
     "role": "hotelOwner",
     "createdAt": "2025-03-25T09:29:16.367Z",
     "updatedAt": "2025-04-10T06:34:48.719Z",
@@ -148,7 +138,6 @@ export const roomsDummyData = [
         "roomType": "Double Bed",
         "pricePerNight": 399,
         "amenities": ["Room Service", "Mountain View", "Pool Access"],
-        "images": [roomImg1, roomImg2, roomImg3, roomImg4],
         "isAvailable": true,
         "createdAt": "2025-04-10T06:26:04.013Z",
         "updatedAt": "2025-04-10T06:26:04.013Z",
@@ -160,7 +149,6 @@ export const roomsDummyData = [
         "roomType": "Double Bed",
         "pricePerNight": 299,
         "amenities": ["Room Service", "Mountain View", "Pool Access"],
-        "images": [roomImg2, roomImg3, roomImg4, roomImg1],
         "isAvailable": true,
         "createdAt": "2025-04-10T06:25:22.593Z",
         "updatedAt": "2025-04-10T06:25:22.593Z",
@@ -172,7 +160,6 @@ export const roomsDummyData = [
         "roomType": "Double Bed",
         "pricePerNight": 249,
         "amenities": ["Free WiFi", "Free Breakfast", "Room Service"],
-        "images": [roomImg3, roomImg4, roomImg1, roomImg2],
         "isAvailable": true,
         "createdAt": "2025-04-10T06:24:06.285Z",
         "updatedAt": "2025-04-10T06:24:06.285Z",
@@ -184,7 +171,6 @@ export const roomsDummyData = [
         "roomType": "Single Bed",
         "pricePerNight": 199,
         "amenities": ["Free WiFi", "Room Service", "Pool Access"],
-        "images": [roomImg4, roomImg1, roomImg2, roomImg3],
         "isAvailable": true,
         "createdAt": "2025-04-10T06:23:20.252Z",
         "updatedAt": "2025-04-10T06:23:20.252Z",
