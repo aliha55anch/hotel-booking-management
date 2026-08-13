@@ -1,7 +1,7 @@
 const express = require('express')
+const path = require('path')
 const dotenv = require('dotenv')
 const cors = require('cors')
-const { clerkMiddleware } = require('@clerk/express')
 const connectDB = require('./config/db')
 const webhookRoutes = require('./routes/webhookRoutes')
 const userRoutes = require('./routes/userRoutes')
@@ -11,6 +11,7 @@ const bookingRoutes = require('./routes/bookingRoutes')
 const reviewRoutes = require('./routes/reviewRoutes')
 const stripeRoutes = require('./routes/stripeRoutes')
 const { notFound, errorHandler } = require('./middleware/errorMiddleware')
+const { clerkAuth, syncClerkUser } = require('./middleware/authMiddleware')
 
 dotenv.config()
 
@@ -23,9 +24,10 @@ app.use(cors())
 app.use('/api/webhooks', webhookRoutes)
 app.use('/api/stripe', stripeRoutes.webhookRouter)
 
-if (process.env.CLERK_SECRET_KEY) {
-  app.use(clerkMiddleware())
-}
+app.use(express.static(path.join(__dirname, 'public')))
+
+app.use(clerkAuth())
+app.use(syncClerkUser)
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))

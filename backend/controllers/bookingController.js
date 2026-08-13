@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler')
 const Booking = require('../models/Booking')
 const Room = require('../models/Room')
 const User = require('../models/User')
+const Hotel = require('../models/Hotel')
 
 const NIGHT_MS = 1000 * 60 * 60 * 24
 
@@ -125,4 +126,26 @@ const getAllBookings = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, count: bookings.length, bookings })
 })
 
-module.exports = { createBooking, getMyBookings, cancelBooking, getAllBookings }
+const getOwnerBookings = asyncHandler(async (req, res) => {
+  const user = await getLocalUser(req.auth.userId)
+
+  if (!user) {
+    res.status(404)
+    throw new Error('User not found. Webhook may not have synced this user yet.')
+  }
+
+  const ownedHotels = await Hotel.find({ owner: user._id }).select('_id')
+  const hotelIds = ownedHotels.map((hotel) => hotel._id)
+
+  const bookings = hotelIds.length
+    ? await Booking.find({ hotel: { $in: hotelIds } })
+        .populate('user', 'name email image')
+        .populate('room')
+        .populate('hotel')
+        .sort({ createdAt: -1 })
+    : []
+
+  res.status(200).json({ success: true, count: bookings.length, bookings })
+})
+
+module.exports = { createBooking, getMyBookings, cancelBooking, getAllBookings, getOwnerBookings }

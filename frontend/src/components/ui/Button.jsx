@@ -14,6 +14,7 @@ const variants = {
   secondary: 'bg-transparent text-primary border border-primary hover:bg-primary-soft',
   accent: 'bg-accent text-ink hover:brightness-95',
   ghost: 'bg-transparent text-ink hover:bg-surface',
+  danger: 'bg-error text-white hover:bg-error/90',
 }
 
 function Button({ to, href, variant = 'primary', size = 'md', className = '', type, children, ...props }) {

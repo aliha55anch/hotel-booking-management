@@ -5,6 +5,7 @@ import Button from '../components/ui/Button.jsx'
 import HotelCard from '../components/hotel/HotelCard.jsx'
 import { HotelIcon, SearchIcon, CalendarIcon, MapPinIcon } from '../components/ui/icons.jsx'
 import { getHotels } from '../services/hotelService.js'
+import heroImage from '../assets/images/heroImage.png'
 
 const inputClass =
   'h-11 rounded-btn border border-line bg-background px-4 text-sm text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
@@ -150,8 +151,15 @@ function HowItWorks() {
 export default function Home() {
   return (
     <>
-      <section className="bg-linear-to-b from-primary-soft to-background">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-20 text-center sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden">
+        <img
+          src={heroImage}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-linear-to-b from-primary-soft/80 via-background/60 to-background" />
+        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-20 text-center sm:px-6 lg:px-8">
           <h1 className="font-heading text-4xl font-semibold text-ink sm:text-5xl">
             Find your perfect stay
           </h1>

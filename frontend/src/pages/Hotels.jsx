@@ -39,11 +39,15 @@ export default function Hotels() {
     defaultValues: {
       city: searchParams.get('city') || '',
       rating: searchParams.get('rating') || '',
+      checkIn: searchParams.get('checkIn') || '',
+      checkOut: searchParams.get('checkOut') || '',
     },
   })
 
   const city = searchParams.get('city') || ''
   const rating = searchParams.get('rating') || ''
+  const checkIn = searchParams.get('checkIn') || ''
+  const checkOut = searchParams.get('checkOut') || ''
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
 
   const [hotels, setHotels] = useState([])
@@ -57,7 +61,7 @@ export default function Hotels() {
     setLoading(true)
     setError(null)
 
-    getHotels({ city, rating, page, limit: LIMIT })
+    getHotels({ city, rating, checkIn: checkIn || undefined, checkOut: checkOut || undefined, page, limit: LIMIT })
       .then((data) => {
         if (!cancelled) {
           setHotels(data.hotels || [])
@@ -75,18 +79,27 @@ export default function Hotels() {
     return () => {
       cancelled = true
     }
-  }, [city, rating, page])
+  }, [city, rating, checkIn, checkOut, page])
 
   useEffect(() => {
-    reset({ city: searchParams.get('city') || '', rating: searchParams.get('rating') || '' })
+    reset({
+      city: searchParams.get('city') || '',
+      rating: searchParams.get('rating') || '',
+      checkIn: searchParams.get('checkIn') || '',
+      checkOut: searchParams.get('checkOut') || '',
+    })
   }, [searchParams, reset])
 
-  const onSubmit = ({ city: nextCity, rating: nextRating }) => {
+  const onSubmit = ({ city: nextCity, rating: nextRating, checkIn: nextCheckIn, checkOut: nextCheckOut }) => {
     const params = new URLSearchParams(searchParams)
     if (nextCity?.trim()) params.set('city', nextCity.trim())
     else params.delete('city')
     if (nextRating) params.set('rating', nextRating)
     else params.delete('rating')
+    if (nextCheckIn) params.set('checkIn', nextCheckIn)
+    else params.delete('checkIn')
+    if (nextCheckOut) params.set('checkOut', nextCheckOut)
+    else params.delete('checkOut')
     params.delete('page')
     setSearchParams(params, { replace: true })
   }
@@ -101,7 +114,7 @@ export default function Hotels() {
   }
 
   const clearFilters = () => {
-    reset({ city: '', rating: '' })
+    reset({ city: '', rating: '', checkIn: '', checkOut: '' })
     setSearchParams({})
   }
 
@@ -131,6 +144,14 @@ export default function Hotels() {
               </option>
             ))}
           </select>
+        </label>
+        <label className="sm:w-40">
+          <span className="mb-1 block text-xs font-medium text-muted">Check-in</span>
+          <input type="date" className={`${inputClass} w-full`} {...register('checkIn')} />
+        </label>
+        <label className="sm:w-40">
+          <span className="mb-1 block text-xs font-medium text-muted">Check-out</span>
+          <input type="date" className={`${inputClass} w-full`} {...register('checkOut')} />
         </label>
         <Button type="submit" size="md">
           <SearchIcon className="h-4 w-4" />
@@ -191,6 +212,16 @@ export default function Hotels() {
           </Button>
         </div>
       )}
+
+      <div className="mt-10 flex flex-col items-center justify-between gap-4 rounded-card border border-line bg-primary-soft/40 p-8 text-center sm:flex-row sm:text-left">
+        <div>
+          <h2 className="font-heading text-xl font-semibold text-ink">Own a hotel?</h2>
+          <p className="mt-1 text-sm text-muted">List it on StayHub and start taking bookings today.</p>
+        </div>
+        <Button to="/owner" className="shrink-0">
+          Become a partner
+        </Button>
+      </div>
     </section>
   )
 }

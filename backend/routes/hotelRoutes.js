@@ -1,21 +1,22 @@
 const express = require('express')
-const { requireAuth } = require('@clerk/express')
+const { requireAuth } = require('../middleware/authMiddleware')
 const {
   getAllHotels,
   getHotelById,
+  getMyHotels,
   createHotel,
   updateHotel,
   deleteHotel,
 } = require('../controllers/hotelController')
-const { checkAdmin } = require('../middleware/roleMiddleware')
 
 const router = express.Router()
 
 router.get('/', getAllHotels)
+router.get('/mine', requireAuth(), getMyHotels)
 router.get('/:id', getHotelById)
 
-router.post('/', requireAuth(), checkAdmin, createHotel)
-router.put('/:id', requireAuth(), checkAdmin, updateHotel)
-router.delete('/:id', requireAuth(), checkAdmin, deleteHotel)
+router.post('/', requireAuth(), createHotel)
+router.put('/:id', requireAuth(), updateHotel)
+router.delete('/:id', requireAuth(), deleteHotel)
 
 module.exports = router

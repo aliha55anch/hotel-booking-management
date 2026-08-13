@@ -1,5 +1,5 @@
 const express = require('express')
-const { requireAuth } = require('@clerk/express')
+const { requireAuth } = require('../middleware/authMiddleware')
 const { createPaymentIntent, stripeWebhook } = require('../controllers/stripeController')
 
 const webhookRouter = express.Router()

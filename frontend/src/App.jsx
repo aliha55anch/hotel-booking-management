@@ -1,12 +1,24 @@
-import { Routes, Route, Outlet } from 'react-router-dom'
-import Navbar from './components/Navbar.jsx'
-import Footer from './components/Footer.jsx'
-import Home from './pages/Home.jsx'
-import Hotels from './pages/Hotels.jsx'
-import HotelDetail from './pages/HotelDetail.jsx'
-import MyBookings from './pages/MyBookings.jsx'
-import Admin from './pages/Admin.jsx'
-import NotFound from './pages/NotFound.jsx'
+import { Routes, Route, Outlet } from "react-router-dom";
+import Navbar from "./components/Navbar.jsx";
+import Footer from "./components/Footer.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AdminLayout from "./components/admin/AdminLayout.jsx";
+import OwnerLayout from "./components/owner/OwnerLayout.jsx";
+import AdminOverview from "./pages/admin/Overview.jsx";
+import ManageHotels from "./pages/admin/ManageHotels.jsx";
+import ManageRooms from "./pages/admin/ManageRooms.jsx";
+import ManageBookings from "./pages/admin/ManageBookings.jsx";
+import ManageUsers from "./pages/admin/ManageUsers.jsx";
+import OwnerOverview from "./pages/owner/Overview.jsx";
+import OwnerHotels from "./pages/owner/MyHotels.jsx";
+import OwnerRooms from "./pages/owner/MyRooms.jsx";
+import Home from "./pages/Home.jsx";
+import Hotels from "./pages/Hotels.jsx";
+import HotelDetail from "./pages/HotelDetail.jsx";
+import Experience from "./pages/Experience.jsx";
+import About from "./pages/About.jsx";
+import MyBookings from "./pages/MyBookings.jsx";
+import NotFound from "./pages/NotFound.jsx";
 
 function Layout() {
   return (
@@ -17,22 +29,44 @@ function Layout() {
       </main>
       <Footer />
     </div>
-  )
+  );
 }
 
 function App() {
   return (
     <Routes>
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminOverview />} />
+        <Route path="hotels" element={<ManageHotels />} />
+        <Route path="rooms" element={<ManageRooms />} />
+        <Route path="bookings" element={<ManageBookings />} />
+        <Route path="users" element={<ManageUsers />} />
+      </Route>
+
+      <Route path="/owner" element={<OwnerLayout />}>
+        <Route index element={<OwnerOverview />} />
+        <Route path="hotels" element={<OwnerHotels />} />
+        <Route path="rooms" element={<OwnerRooms />} />
+      </Route>
+
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/hotels" element={<Hotels />} />
         <Route path="/hotels/:id" element={<HotelDetail />} />
-        <Route path="/my-bookings" element={<MyBookings />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route
+          path="/my-bookings"
+          element={
+            <ProtectedRoute>
+              <MyBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/experience" element={<Experience />} />
+        <Route path="/about" element={<About />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;
