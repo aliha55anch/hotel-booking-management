@@ -11,3 +11,13 @@ export const getAllUsers = async (token) => {
   const { data } = await api.get('/users', { headers: authHeaders(token) })
   return data
 }
+
+export const updateUserRole = async (id, payload, token) => {
+  const { data } = await api.put(`/users/${id}`, payload, { headers: authHeaders(token) })
+  return data
+}
+
+export const deleteUser = async (id, token) => {
+  const { data } = await api.delete(`/users/${id}`, { headers: authHeaders(token) })
+  return data
+}

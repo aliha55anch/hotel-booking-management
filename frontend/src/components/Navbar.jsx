@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import { SignedIn, SignedOut, UserButton, useClerk, useAuth } from '@clerk/clerk-react'
 import { MenuIcon, CloseIcon, FaviconIcon } from './ui/icons.jsx'
+import { getMyProfile } from '../services/userService.js'
 import { CLERK_PUBLISHABLE_KEY } from '../lib/config.js'
 
 const links = [
@@ -13,23 +14,12 @@ const links = [
 
 const accountLinks = [
   { to: '/my-bookings', label: 'My Bookings' },
-  { to: '/owner', label: 'Owner' },
-  { to: '/admin', label: 'Admin' },
+  { to: '/owner', label: 'Owner', roles: ['hotelOwner', 'admin'] },
+  { to: '/admin', label: 'Admin', roles: ['admin'] },
 ]
 
-function SignedInOnly({ children }) {
-  if (!CLERK_PUBLISHABLE_KEY) return children
-  return <ClerkSignedInOnly>{children}</ClerkSignedInOnly>
-}
-
-function ClerkSignedInOnly({ children }) {
-  const { isSignedIn } = useAuth()
-  if (!isSignedIn) return null
-  return children
-}
-
-function NavLinks({ solid, onNavigate }) {
-  const renderLink = (link) => (
+function renderNavLink(link, solid, onNavigate) {
+  return (
     <NavLink
       key={link.to}
       to={link.to}
@@ -49,13 +39,72 @@ function NavLinks({ solid, onNavigate }) {
       )}
     </NavLink>
   )
+}
 
-  return (
-    <>
-      {links.map(renderLink)}
-      <SignedInOnly>{accountLinks.map(renderLink)}</SignedInOnly>
-    </>
-  )
+function NavLinks({ solid, onNavigate, items }) {
+  return <>{items.map((link) => renderNavLink(link, solid, onNavigate))}</>
+}
+
+function AccountLinks({ solid, onNavigate }) {
+  if (!CLERK_PUBLISHABLE_KEY) return <FallbackAccountLinks solid={solid} onNavigate={onNavigate} />
+  return <ClerkAccountLinks solid={solid} onNavigate={onNavigate} />
+}
+
+function ClerkAccountLinks({ solid, onNavigate }) {
+  const { isLoaded, isSignedIn, getToken } = useAuth()
+  const [role, setRole] = useState(null)
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return
+
+    let cancelled = false
+    getToken()
+      .then((token) => getMyProfile(token))
+      .then((data) => {
+        if (!cancelled) setRole(data.user?.role || null)
+      })
+      .catch(() => {
+        if (!cancelled) setRole(null)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isLoaded, isSignedIn, getToken])
+
+  if (!isLoaded || !isSignedIn) return null
+
+  const visible = accountLinks.filter((link) => !link.roles || link.roles.includes(role))
+  return <NavLinks solid={solid} onNavigate={onNavigate} items={visible} />
+}
+
+function FallbackAccountLinks({ solid, onNavigate }) {
+  const [role, setRole] = useState(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    getMyProfile()
+      .then((data) => {
+        if (!cancelled) setRole(data.user?.role || null)
+      })
+      .catch(() => {
+        if (!cancelled) setRole(null)
+      })
+      .finally(() => {
+        if (!cancelled) setReady(true)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  if (!ready) return null
+
+  const visible = accountLinks.filter((link) => !link.roles || link.roles.includes(role))
+  return <NavLinks solid={solid} onNavigate={onNavigate} items={visible} />
 }
 
 function ClerkAuthArea({ solid }) {
@@ -152,7 +201,8 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
-          <NavLinks solid={solid} />
+          <NavLinks solid={solid} items={links} />
+          <AccountLinks solid={solid} />
         </div>
 
         <div className="hidden items-center gap-4 md:flex">
@@ -175,7 +225,8 @@ export default function Navbar() {
       {open && (
         <div className="border-t border-line bg-background text-ink md:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4">
-            <NavLinks solid onNavigate={() => setOpen(false)} />
+            <NavLinks solid items={links} onNavigate={() => setOpen(false)} />
+            <AccountLinks solid onNavigate={() => setOpen(false)} />
             <div className="mt-2 flex flex-col gap-3">
               {CLERK_PUBLISHABLE_KEY ? <ClerkAuthArea solid /> : <FallbackAuthArea solid />}
             </div>

@@ -18,6 +18,7 @@ import HotelDetail from "./pages/HotelDetail.jsx";
 import Experience from "./pages/Experience.jsx";
 import About from "./pages/About.jsx";
 import MyBookings from "./pages/MyBookings.jsx";
+import Payment from "./pages/Payment.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 function Layout() {
@@ -58,6 +59,14 @@ function App() {
           element={
             <ProtectedRoute>
               <MyBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment"
+          element={
+            <ProtectedRoute>
+              <Payment />
             </ProtectedRoute>
           }
         />

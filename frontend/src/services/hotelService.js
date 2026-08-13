@@ -5,6 +5,11 @@ export const getHotels = async (params = {}) => {
   return data
 }
 
+export const getStats = async () => {
+  const { data } = await api.get('/hotels/stats')
+  return data
+}
+
 export const getHotelById = async (id) => {
   const { data } = await api.get(`/hotels/${id}`)
   return data

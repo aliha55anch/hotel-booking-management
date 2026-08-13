@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { assets, exclusiveOffers, testimonials } from '../assets/assets.js'
 import { getHotels } from '../services/hotelService.js'
+import { subscribeNewsletter } from '../services/newsletterService.js'
+import { getApiErrorMessage } from '../lib/errors.js'
 import { hotelRoomImages } from '../lib/siteImages.js'
+import { hotelPrimaryImage } from '../lib/images.js'
 import { formatPrice } from '../lib/format.js'
 
 const cities = [
@@ -32,14 +35,30 @@ const SectionTitle = ({ title, subtitle, align }) => (
 const searchFieldClass =
   'mt-2 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-800 outline-none transition-all duration-200 placeholder:font-normal placeholder:text-gray-400 focus:border-[#49B9FF] focus:bg-white focus:ring-2 focus:ring-[#49B9FF]/25'
 
+const todayISO = () => {
+  const now = new Date()
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0]
+}
+
 function HeroSearch() {
   const navigate = useNavigate()
   const [destination, setDestination] = useState('')
+  const [checkIn, setCheckIn] = useState('')
+  const [checkOut, setCheckOut] = useState('')
+  const [guests, setGuests] = useState(1)
+
+  const today = todayISO()
+  const datesValid = !checkIn || !checkOut || checkOut > checkIn
 
   const onSubmit = (e) => {
     e.preventDefault()
+    if (!datesValid) return
+
     const params = new URLSearchParams()
     if (destination.trim()) params.set('city', destination.trim())
+    if (checkIn) params.set('checkIn', checkIn)
+    if (checkOut) params.set('checkOut', checkOut)
+    if (guests > 1) params.set('guests', String(guests))
     const qs = params.toString()
     navigate(qs ? `/hotels?${qs}` : '/hotels')
   }
@@ -84,14 +103,31 @@ function HeroSearch() {
         <SearchLabel icon={assets.calenderIcon} htmlFor="checkIn">
           Check in
         </SearchLabel>
-        <input id="checkIn" type="date" className={searchFieldClass} />
+        <input
+          id="checkIn"
+          type="date"
+          min={today}
+          value={checkIn}
+          onChange={(e) => setCheckIn(e.target.value)}
+          className={searchFieldClass}
+        />
       </div>
 
       <div className="sm:col-span-1 lg:col-span-2">
         <SearchLabel icon={assets.calenderIcon} htmlFor="checkOut">
           Check out
         </SearchLabel>
-        <input id="checkOut" type="date" className={searchFieldClass} />
+        <input
+          id="checkOut"
+          type="date"
+          min={checkIn || today}
+          value={checkOut}
+          onChange={(e) => setCheckOut(e.target.value)}
+          className={searchFieldClass}
+        />
+        {!datesValid && (
+          <p className="mt-1 text-xs text-red-400">Check-out must be after check-in.</p>
+        )}
       </div>
 
       <div className="sm:col-span-1 lg:col-span-2">
@@ -102,9 +138,10 @@ function HeroSearch() {
           id="guests"
           min={1}
           max={4}
+          value={guests}
+          onChange={(e) => setGuests(Math.max(1, Math.min(4, Number(e.target.value) || 1)))}
           type="number"
           className={searchFieldClass}
-          placeholder="0"
         />
       </div>
 
@@ -141,7 +178,7 @@ function Hero() {
 }
 
 function RoomCard({ hotel, index }) {
-  const src = hotelRoomImages[index % hotelRoomImages.length]
+  const src = hotelPrimaryImage(hotel, hotelRoomImages[index % hotelRoomImages.length])
 
   return (
     <Link
@@ -346,10 +383,22 @@ function Testimonials() {
 
 function StayInspired() {
   const [email, setEmail] = useState('')
+  const [status, setStatus] = useState('idle')
+  const [message, setMessage] = useState('')
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
-    setEmail('')
+    setStatus('submitting')
+    setMessage('')
+    try {
+      await subscribeNewsletter(email)
+      setStatus('success')
+      setMessage("Thanks for subscribing! You'll hear from us soon.")
+      setEmail('')
+    } catch (err) {
+      setStatus('error')
+      setMessage(getApiErrorMessage(err, 'Could not subscribe. Please try again.'))
+    }
   }
 
   return (
@@ -372,12 +421,18 @@ function StayInspired() {
         />
         <button
           type="submit"
-          className="group flex cursor-pointer items-center justify-center gap-2 rounded bg-black px-4 py-2.5 transition-all active:scale-95 md:px-7"
+          disabled={status === 'submitting'}
+          className="group flex cursor-pointer items-center justify-center gap-2 rounded bg-black px-4 py-2.5 transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 md:px-7"
         >
-          Subscribe
-          <img className="w-3.5 invert transition-all group-hover:translate-x-1" src={assets.arrowIcon} alt="arrow-icon" />
+          {status === 'submitting' ? 'Subscribing...' : 'Subscribe'}
+          {status !== 'submitting' && (
+            <img className="w-3.5 invert transition-all group-hover:translate-x-1" src={assets.arrowIcon} alt="arrow-icon" />
+          )}
         </button>
       </form>
+      {message && (
+        <p className={`mt-4 text-center text-sm ${status === 'error' ? 'text-red-400' : 'text-green-400'}`}>{message}</p>
+      )}
       <p className="mt-6 text-center text-xs text-gray-500">
         By subscribing, you agree to our Privacy Policy and consent to receive updates.
       </p>

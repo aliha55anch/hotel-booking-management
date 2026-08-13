@@ -1,13 +1,13 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth, useClerk } from '@clerk/clerk-react'
 import Button from '../ui/Button.jsx'
 import AmenitiesList from './AmenitiesList.jsx'
-import { BedIcon, UsersIcon, CheckIcon } from '../ui/icons.jsx'
-import { createBooking } from '../../services/bookingService.js'
-import { getApiErrorMessage } from '../../lib/errors.js'
+import { BedIcon, UsersIcon, CalendarIcon } from '../ui/icons.jsx'
 import { formatPrice } from '../../lib/format.js'
 import { CLERK_PUBLISHABLE_KEY } from '../../lib/config.js'
 import { imageFor } from '../../lib/siteImages.js'
+import { roomPrimaryImage } from '../../lib/images.js'
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24
 
@@ -19,88 +19,62 @@ const todayISO = () => {
 const dateInputClass =
   'h-11 w-full rounded-btn border border-line bg-background px-4 text-sm text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
 
-function BookingSuccess() {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-btn border border-success/40 bg-success/10 p-3">
-      <p className="flex items-center gap-2 text-sm font-medium text-ink">
-        <CheckIcon className="h-4 w-4 text-success" />
-        Booking confirmed
-      </p>
-      <Button to="/my-bookings" variant="secondary" size="sm">
-        View bookings
-      </Button>
-    </div>
-  )
-}
-
-function GuestBookNotice() {
-  const [show, setShow] = useState(false)
-
-  return (
-    <div className="space-y-2">
-      <Button type="button" size="md" className="w-full" onClick={() => setShow((prev) => !prev)}>
-        Book Now
-      </Button>
-      {show && <p className="text-center text-xs text-muted">Sign in is required to book this room.</p>}
-    </div>
-  )
-}
-
-function ClerkBookButton({ roomId, checkIn, checkOut, disabled }) {
-  const { isLoaded, isSignedIn, getToken } = useAuth()
+function ClerkBookButton({ paymentUrl, disabled, onNoDates }) {
+  const { isLoaded, isSignedIn } = useAuth()
   const { openSignIn } = useClerk()
-  const [status, setStatus] = useState('idle')
-  const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
-  const handleBook = async () => {
+  const handleBook = () => {
     if (!isLoaded) return
 
-    if (!isSignedIn) {
-      openSignIn({ redirectUrl: window.location.href })
+    if (disabled || !paymentUrl) {
+      if (onNoDates) onNoDates()
       return
     }
 
-    if (disabled || !checkIn || !checkOut) return
-
-    setStatus('submitting')
-    setError(null)
-
-    try {
-      const token = await getToken()
-      await createBooking({ room: roomId, checkInDate: checkIn, checkOutDate: checkOut }, token)
-      setStatus('success')
-    } catch (err) {
-      setError(getApiErrorMessage(err, 'Could not create the booking'))
-      setStatus('error')
+    if (!isSignedIn) {
+      openSignIn({ redirectUrl: paymentUrl })
+      return
     }
+
+    navigate(paymentUrl)
   }
 
-  if (status === 'success') return <BookingSuccess />
+  return (
+    <Button type="button" size="md" className="w-full" disabled={!isLoaded} onClick={handleBook}>
+      Book Now
+    </Button>
+  )
+}
+
+function GuestBookButton({ paymentUrl, disabled, onNoDates }) {
+  const navigate = useNavigate()
+
+  const handleBook = () => {
+    if (disabled || !paymentUrl) {
+      if (onNoDates) onNoDates()
+      return
+    }
+    navigate(paymentUrl)
+  }
 
   return (
-    <div className="space-y-2">
-      {error && <p className="text-sm text-error">{error}</p>}
-      <Button
-        type="button"
-        size="md"
-        className="w-full"
-        disabled={status === 'submitting' || !isLoaded || disabled}
-        onClick={handleBook}
-      >
-        {status === 'submitting' ? 'Booking...' : 'Book Now'}
-      </Button>
-    </div>
+    <Button type="button" size="md" className="w-full" onClick={handleBook}>
+      Book Now
+    </Button>
   )
 }
 
 function BookButton(props) {
   if (CLERK_PUBLISHABLE_KEY) return <ClerkBookButton {...props} />
-  return <GuestBookNotice />
+  return <GuestBookButton {...props} />
 }
 
-export default function RoomCard({ room }) {
+export default function RoomCard({ room, hotelId }) {
   const [checkIn, setCheckIn] = useState('')
   const [checkOut, setCheckOut] = useState('')
+  const [showDates, setShowDates] = useState(false)
+  const [dateHint, setDateHint] = useState(false)
 
   const today = todayISO()
   const checkInDate = checkIn ? new Date(checkIn) : null
@@ -118,7 +92,11 @@ export default function RoomCard({ room }) {
   const total = nights * room.pricePerNight
 
   const unavailable = room.isAvailable === false
-  const image = imageFor(room._id)
+  const image = roomPrimaryImage(room) || imageFor(room._id)
+  const paymentUrl =
+    hotelId && validDates
+      ? `/payment?hotel=${hotelId}&checkIn=${checkIn}&checkOut=${checkOut}&guests=1&room=${room._id}`
+      : ''
 
   return (
     <div className="flex flex-col gap-4 rounded-card border border-line bg-background p-4 shadow-card sm:flex-row sm:p-5">
@@ -156,30 +134,63 @@ export default function RoomCard({ room }) {
         {unavailable ? (
           <p className="text-sm font-medium text-error">This room is currently unavailable.</p>
         ) : (
-          <div className="mt-1 flex flex-col gap-3 sm:flex-row sm:items-end">
-            <label className="flex-1">
-              <span className="mb-1 block text-xs font-medium text-muted">Check-in</span>
-              <input
-                type="date"
-                min={today}
-                value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
-                className={dateInputClass}
-              />
-            </label>
-            <label className="flex-1">
-              <span className="mb-1 block text-xs font-medium text-muted">Check-out</span>
-              <input
-                type="date"
-                min={checkIn || today}
-                value={checkOut}
-                onChange={(e) => setCheckOut(e.target.value)}
-                className={dateInputClass}
-              />
-            </label>
-            <div className="w-full sm:w-auto">
-              <BookButton roomId={room._id} checkIn={checkIn} checkOut={checkOut} disabled={!validDates} />
+          <div className="mt-1 flex flex-col gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                className="w-full sm:flex-1"
+                onClick={() => {
+                  setShowDates((prev) => !prev)
+                  setDateHint(false)
+                }}
+              >
+                <CalendarIcon className="h-4 w-4" />
+                {showDates ? 'Hide availability' : 'Check availability'}
+              </Button>
+              <div className="w-full sm:flex-1">
+                <BookButton
+                  paymentUrl={paymentUrl}
+                  disabled={!validDates}
+                  onNoDates={() => {
+                    setShowDates(true)
+                    setDateHint(true)
+                  }}
+                />
+              </div>
             </div>
+
+            {dateHint && (
+              <p className="text-sm text-muted">
+                Please choose check-in and check-out dates to continue booking.
+              </p>
+            )}
+
+            {showDates && (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <label className="flex-1">
+                  <span className="mb-1 block text-xs font-medium text-muted">Check-in</span>
+                  <input
+                    type="date"
+                    min={today}
+                    value={checkIn}
+                    onChange={(e) => setCheckIn(e.target.value)}
+                    className={dateInputClass}
+                  />
+                </label>
+                <label className="flex-1">
+                  <span className="mb-1 block text-xs font-medium text-muted">Check-out</span>
+                  <input
+                    type="date"
+                    min={checkIn || today}
+                    value={checkOut}
+                    onChange={(e) => setCheckOut(e.target.value)}
+                    className={dateInputClass}
+                  />
+                </label>
+              </div>
+            )}
           </div>
         )}
 

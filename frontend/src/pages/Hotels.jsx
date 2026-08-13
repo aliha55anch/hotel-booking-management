@@ -6,6 +6,7 @@ import HotelCard from '../components/hotel/HotelCard.jsx'
 import { HotelIcon, SearchIcon, ChevronLeftIcon, ChevronRightIcon } from '../components/ui/icons.jsx'
 import { getHotels } from '../services/hotelService.js'
 import { hotelRoomImages } from '../lib/siteImages.js'
+import { hotelPrimaryImage } from '../lib/images.js'
 
 const LIMIT = 9
 
@@ -42,6 +43,9 @@ export default function Hotels() {
       rating: searchParams.get('rating') || '',
       checkIn: searchParams.get('checkIn') || '',
       checkOut: searchParams.get('checkOut') || '',
+      guests: searchParams.get('guests') || '',
+      minPrice: searchParams.get('minPrice') || '',
+      maxPrice: searchParams.get('maxPrice') || '',
     },
   })
 
@@ -49,6 +53,9 @@ export default function Hotels() {
   const rating = searchParams.get('rating') || ''
   const checkIn = searchParams.get('checkIn') || ''
   const checkOut = searchParams.get('checkOut') || ''
+  const guests = searchParams.get('guests') || ''
+  const minPrice = searchParams.get('minPrice') || ''
+  const maxPrice = searchParams.get('maxPrice') || ''
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
 
   const [hotels, setHotels] = useState([])
@@ -62,7 +69,17 @@ export default function Hotels() {
     setLoading(true)
     setError(null)
 
-    getHotels({ city, rating, checkIn: checkIn || undefined, checkOut: checkOut || undefined, page, limit: LIMIT })
+    getHotels({
+      city,
+      rating,
+      checkIn: checkIn || undefined,
+      checkOut: checkOut || undefined,
+      guests: guests || undefined,
+      minPrice: minPrice || undefined,
+      maxPrice: maxPrice || undefined,
+      page,
+      limit: LIMIT,
+    })
       .then((data) => {
         if (!cancelled) {
           setHotels(data.hotels || [])
@@ -80,7 +97,7 @@ export default function Hotels() {
     return () => {
       cancelled = true
     }
-  }, [city, rating, checkIn, checkOut, page])
+  }, [city, rating, checkIn, checkOut, guests, minPrice, maxPrice, page])
 
   useEffect(() => {
     reset({
@@ -88,10 +105,21 @@ export default function Hotels() {
       rating: searchParams.get('rating') || '',
       checkIn: searchParams.get('checkIn') || '',
       checkOut: searchParams.get('checkOut') || '',
+      guests: searchParams.get('guests') || '',
+      minPrice: searchParams.get('minPrice') || '',
+      maxPrice: searchParams.get('maxPrice') || '',
     })
   }, [searchParams, reset])
 
-  const onSubmit = ({ city: nextCity, rating: nextRating, checkIn: nextCheckIn, checkOut: nextCheckOut }) => {
+  const onSubmit = ({
+    city: nextCity,
+    rating: nextRating,
+    checkIn: nextCheckIn,
+    checkOut: nextCheckOut,
+    guests: nextGuests,
+    minPrice: nextMinPrice,
+    maxPrice: nextMaxPrice,
+  }) => {
     const params = new URLSearchParams(searchParams)
     if (nextCity?.trim()) params.set('city', nextCity.trim())
     else params.delete('city')
@@ -101,6 +129,12 @@ export default function Hotels() {
     else params.delete('checkIn')
     if (nextCheckOut) params.set('checkOut', nextCheckOut)
     else params.delete('checkOut')
+    if (nextGuests) params.set('guests', String(nextGuests))
+    else params.delete('guests')
+    if (nextMinPrice) params.set('minPrice', String(nextMinPrice))
+    else params.delete('minPrice')
+    if (nextMaxPrice) params.set('maxPrice', String(nextMaxPrice))
+    else params.delete('maxPrice')
     params.delete('page')
     setSearchParams(params, { replace: true })
   }
@@ -115,7 +149,7 @@ export default function Hotels() {
   }
 
   const clearFilters = () => {
-    reset({ city: '', rating: '', checkIn: '', checkOut: '' })
+    reset({ city: '', rating: '', checkIn: '', checkOut: '', guests: '', minPrice: '', maxPrice: '' })
     setSearchParams({})
   }
 
@@ -154,6 +188,18 @@ export default function Hotels() {
           <span className="mb-1 block text-xs font-medium text-muted">Check-out</span>
           <input type="date" className={`${inputClass} w-full`} {...register('checkOut')} />
         </label>
+        <label className="sm:w-28">
+          <span className="mb-1 block text-xs font-medium text-muted">Guests</span>
+          <input type="number" min={1} placeholder="Any" className={`${inputClass} w-full`} {...register('guests')} />
+        </label>
+        <div className="flex flex-col sm:w-56">
+          <span className="mb-1 block text-xs font-medium text-muted">Price / night</span>
+          <div className="flex items-center gap-2">
+            <input type="number" min={0} placeholder="Min" className={`${inputClass} w-full`} {...register('minPrice')} />
+            <span className="text-xs text-muted">–</span>
+            <input type="number" min={0} placeholder="Max" className={`${inputClass} w-full`} {...register('maxPrice')} />
+          </div>
+        </div>
         <Button type="submit" size="md">
           <SearchIcon className="h-4 w-4" />
           Search
@@ -182,7 +228,7 @@ export default function Hotels() {
               <HotelCard
                 key={hotel._id}
                 hotel={hotel}
-                image={hotelRoomImages[index % hotelRoomImages.length]}
+                image={hotelPrimaryImage(hotel, hotelRoomImages[index % hotelRoomImages.length])}
               />
             ))}
           </div>

@@ -16,7 +16,7 @@ const canManageHotel = (hotel, user) => {
 }
 
 const getAllHotels = asyncHandler(async (req, res) => {
-  const { city, rating, checkIn, checkOut, page = 1, limit = 10 } = req.query
+  const { city, rating, checkIn, checkOut, guests, minPrice, maxPrice, page = 1, limit = 10 } = req.query
 
   const filter = {}
 
@@ -27,6 +27,11 @@ const getAllHotels = asyncHandler(async (req, res) => {
   if (rating) {
     filter.rating = { $gte: Number(rating) }
   }
+
+  const guestsNum = Number(guests) || 0
+
+  const minPriceNum = minPrice !== undefined && minPrice !== '' ? Number(minPrice) : null
+  const maxPriceNum = maxPrice !== undefined && maxPrice !== '' ? Number(maxPrice) : null
 
   let checkInDate = null
   let checkOutDate = null
@@ -55,10 +60,18 @@ const getAllHotels = asyncHandler(async (req, res) => {
   if (hotels.length > 0) {
     const hotelIds = hotels.map((hotel) => hotel._id)
 
-    let rooms = await Room.find({
+    const roomFilter = {
       hotel: { $in: hotelIds },
       isAvailable: { $ne: false },
-    })
+    }
+    if (guestsNum > 0) roomFilter.capacity = { $gte: guestsNum }
+    if (minPriceNum != null || maxPriceNum != null) {
+      roomFilter.pricePerNight = {}
+      if (minPriceNum != null) roomFilter.pricePerNight.$gte = minPriceNum
+      if (maxPriceNum != null) roomFilter.pricePerNight.$lte = maxPriceNum
+    }
+
+    let rooms = await Room.find(roomFilter)
       .select('_id hotel pricePerNight')
       .lean()
 
@@ -83,6 +96,9 @@ const getAllHotels = asyncHandler(async (req, res) => {
     if (checkInDate && checkOutDate) {
       const availableHotelIds = new Set(Object.keys(minPrices))
       hotels = hotels.filter((hotel) => availableHotelIds.has(hotel._id.toString()))
+    } else if (guestsNum > 0 || minPriceNum != null || maxPriceNum != null) {
+      const matchingHotelIds = new Set(Object.keys(minPrices))
+      hotels = hotels.filter((hotel) => matchingHotelIds.has(hotel._id.toString()))
     }
 
     for (const [key, value] of Object.entries(minPrices)) {
@@ -105,6 +121,22 @@ const getAllHotels = asyncHandler(async (req, res) => {
     page: pageNum,
     totalPages: Math.ceil(total / limitNum),
     hotels: hotelsWithPrice,
+  })
+})
+
+const getStats = asyncHandler(async (req, res) => {
+  const [hotels, cities, ratingAgg, bookings] = await Promise.all([
+    Hotel.countDocuments(),
+    Hotel.distinct('city'),
+    Hotel.aggregate([{ $group: { _id: null, avg: { $avg: '$rating' } } }]),
+    Booking.countDocuments({ status: 'confirmed', paymentStatus: 'paid' }),
+  ])
+
+  const rating = ratingAgg[0]?.avg ? Number(ratingAgg[0].avg.toFixed(1)) : 0
+
+  res.status(200).json({
+    success: true,
+    stats: { hotels, cities: cities.length, rating, bookings },
   })
 })
 
@@ -151,6 +183,11 @@ const createHotel = asyncHandler(async (req, res) => {
     amenities,
     owner: user._id,
   })
+
+  if (user.role === 'user') {
+    user.role = 'hotelOwner'
+    await user.save()
+  }
 
   res.status(201).json({ success: true, hotel })
 })
@@ -200,4 +237,4 @@ const deleteHotel = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, message: 'Hotel deleted' })
 })
 
-module.exports = { getAllHotels, getHotelById, getMyHotels, createHotel, updateHotel, deleteHotel }
+module.exports = { getAllHotels, getStats, getHotelById, getMyHotels, createHotel, updateHotel, deleteHotel }

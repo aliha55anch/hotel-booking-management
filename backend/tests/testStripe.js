@@ -50,7 +50,11 @@ const run = async () => {
   const hotelId = res.body.hotel._id.toString()
 
   res = mockRes()
-  await createRoom({ body: { hotel: hotelId, roomType: 'Deluxe', pricePerNight: 150 } }, res, res.next)
+  await createRoom(
+    { auth: { userId: 'test_clerk_admin' }, body: { hotel: hotelId, roomType: 'Deluxe', pricePerNight: 150 } },
+    res,
+    res.next
+  )
   const roomId = res.body.room._id.toString()
 
   const makeBooking = async (daysFrom = 1) => {

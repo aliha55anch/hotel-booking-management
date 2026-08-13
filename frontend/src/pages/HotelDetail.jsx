@@ -1,21 +1,145 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth, useClerk } from '@clerk/clerk-react'
 import Button from '../components/ui/Button.jsx'
+import Modal from '../components/ui/Modal.jsx'
 import RoomCard from '../components/hotel/RoomCard.jsx'
 import AmenitiesList from '../components/hotel/AmenitiesList.jsx'
-import { MapPinIcon, StarIcon, HotelIcon, ChevronLeftIcon, CalendarIcon } from '../components/ui/icons.jsx'
+import { MapPinIcon, StarIcon, HotelIcon, ChevronLeftIcon, CalendarIcon, TrashIcon } from '../components/ui/icons.jsx'
 import { getHotelById } from '../services/hotelService.js'
 import { getRoomsByHotel } from '../services/roomService.js'
-import { getReviewsByHotel, createReview } from '../services/reviewService.js'
+import { getReviewsByHotel, createReview, deleteReview } from '../services/reviewService.js'
+import { getMyProfile } from '../services/userService.js'
+import { checkAvailability } from '../services/bookingService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
 import { formatPrice } from '../lib/format.js'
 import { CLERK_PUBLISHABLE_KEY } from '../lib/config.js'
 import { galleryFor } from '../lib/siteImages.js'
+import { hotelGalleryImages } from '../lib/images.js'
 
 const formatDate = (iso) => {
   if (!iso) return ''
   return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+const todayISO = () => {
+  const now = new Date()
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0]
+}
+
+const modalInputClass =
+  'w-full rounded-btn border border-line bg-background px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
+
+function BookingModal({ hotel, open, onClose }) {
+  const navigate = useNavigate()
+  const { isLoaded, isSignedIn } = useAuth()
+  const { openSignIn } = useClerk()
+  const [checkIn, setCheckIn] = useState('')
+  const [checkOut, setCheckOut] = useState('')
+  const [guests, setGuests] = useState(1)
+  const [checking, setChecking] = useState(false)
+  const [error, setError] = useState(null)
+
+  const today = todayISO()
+  const validDates = Boolean(checkIn && checkOut && checkIn >= today && checkOut > checkIn)
+
+  const onSubmit = async (e) => {
+    e.preventDefault()
+    if (!validDates || checking) return
+
+    setChecking(true)
+    setError(null)
+
+    try {
+      const result = await checkAvailability({
+        hotel: hotel._id,
+        checkInDate: checkIn,
+        checkOutDate: checkOut,
+        guests,
+      })
+
+      if (!result.available) {
+        setError('No rooms are available for these dates. Please try different dates.')
+        return
+      }
+
+      const paymentUrl = `/payment?hotel=${hotel._id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`
+
+      if (CLERK_PUBLISHABLE_KEY && isLoaded && !isSignedIn) {
+        onClose()
+        openSignIn({ redirectUrl: paymentUrl })
+        return
+      }
+
+      onClose()
+      navigate(paymentUrl)
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Could not check availability'))
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  return (
+    <Modal open={open} title={`Book ${hotel.name}`} onClose={onClose} maxWidth="max-w-lg">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="modalCheckIn" className="mb-1 block text-xs font-medium text-muted">
+            Check-in
+          </label>
+          <input
+            id="modalCheckIn"
+            type="date"
+            min={today}
+            value={checkIn}
+            onChange={(e) => setCheckIn(e.target.value)}
+            className={modalInputClass}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="modalCheckOut" className="mb-1 block text-xs font-medium text-muted">
+            Check-out
+          </label>
+          <input
+            id="modalCheckOut"
+            type="date"
+            min={checkIn || today}
+            value={checkOut}
+            onChange={(e) => setCheckOut(e.target.value)}
+            className={modalInputClass}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="modalGuests" className="mb-1 block text-xs font-medium text-muted">
+            Guests
+          </label>
+          <input
+            id="modalGuests"
+            type="number"
+            min={1}
+            max={4}
+            value={guests}
+            onChange={(e) => setGuests(Number(e.target.value))}
+            className={modalInputClass}
+            required
+          />
+        </div>
+
+        {error && <p className="text-sm text-error">{error}</p>}
+
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={checking}>
+            {checking ? 'Checking...' : 'Check availability'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  )
 }
 
 function DetailSkeleton() {
@@ -127,7 +251,7 @@ function ReviewForm({ hotelId, onCreated }) {
   )
 }
 
-function ReviewList({ reviews }) {
+function ReviewList({ reviews, canDelete, onDelete, deletingId }) {
   if (!reviews.length) {
     return <p className="mt-4 text-sm text-muted">No reviews yet. Be the first to share your stay.</p>
   }
@@ -148,6 +272,21 @@ function ReviewList({ reviews }) {
               <StarIcon className="h-3.5 w-3.5" />
               {review.rating}
             </span>
+            {canDelete(review) && (
+              <button
+                type="button"
+                onClick={() => onDelete(review._id)}
+                disabled={deletingId === review._id}
+                aria-label="Delete review"
+                className="flex h-8 w-8 items-center justify-center rounded-btn text-muted transition-colors hover:bg-error/10 hover:text-error disabled:opacity-50"
+              >
+                {deletingId === review._id ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-primary" />
+                ) : (
+                  <TrashIcon className="h-4 w-4" />
+                )}
+              </button>
+            )}
           </div>
           <p className="mt-3 text-sm leading-relaxed text-muted">{review.comment}</p>
         </li>
@@ -167,6 +306,61 @@ export default function HotelDetail() {
   const [error, setError] = useState(null)
   const [notFound, setNotFound] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
+  const [showBooking, setShowBooking] = useState(false)
+  const [me, setMe] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
+  const [deleteError, setDeleteError] = useState(null)
+
+  const { isLoaded, isSignedIn, userId, getToken } = useAuth()
+  const myClerkId = isLoaded && isSignedIn ? userId : null
+
+  useEffect(() => {
+    let cancelled = false
+    if (!isLoaded || !isSignedIn) {
+      setMe(null)
+      return () => {
+        cancelled = true
+      }
+    }
+
+    getToken()
+      .then((token) => {
+        if (cancelled) return
+        return getMyProfile(token)
+      })
+      .then((data) => {
+        if (!cancelled) setMe(data.user)
+      })
+      .catch(() => {
+        if (!cancelled) setMe(null)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isLoaded, isSignedIn, getToken])
+
+  const canDeleteReview = (review) => {
+    if (!myClerkId) return false
+    if (review.user?.clerkId === myClerkId) return true
+    if (!me) return false
+    if (me.role === 'admin') return true
+    return Boolean(hotel?.owner && me._id && hotel.owner === me._id)
+  }
+
+  const handleDeleteReview = async (reviewId) => {
+    setDeletingId(reviewId)
+    setDeleteError(null)
+    try {
+      const token = await getToken()
+      await deleteReview(reviewId, token)
+      setReviews((prev) => prev.filter((review) => review._id !== reviewId))
+    } catch (err) {
+      setDeleteError(getApiErrorMessage(err, 'Could not delete review'))
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -234,7 +428,7 @@ export default function HotelDetail() {
   }
 
   const minPrice = rooms.length ? Math.min(...rooms.map((room) => room.pricePerNight)) : null
-  const gallery = galleryFor(hotel)
+  const gallery = hotelGalleryImages(hotel, galleryFor(hotel))
   const activeImageSrc = activeImage || gallery[0]
 
   return (
@@ -308,8 +502,9 @@ export default function HotelDetail() {
           )}
 
           <div className="mt-5">
-            <Button to="/hotels" variant="secondary" size="md">
-              Compare hotels
+            <Button variant="primary" size="md" onClick={() => setShowBooking(true)}>
+              <CalendarIcon className="h-4 w-4" />
+              Book Now
             </Button>
           </div>
         </div>
@@ -332,7 +527,7 @@ export default function HotelDetail() {
         {rooms.length ? (
           <div className="mt-4 space-y-4">
             {rooms.map((room) => (
-              <RoomCard key={room._id} room={room} />
+              <RoomCard key={room._id} room={room} hotelId={hotel._id} />
             ))}
           </div>
         ) : (
@@ -350,8 +545,16 @@ export default function HotelDetail() {
             onCreated={(review) => setReviews((prev) => [review, ...prev])}
           />
         )}
-        <ReviewList reviews={reviews} />
+        {deleteError && <p className="mt-3 text-sm text-error">{deleteError}</p>}
+        <ReviewList
+          reviews={reviews}
+          canDelete={canDeleteReview}
+          onDelete={handleDeleteReview}
+          deletingId={deletingId}
+        />
       </section>
+
+      <BookingModal hotel={hotel} open={showBooking} onClose={() => setShowBooking(false)} />
     </section>
   )
 }

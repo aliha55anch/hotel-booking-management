@@ -85,6 +85,57 @@ const getMyBookings = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, count: bookings.length, bookings })
 })
 
+const checkAvailability = asyncHandler(async (req, res) => {
+  const { hotel, checkInDate, checkOutDate, guests } = req.query
+
+  if (!hotel) {
+    res.status(400)
+    throw new Error('hotel is required')
+  }
+
+  const checkIn = new Date(checkInDate)
+  const checkOut = new Date(checkOutDate)
+
+  if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
+    res.status(400)
+    throw new Error('Invalid check-in or check-out date')
+  }
+
+  if (checkOut <= checkIn) {
+    res.status(400)
+    throw new Error('Check-out date must be after check-in date')
+  }
+
+  const guestsNum = Number(guests) || 0
+
+  const roomFilter = { hotel, isAvailable: true }
+  if (guestsNum > 0) roomFilter.capacity = { $gte: guestsNum }
+
+  const rooms = await Room.find(roomFilter).sort({ pricePerNight: 1 })
+  const roomIds = rooms.map((room) => room._id)
+
+  const overlapping = roomIds.length
+    ? await Booking.find({
+        room: { $in: roomIds },
+        status: { $ne: 'cancelled' },
+        checkInDate: { $lt: checkOut },
+        checkOutDate: { $gt: checkIn },
+      }).select('room')
+    : []
+
+  const bookedRoomIds = new Set(overlapping.map((booking) => booking.room.toString()))
+  const availableRooms = rooms.filter((room) => !bookedRoomIds.has(room._id.toString()))
+
+  res.status(200).json({
+    success: true,
+    available: availableRooms.length > 0,
+    checkInDate: checkIn.toISOString(),
+    checkOutDate: checkOut.toISOString(),
+    guests: guestsNum,
+    availableRooms,
+  })
+})
+
 const cancelBooking = asyncHandler(async (req, res) => {
   const user = await getLocalUser(req.auth.userId)
 
@@ -114,6 +165,47 @@ const cancelBooking = asyncHandler(async (req, res) => {
   await booking.save()
 
   res.status(200).json({ success: true, booking })
+})
+
+const updateBookingStatus = asyncHandler(async (req, res) => {
+  const booking = await Booking.findById(req.params.id)
+
+  if (!booking) {
+    res.status(404)
+    throw new Error('Booking not found')
+  }
+
+  const { status, paymentStatus } = req.body
+
+  const validStatuses = ['pending', 'confirmed', 'cancelled']
+  const validPaymentStatuses = ['unpaid', 'paid', 'refunded']
+
+  if (status !== undefined && !validStatuses.includes(status)) {
+    res.status(400)
+    throw new Error(`Invalid status. Allowed: ${validStatuses.join(', ')}`)
+  }
+
+  if (paymentStatus !== undefined && !validPaymentStatuses.includes(paymentStatus)) {
+    res.status(400)
+    throw new Error(`Invalid payment status. Allowed: ${validPaymentStatuses.join(', ')}`)
+  }
+
+  if (status === undefined && paymentStatus === undefined) {
+    res.status(400)
+    throw new Error('Nothing to update')
+  }
+
+  const updates = {}
+  if (status !== undefined) updates.status = status
+  if (paymentStatus !== undefined) updates.paymentStatus = paymentStatus
+
+  const updated = await Booking.findByIdAndUpdate(
+    req.params.id,
+    { $set: updates },
+    { returnDocument: 'after', runValidators: true }
+  )
+
+  res.status(200).json({ success: true, booking: updated })
 })
 
 const getAllBookings = asyncHandler(async (req, res) => {
@@ -148,4 +240,33 @@ const getOwnerBookings = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, count: bookings.length, bookings })
 })
 
-module.exports = { createBooking, getMyBookings, cancelBooking, getAllBookings, getOwnerBookings }
+const cleanupExpiredBookings = async () => {
+  const now = new Date()
+  const cutoff = new Date(now.getTime() - 72 * 60 * 60 * 1000)
+
+  const result = await Booking.updateMany(
+    {
+      status: { $ne: 'cancelled' },
+      paymentStatus: 'unpaid',
+      $or: [{ checkInDate: { $lt: now } }, { createdAt: { $lt: cutoff } }],
+    },
+    { $set: { status: 'cancelled' } }
+  )
+
+  if (result.modifiedCount > 0) {
+    console.log(`[cleanup] Cancelled ${result.modifiedCount} abandoned unpaid booking(s)`)
+  }
+
+  return result.modifiedCount
+}
+
+module.exports = {
+  createBooking,
+  getMyBookings,
+  cancelBooking,
+  updateBookingStatus,
+  getAllBookings,
+  getOwnerBookings,
+  checkAvailability,
+  cleanupExpiredBookings,
+}

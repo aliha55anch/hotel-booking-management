@@ -1,5 +1,9 @@
 const asyncHandler = require('express-async-handler')
 const User = require('../models/User')
+const Hotel = require('../models/Hotel')
+const Booking = require('../models/Booking')
+
+const VALID_ROLES = ['user', 'hotelOwner', 'admin']
 
 const getMyProfile = asyncHandler(async (req, res) => {
   const user = await User.findOne({ clerkId: req.auth.userId })
@@ -55,4 +59,58 @@ const getUserById = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, user })
 })
 
-module.exports = { getMyProfile, updateMyProfile, getAllUsers, getUserById }
+const updateUser = asyncHandler(async (req, res) => {
+  const { role } = req.body
+
+  if (role !== undefined && !VALID_ROLES.includes(role)) {
+    res.status(400)
+    throw new Error(`Invalid role. Allowed roles: ${VALID_ROLES.join(', ')}`)
+  }
+
+  if (role === undefined) {
+    res.status(400)
+    throw new Error('No updatable fields provided')
+  }
+
+  const user = await User.findById(req.params.id)
+
+  if (!user) {
+    res.status(404)
+    throw new Error('User not found')
+  }
+
+  if (user.clerkId === req.auth.userId) {
+    res.status(403)
+    throw new Error('Admins cannot change their own role')
+  }
+
+  const updated = await User.findByIdAndUpdate(
+    req.params.id,
+    { $set: { role } },
+    { returnDocument: 'after', runValidators: true }
+  )
+
+  res.status(200).json({ success: true, user: updated })
+})
+
+const deleteUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id)
+
+  if (!user) {
+    res.status(404)
+    throw new Error('User not found')
+  }
+
+  if (user.clerkId === req.auth.userId) {
+    res.status(403)
+    throw new Error('Admins cannot delete their own account')
+  }
+
+  await User.findByIdAndDelete(req.params.id)
+  await Hotel.updateMany({ owner: user._id }, { $set: { owner: null } })
+  await Booking.deleteMany({ user: user._id })
+
+  res.status(200).json({ success: true, message: 'User deleted' })
+})
+
+module.exports = { getMyProfile, updateMyProfile, getAllUsers, getUserById, updateUser, deleteUser }

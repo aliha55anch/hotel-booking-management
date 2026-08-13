@@ -7,6 +7,11 @@ export const createBooking = async (payload, token) => {
   return data
 }
 
+export const checkAvailability = async (params) => {
+  const { data } = await api.get('/bookings/availability', { params })
+  return data
+}
+
 export const getMyBookings = async (token) => {
   const { data } = await api.get('/bookings/my', {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -31,6 +36,13 @@ export const getAllBookings = async (token, params = {}) => {
 
 export const getOwnerBookings = async (token) => {
   const { data } = await api.get('/bookings/owner', {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  return data
+}
+
+export const updateBookingStatus = async (id, payload, token) => {
+  const { data } = await api.put(`/bookings/${id}`, payload, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   return data

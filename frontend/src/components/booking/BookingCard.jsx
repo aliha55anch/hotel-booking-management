@@ -3,6 +3,7 @@ import Button from '../ui/Button.jsx'
 import { BedIcon, CalendarIcon } from '../ui/icons.jsx'
 import { formatPrice } from '../../lib/format.js'
 import { imageFor } from '../../lib/siteImages.js'
+import { roomPrimaryImage, hotelPrimaryImage } from '../../lib/images.js'
 
 const formatDate = (iso) => {
   if (!iso) return ''
@@ -27,7 +28,7 @@ export default function BookingCard({ booking, onCancel, cancelling }) {
   const status = booking.status || 'pending'
   const paymentStatus = booking.paymentStatus || 'unpaid'
   const cancelled = status === 'cancelled'
-  const image = imageFor(booking._id)
+  const image = roomPrimaryImage(booking.room) || hotelPrimaryImage(booking.hotel) || imageFor(booking._id)
 
   return (
     <div className="flex flex-col gap-4 rounded-card border border-line bg-background p-4 shadow-card sm:flex-row sm:p-5">

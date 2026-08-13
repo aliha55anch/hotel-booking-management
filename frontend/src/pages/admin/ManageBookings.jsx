@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../../components/admin/PageHeader.jsx'
 import Button from '../../components/ui/Button.jsx'
-import { StatusBadge, PaymentBadge } from '../../components/admin/Badges.jsx'
+import { PaymentBadge } from '../../components/admin/Badges.jsx'
 import { CalendarIcon } from '../../components/ui/icons.jsx'
-import { getAllBookings } from '../../services/bookingService.js'
+import { getAllBookings, updateBookingStatus } from '../../services/bookingService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { formatPrice } from '../../lib/format.js'
 import { useAdmin } from '../../components/admin/adminContext.js'
@@ -12,6 +12,12 @@ const formatDate = (iso) => {
   if (!iso) return ''
   return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
+
+const statusOptions = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'confirmed', label: 'Confirmed' },
+  { value: 'cancelled', label: 'Cancelled' },
+]
 
 const filters = [
   { value: 'all', label: 'All' },
@@ -25,6 +31,68 @@ const filterClass = (active) =>
     active ? 'bg-primary text-white' : 'text-muted hover:bg-surface hover:text-ink'
   }`
 
+const selectClass =
+  'h-9 rounded-btn border border-line bg-background px-2 text-xs font-medium text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
+
+function BookingRow({ booking, token, onChange }) {
+  const [updating, setUpdating] = useState(false)
+  const [rowError, setRowError] = useState(null)
+
+  const handleStatusChange = async (e) => {
+    const nextStatus = e.target.value
+    if (nextStatus === booking.status) return
+
+    setUpdating(true)
+    setRowError(null)
+
+    try {
+      const { booking: updated } = await updateBookingStatus(booking._id, { status: nextStatus }, token)
+      onChange(updated)
+    } catch (err) {
+      setRowError(getApiErrorMessage(err, 'Could not update the booking'))
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  return (
+    <tr className="hover:bg-surface/60">
+      <td className="px-4 py-3">
+        <p className="font-medium text-ink">{booking.user?.name || 'Guest'}</p>
+        {booking.user?.email && <p className="text-xs text-muted">{booking.user.email}</p>}
+      </td>
+      <td className="px-4 py-3 text-muted">{booking.hotel?.name || '—'}</td>
+      <td className="px-4 py-3 text-muted">{booking.room?.roomType || '—'}</td>
+      <td className="px-4 py-3 text-muted">
+        {formatDate(booking.checkInDate)} → {formatDate(booking.checkOutDate)}
+      </td>
+      <td className="px-4 py-3 font-semibold text-ink">{formatPrice(booking.totalPrice)}</td>
+      <td className="px-4 py-3">
+        <label className="flex items-center gap-2">
+          <span className="sr-only">Booking status</span>
+          <select
+            value={booking.status}
+            onChange={handleStatusChange}
+            disabled={updating}
+            className={selectClass}
+          >
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {updating && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />}
+        </label>
+        {rowError && <p className="mt-1 text-xs text-error">{rowError}</p>}
+      </td>
+      <td className="px-4 py-3">
+        <PaymentBadge status={booking.paymentStatus} />
+      </td>
+    </tr>
+  )
+}
+
 export default function ManageBookings() {
   const { token } = useAdmin()
   const [bookings, setBookings] = useState([])
@@ -32,6 +100,10 @@ export default function ManageBookings() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [reloadKey, setReloadKey] = useState(0)
+
+  const replaceBooking = (updated) => {
+    setBookings((prev) => prev.map((booking) => (booking._id === updated._id ? updated : booking)))
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -107,24 +179,7 @@ export default function ManageBookings() {
             </thead>
             <tbody className="divide-y divide-line">
               {visible.map((booking) => (
-                <tr key={booking._id} className="hover:bg-surface/60">
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-ink">{booking.user?.name || 'Guest'}</p>
-                    {booking.user?.email && <p className="text-xs text-muted">{booking.user.email}</p>}
-                  </td>
-                  <td className="px-4 py-3 text-muted">{booking.hotel?.name || '—'}</td>
-                  <td className="px-4 py-3 text-muted">{booking.room?.roomType || '—'}</td>
-                  <td className="px-4 py-3 text-muted">
-                    {formatDate(booking.checkInDate)} → {formatDate(booking.checkOutDate)}
-                  </td>
-                  <td className="px-4 py-3 font-semibold text-ink">{formatPrice(booking.totalPrice)}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={booking.status} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <PaymentBadge status={booking.paymentStatus} />
-                  </td>
-                </tr>
+                <BookingRow key={booking._id} booking={booking} token={token} onChange={replaceBooking} />
               ))}
             </tbody>
           </table>

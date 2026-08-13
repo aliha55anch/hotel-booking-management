@@ -11,3 +11,10 @@ export const createReview = async (payload, token) => {
   })
   return data
 }
+
+export const deleteReview = async (id, token) => {
+  const { data } = await api.delete(`/reviews/${id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  return data
+}

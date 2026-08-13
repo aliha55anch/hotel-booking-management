@@ -39,7 +39,7 @@ const createReview = asyncHandler(async (req, res) => {
 })
 
 const getReviewsByHotel = asyncHandler(async (req, res) => {
-  const reviews = await Review.find({ hotel: req.params.hotelId }).populate('user', 'name image')
+  const reviews = await Review.find({ hotel: req.params.hotelId }).populate('user', 'name image clerkId')
 
   res.status(200).json({ success: true, count: reviews.length, reviews })
 })
@@ -59,7 +59,13 @@ const deleteReview = asyncHandler(async (req, res) => {
     throw new Error('Review not found')
   }
 
-  if (review.user.toString() !== user._id.toString() && user.role !== 'admin') {
+  const hotel = await Hotel.findById(review.hotel).select('owner')
+
+  const isAuthor = review.user.toString() === user._id.toString()
+  const isAdmin = user.role === 'admin'
+  const isHotelOwner = Boolean(hotel && hotel.owner && hotel.owner.toString() === user._id.toString())
+
+  if (!isAuthor && !isAdmin && !isHotelOwner) {
     res.status(403)
     throw new Error('Not authorized to delete this review')
   }

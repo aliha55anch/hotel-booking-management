@@ -77,24 +77,29 @@ export default function Overview() {
     setLoading(true)
     setError(null)
 
-    Promise.all([getMyHotels(token), getOwnerBookings(token)])
+    Promise.allSettled([getMyHotels(token), getOwnerBookings(token)])
       .then(([hotelRes, bookingRes]) => {
         if (cancelled) return
 
-        const bookings = bookingRes.bookings || []
+        const hotelData = hotelRes.status === 'fulfilled' ? hotelRes.value : null
+        const bookingData = bookingRes.status === 'fulfilled' ? bookingRes.value : null
+
+        if (!hotelData && bookingRes.status === 'rejected') {
+          setError(getApiErrorMessage(bookingRes.reason, 'Could not load overview'))
+          return
+        }
+
+        const bookings = bookingData?.bookings || []
         const revenue = bookings
           .filter((booking) => booking.paymentStatus === 'paid')
           .reduce((sum, booking) => sum + (Number(booking.totalPrice) || 0), 0)
 
         setStats({
-          hotels: hotelRes.count || hotelRes.hotels?.length || 0,
+          hotels: hotelData?.count || hotelData?.hotels?.length || 0,
           bookings: bookings.length,
           revenue,
         })
         setRecent(bookings.slice(0, 5))
-      })
-      .catch((err) => {
-        if (!cancelled) setError(getApiErrorMessage(err, 'Could not load overview'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

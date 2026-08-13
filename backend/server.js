@@ -10,8 +10,10 @@ const roomRoutes = require('./routes/roomRoutes')
 const bookingRoutes = require('./routes/bookingRoutes')
 const reviewRoutes = require('./routes/reviewRoutes')
 const stripeRoutes = require('./routes/stripeRoutes')
+const newsletterRoutes = require('./routes/newsletterRoutes')
 const { notFound, errorHandler } = require('./middleware/errorMiddleware')
 const { clerkAuth, syncClerkUser } = require('./middleware/authMiddleware')
+const { cleanupExpiredBookings } = require('./controllers/bookingController')
 
 dotenv.config()
 
@@ -38,6 +40,7 @@ app.use('/api/rooms', roomRoutes)
 app.use('/api/bookings', bookingRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/stripe', stripeRoutes.router)
+app.use('/api/newsletter', newsletterRoutes)
 
 app.get('/', (req, res) => {
   res.send('Hotel Booking API is running...')
@@ -51,3 +54,12 @@ const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`)
 })
+
+cleanupExpiredBookings().catch((err) => {
+  console.error('[cleanup] Failed to run abandoned booking cleanup:', err.message)
+})
+setInterval(() => {
+  cleanupExpiredBookings().catch((err) => {
+    console.error('[cleanup] Failed to run abandoned booking cleanup:', err.message)
+  })
+}, 6 * 60 * 60 * 1000)

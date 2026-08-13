@@ -46,6 +46,7 @@ const run = async () => {
   res = mockRes()
   await createRoom(
     {
+      auth: { userId: 'test_clerk_admin' },
       body: {
         hotel: hotelId,
         roomType: 'Deluxe',
@@ -63,11 +64,14 @@ const run = async () => {
   const roomId = room._id.toString()
 
   res = mockRes()
-  await updateRoom({ params: { id: roomId }, body: { pricePerNight: 200, roomType: 'Suite' } }, res)
+  await updateRoom(
+    { auth: { userId: 'test_clerk_admin' }, params: { id: roomId }, body: { pricePerNight: 200, roomType: 'Suite' } },
+    res
+  )
   console.log('UPDATE:', res.statusCode, '| type:', res.body.room.roomType, '| price:', res.body.room.pricePerNight)
 
   res = mockRes()
-  await deleteRoom({ params: { id: roomId } }, res)
+  await deleteRoom({ auth: { userId: 'test_clerk_admin' }, params: { id: roomId } }, res)
   console.log('DELETE:', res.statusCode, '| message:', res.body.message)
 
   const gone = await Room.findById(roomId)

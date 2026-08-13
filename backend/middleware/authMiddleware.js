@@ -13,6 +13,12 @@ const clerkAuth = () => {
 
 const requireAuth = () => {
   if (!hasClerkKeys()) {
+    if (process.env.NODE_ENV === 'production') {
+      return (req, res, next) => {
+        res.status(503)
+        next(new Error('Authentication is not configured on this server'))
+      }
+    }
     return (req, res, next) => {
       req.auth = {
         userId: process.env.DEV_USER_ID || 'test_clerk_admin',

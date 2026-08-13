@@ -2,6 +2,7 @@ const connectDB = require('../config/db')
 const { createHotel, updateHotel, deleteHotel, getAllHotels } = require('../controllers/hotelController')
 const { createRoom } = require('../controllers/roomController')
 const Hotel = require('../models/Hotel')
+const Room = require('../models/Room')
 const User = require('../models/User')
 const dotenv = require('dotenv')
 dotenv.config()
@@ -28,6 +29,14 @@ const run = async () => {
   await connectDB()
   const admin = await User.findOne({ clerkId: 'test_clerk_admin' })
 
+  const staleHotels = await Hotel.find({ name: 'Pearl Continental' }).select('_id')
+  const staleIds = staleHotels.map((hotel) => hotel._id)
+  if (staleIds.length) {
+    await Room.deleteMany({ hotel: { $in: staleIds } })
+    await Hotel.deleteMany({ name: 'Pearl Continental' })
+    console.log('CLEANED stale test data:', staleIds.length, 'hotel(s)')
+  }
+
   let res = mockRes()
   await createHotel(
     {
@@ -48,7 +57,14 @@ const run = async () => {
   const hotelId = hotel._id.toString()
 
   res = mockRes()
-  await createRoom({ body: { hotel: hotelId, roomType: 'Deluxe', pricePerNight: 150, capacity: 2 } }, res, res.next)
+  await createRoom(
+    {
+      auth: { userId: 'test_clerk_admin' },
+      body: { hotel: hotelId, roomType: 'Deluxe', pricePerNight: 150, capacity: 2 },
+    },
+    res,
+    res.next
+  )
   console.log('ROOM CREATE:', res.statusCode, '| price:', res.body.room.pricePerNight)
 
   res = mockRes()
@@ -57,11 +73,19 @@ const run = async () => {
   console.log('LIST WITH PRICEFROM:', res.statusCode, '| priceFrom:', listed.priceFrom, '| matches room price:', listed.priceFrom === 150)
 
   res = mockRes()
-  await updateHotel({ params: { id: hotelId }, body: { description: 'Updated desc', city: 'Rawalpindi' } }, res, res.next)
+  await updateHotel(
+    {
+      auth: { userId: 'test_clerk_admin' },
+      params: { id: hotelId },
+      body: { description: 'Updated desc', city: 'Rawalpindi' },
+    },
+    res,
+    res.next
+  )
   console.log('UPDATE:', res.statusCode, '| city:', res.body.hotel.city, '| desc:', res.body.hotel.description)
 
   res = mockRes()
-  await deleteHotel({ params: { id: hotelId } }, res)
+  await deleteHotel({ auth: { userId: 'test_clerk_admin' }, params: { id: hotelId } }, res)
   console.log('DELETE:', res.statusCode, '| message:', res.body.message)
 
   const gone = await Hotel.findById(hotelId)

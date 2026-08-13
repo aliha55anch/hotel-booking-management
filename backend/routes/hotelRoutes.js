@@ -2,6 +2,7 @@ const express = require('express')
 const { requireAuth } = require('../middleware/authMiddleware')
 const {
   getAllHotels,
+  getStats,
   getHotelById,
   getMyHotels,
   createHotel,
@@ -12,6 +13,7 @@ const {
 const router = express.Router()
 
 router.get('/', getAllHotels)
+router.get('/stats', getStats)
 router.get('/mine', requireAuth(), getMyHotels)
 router.get('/:id', getHotelById)
 

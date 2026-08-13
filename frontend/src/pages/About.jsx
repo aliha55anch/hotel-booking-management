@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import Button from '../components/ui/Button.jsx'
+import { getStats } from '../services/hotelService.js'
 import {
   HotelIcon,
   CalendarIcon,
@@ -32,14 +34,33 @@ const values = [
   },
 ]
 
-const stats = [
-  { label: 'Hotels listed', value: '9+' },
-  { label: 'Cities covered', value: '5' },
-  { label: 'Happy guests', value: '1,000+' },
-  { label: 'Average rating', value: '4.8' },
-]
+const formatCount = (value) => {
+  if (value == null || value === 0) return '—'
+  if (value >= 1000) return `${Math.round(value / 1000)}k+`
+  return `${value}+`
+}
 
 export default function About() {
+  const [stats, setStats] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    getStats()
+      .then((data) => {
+        if (!cancelled) setStats(data.stats)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const statRows = [
+    { label: 'Hotels listed', value: formatCount(stats?.hotels) },
+    { label: 'Cities covered', value: formatCount(stats?.cities) },
+    { label: 'Confirmed stays', value: formatCount(stats?.bookings) },
+    { label: 'Average rating', value: stats?.rating ? stats.rating.toFixed(1) : '—' },
+  ]
   return (
     <>
       <section className="relative -mt-18 overflow-hidden bg-linear-to-b from-primary-soft/70 via-background/50 to-background">
@@ -91,7 +112,7 @@ export default function About() {
             </div>
             <div className="flex items-center rounded-card border border-line bg-surface p-6">
             <ul className="w-full space-y-4">
-              {stats.map((stat) => (
+              {statRows.map((stat) => (
                 <li key={stat.label} className="flex items-center justify-between gap-4 border-b border-line pb-4 last:border-b-0 last:pb-0">
                   <span className="text-sm text-muted">{stat.label}</span>
                   <span className="font-heading text-xl font-semibold text-primary">{stat.value}</span>

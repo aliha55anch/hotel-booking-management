@@ -5,6 +5,8 @@ const {
   updateMyProfile,
   getAllUsers,
   getUserById,
+  updateUser,
+  deleteUser,
 } = require('../controllers/userController')
 const { checkAdmin } = require('../middleware/roleMiddleware')
 
@@ -15,5 +17,7 @@ router.put('/me', requireAuth(), updateMyProfile)
 
 router.get('/', requireAuth(), checkAdmin, getAllUsers)
 router.get('/:id', requireAuth(), checkAdmin, getUserById)
+router.put('/:id', requireAuth(), checkAdmin, updateUser)
+router.delete('/:id', requireAuth(), checkAdmin, deleteUser)
 
 module.exports = router
