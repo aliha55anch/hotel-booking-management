@@ -2,8 +2,7 @@ const asyncHandler = require('express-async-handler')
 const User = require('../models/User')
 const Hotel = require('../models/Hotel')
 const Booking = require('../models/Booking')
-
-const VALID_ROLES = ['user', 'hotelOwner', 'admin']
+const { VALID_ROLES, isStaff } = require('../utils/roles')
 
 const getMyProfile = asyncHandler(async (req, res) => {
   const user = await User.findOne({ clerkId: req.auth.userId })
@@ -62,14 +61,14 @@ const getUserById = asyncHandler(async (req, res) => {
 const updateUser = asyncHandler(async (req, res) => {
   const { role } = req.body
 
-  if (role !== undefined && !VALID_ROLES.includes(role)) {
-    res.status(400)
-    throw new Error(`Invalid role. Allowed roles: ${VALID_ROLES.join(', ')}`)
-  }
-
   if (role === undefined) {
     res.status(400)
     throw new Error('No updatable fields provided')
+  }
+
+  if (!VALID_ROLES.includes(role)) {
+    res.status(400)
+    throw new Error(`Invalid role. Allowed roles: ${VALID_ROLES.join(', ')}`)
   }
 
   const user = await User.findById(req.params.id)
@@ -82,6 +81,23 @@ const updateUser = asyncHandler(async (req, res) => {
   if (user.clerkId === req.auth.userId) {
     res.status(403)
     throw new Error('Admins cannot change their own role')
+  }
+
+  if (user.role === 'owner') {
+    res.status(403)
+    throw new Error('The owner role cannot be changed')
+  }
+
+  const actor = req.user
+
+  if (!actor || !isStaff(actor.role)) {
+    res.status(403)
+    throw new Error('Not authorized to update user roles')
+  }
+
+  if (actor.role !== 'owner' && user.role === 'admin') {
+    res.status(403)
+    throw new Error('Admins cannot change the role of another admin')
   }
 
   const updated = await User.findByIdAndUpdate(
@@ -104,6 +120,23 @@ const deleteUser = asyncHandler(async (req, res) => {
   if (user.clerkId === req.auth.userId) {
     res.status(403)
     throw new Error('Admins cannot delete their own account')
+  }
+
+  if (user.role === 'owner') {
+    res.status(403)
+    throw new Error('The owner account cannot be deleted')
+  }
+
+  const actor = req.user
+
+  if (!actor || !isStaff(actor.role)) {
+    res.status(403)
+    throw new Error('Not authorized to delete users')
+  }
+
+  if (actor.role !== 'owner' && user.role === 'admin') {
+    res.status(403)
+    throw new Error('Admins cannot delete another admin')
   }
 
   await User.findByIdAndDelete(req.params.id)

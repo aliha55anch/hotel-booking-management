@@ -32,14 +32,17 @@ const webhookHandler = async (req, res) => {
   const getName = (user) => [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.username || null
 
   switch (type) {
-    case 'user.created':
+    case 'user.created': {
+      const isFirstUser = (await User.countDocuments()) === 0
       await User.create({
         clerkId: data.id,
         name: getName(data),
         email: getEmail(data),
         image: data.image_url || null,
+        role: isFirstUser ? 'owner' : 'user',
       })
       break
+    }
 
     case 'user.updated':
       await User.findOneAndUpdate(

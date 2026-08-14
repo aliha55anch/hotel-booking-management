@@ -1,4 +1,5 @@
 const User = require('../models/User')
+const { isStaff } = require('../utils/roles')
 
 const checkAdmin = async (req, res, next) => {
   try {
@@ -8,7 +9,7 @@ const checkAdmin = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'User not found' })
     }
 
-    if (user.role !== 'admin') {
+    if (!isStaff(user.role)) {
       return res.status(403).json({ success: false, message: 'Access denied. Admins only.' })
     }
 
@@ -27,7 +28,7 @@ const checkOwner = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'User not found' })
     }
 
-    if (user.role !== 'hotelOwner' && user.role !== 'admin') {
+    if (user.role !== 'hotelOwner' && !isStaff(user.role)) {
       return res.status(403).json({ success: false, message: 'Access denied. Hotel owners only.' })
     }
 

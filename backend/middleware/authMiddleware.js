@@ -45,6 +45,8 @@ const syncClerkUser = async (req, res, next) => {
 
     if (!email) return next()
 
+    const isFirstUser = (await User.countDocuments()) === 0
+
     await User.create({
       clerkId,
       name:
@@ -53,6 +55,7 @@ const syncClerkUser = async (req, res, next) => {
         null,
       email,
       image: clerkUser.imageUrl || null,
+      role: isFirstUser ? 'owner' : 'user',
     })
 
     next()

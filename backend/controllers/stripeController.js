@@ -3,6 +3,7 @@ const stripe = require('../config/stripe')
 const Booking = require('../models/Booking')
 const User = require('../models/User')
 const sendEmail = require('../utils/sendEmail')
+const { isStaff } = require('../utils/roles')
 
 const createPaymentIntent = asyncHandler(async (req, res) => {
   const { bookingId } = req.body
@@ -21,7 +22,7 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
     throw new Error('Booking not found')
   }
 
-  if (booking.user.toString() !== user._id.toString() && user.role !== 'admin') {
+  if (booking.user.toString() !== user._id.toString() && !isStaff(user.role)) {
     res.status(403)
     throw new Error('Not authorized to pay for this booking')
   }

@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler')
 const Review = require('../models/Review')
 const Hotel = require('../models/Hotel')
 const User = require('../models/User')
+const { isStaff } = require('../utils/roles')
 
 const updateHotelRating = async (hotelId) => {
   const reviews = await Review.find({ hotel: hotelId })
@@ -62,7 +63,7 @@ const deleteReview = asyncHandler(async (req, res) => {
   const hotel = await Hotel.findById(review.hotel).select('owner')
 
   const isAuthor = review.user.toString() === user._id.toString()
-  const isAdmin = user.role === 'admin'
+  const isAdmin = isStaff(user.role)
   const isHotelOwner = Boolean(hotel && hotel.owner && hotel.owner.toString() === user._id.toString())
 
   if (!isAuthor && !isAdmin && !isHotelOwner) {

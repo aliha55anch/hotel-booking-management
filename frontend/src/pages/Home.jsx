@@ -5,7 +5,6 @@ import { getHotels } from '../services/hotelService.js'
 import { subscribeNewsletter } from '../services/newsletterService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
 import { hotelRoomImages } from '../lib/siteImages.js'
-import { hotelPrimaryImage } from '../lib/images.js'
 import { formatPrice } from '../lib/format.js'
 
 const cities = [
@@ -178,7 +177,7 @@ function Hero() {
 }
 
 function RoomCard({ hotel, index }) {
-  const src = hotelPrimaryImage(hotel, hotelRoomImages[index % hotelRoomImages.length])
+  const src = hotelRoomImages[index % hotelRoomImages.length]
 
   return (
     <Link
@@ -306,7 +305,7 @@ function ExclusiveOffers() {
             <div
               key={offer._id}
               className="group relative flex min-h-64 flex-col items-start justify-between gap-1 rounded-xl bg-cover bg-center bg-no-repeat px-4 pt-12 text-white md:pt-18"
-              style={{ backgroundImage: `url(${offer.image})` }}
+              style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${offer.image})` }}
             >
               <span className="absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800">
                 {offer.priceOff}% OFF

@@ -15,7 +15,7 @@ const run = async () => {
         clerkId: 'test_clerk_admin',
         name: 'Test Admin',
         email: 'admin@test.com',
-        role: 'admin',
+        role: 'owner',
       },
     },
     { upsert: true, returnDocument: 'after' }

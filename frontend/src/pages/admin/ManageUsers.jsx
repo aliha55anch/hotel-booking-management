@@ -3,6 +3,7 @@ import PageHeader from '../../components/admin/PageHeader.jsx'
 import Button from '../../components/ui/Button.jsx'
 import ConfirmDialog from '../../components/admin/ConfirmDialog.jsx'
 import { UsersIcon, TrashIcon } from '../../components/ui/icons.jsx'
+import { RoleBadge } from '../../components/admin/Badges.jsx'
 import { getAllUsers, updateUserRole, deleteUser } from '../../services/userService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { useAdmin } from '../../components/admin/adminContext.js'
@@ -109,6 +110,11 @@ export default function ManageUsers() {
             <tbody className="divide-y divide-line">
               {users.map((user) => {
                 const isSelf = user.clerkId === me?.clerkId
+                const isOwnerRow = user.role === 'owner'
+                const isAdminRow = user.role === 'admin'
+                const isOwnerViewer = me?.role === 'owner'
+                const canManage = !isSelf && !isOwnerRow && !(isAdminRow && !isOwnerViewer)
+
                 return (
                   <tr key={user._id} className="hover:bg-surface/60">
                     <td className="px-4 py-3">
@@ -127,23 +133,29 @@ export default function ManageUsers() {
                     </td>
                     <td className="hidden px-4 py-3 text-muted md:table-cell">{user.email || '—'}</td>
                     <td className="px-4 py-3">
-                      <select
-                        value={user.role}
-                        disabled={isSelf}
-                        onChange={(e) => handleRoleChange(user, e.target.value)}
-                        className={selectClass}
-                      >
-                        {roleOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                      {isOwnerRow ? (
+                        <RoleBadge role={user.role} />
+                      ) : (
+                        <select
+                          value={user.role}
+                          disabled={!canManage}
+                          onChange={(e) => handleRoleChange(user, e.target.value)}
+                          className={selectClass}
+                        >
+                          {roleOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
                         {isSelf ? (
                           <span className="text-xs text-muted">Self</span>
+                        ) : !canManage ? (
+                          <span className="text-xs text-muted">Protected</span>
                         ) : (
                           <button
                             type="button"

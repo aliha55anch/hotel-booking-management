@@ -3,6 +3,7 @@ const Booking = require('../models/Booking')
 const Room = require('../models/Room')
 const User = require('../models/User')
 const Hotel = require('../models/Hotel')
+const { isStaff } = require('../utils/roles')
 
 const NIGHT_MS = 1000 * 60 * 60 * 24
 
@@ -151,7 +152,7 @@ const cancelBooking = asyncHandler(async (req, res) => {
     throw new Error('Booking not found')
   }
 
-  if (booking.user.toString() !== user._id.toString() && user.role !== 'admin') {
+  if (booking.user.toString() !== user._id.toString() && !isStaff(user.role)) {
     res.status(403)
     throw new Error('Not authorized to cancel this booking')
   }

@@ -149,7 +149,7 @@ function AdminShell({ token }) {
 
   if (error) return <AdminError message={error} onRetry={() => setReloadKey((key) => key + 1)} />
 
-  if (user?.role !== 'admin') return <AccessDenied />
+  if (user?.role !== 'admin' && user?.role !== 'owner') return <AccessDenied />
 
   return (
     <AdminContext.Provider value={{ token, user, reload: () => setReloadKey((key) => key + 1) }}>

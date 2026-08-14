@@ -6,7 +6,6 @@ import HotelCard from '../components/hotel/HotelCard.jsx'
 import { HotelIcon, SearchIcon, ChevronLeftIcon, ChevronRightIcon } from '../components/ui/icons.jsx'
 import { getHotels } from '../services/hotelService.js'
 import { hotelRoomImages } from '../lib/siteImages.js'
-import { hotelPrimaryImage } from '../lib/images.js'
 
 const LIMIT = 9
 
@@ -228,7 +227,7 @@ export default function Hotels() {
               <HotelCard
                 key={hotel._id}
                 hotel={hotel}
-                image={hotelPrimaryImage(hotel, hotelRoomImages[index % hotelRoomImages.length])}
+                image={hotelRoomImages[index % hotelRoomImages.length]}
               />
             ))}
           </div>

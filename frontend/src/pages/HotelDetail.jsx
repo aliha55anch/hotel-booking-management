@@ -15,7 +15,6 @@ import { getApiErrorMessage } from '../lib/errors.js'
 import { formatPrice } from '../lib/format.js'
 import { CLERK_PUBLISHABLE_KEY } from '../lib/config.js'
 import { galleryFor } from '../lib/siteImages.js'
-import { hotelGalleryImages } from '../lib/images.js'
 
 const formatDate = (iso) => {
   if (!iso) return ''
@@ -428,7 +427,7 @@ export default function HotelDetail() {
   }
 
   const minPrice = rooms.length ? Math.min(...rooms.map((room) => room.pricePerNight)) : null
-  const gallery = hotelGalleryImages(hotel, galleryFor(hotel))
+  const gallery = galleryFor(hotel)
   const activeImageSrc = activeImage || gallery[0]
 
   return (

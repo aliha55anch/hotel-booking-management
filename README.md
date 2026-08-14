@@ -70,7 +70,8 @@ npm run preview   # preview the build
 
 - `user` — browse, book, review
 - `hotelOwner` — created automatically when a user lists their first hotel; manages own hotels/rooms, sees own bookings
-- `admin` — ManageBookings / ManageUsers / ManageHotels / ManageRooms dashboards (`/admin`)
+- `admin` — ManageBookings / ManageUsers / ManageHotels / ManageRooms dashboards (`/admin`); can promote users to admin and delete plain users, but cannot modify or delete other admins or the owner
+- `owner` — the very first account that signs up (when the `User` collection is empty); also holds admin powers and is the only role that can manage or delete admins. The owner account itself can never be demoted or deleted.
 
 > There is no public sign-up endpoint for the admin role. To promote a user, update the
 > `role` field on the `User` document (e.g. in MongoDB Compass) or use the existing admin

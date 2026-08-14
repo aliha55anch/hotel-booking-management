@@ -14,8 +14,8 @@ const links = [
 
 const accountLinks = [
   { to: '/my-bookings', label: 'My Bookings' },
-  { to: '/owner', label: 'Owner', roles: ['hotelOwner', 'admin'] },
-  { to: '/admin', label: 'Admin', roles: ['admin'] },
+  { to: '/owner', label: 'Owner', roles: ['hotelOwner', 'admin', 'owner'] },
+  { to: '/admin', label: 'Admin', roles: ['admin', 'owner'] },
 ]
 
 function renderNavLink(link, solid, onNavigate) {
@@ -116,8 +116,8 @@ function ClerkAuthArea({ solid }) {
         <button
           type="button"
           onClick={() => openSignIn()}
-          className={`text-sm font-medium transition-colors ${
-            solid ? 'text-black hover:text-ink' : 'text-white hover:text-white/80'
+          className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+            solid ? 'text-black hover:bg-surface' : 'text-white hover:bg-white/10'
           }`}
         >
           Sign in
@@ -125,8 +125,8 @@ function ClerkAuthArea({ solid }) {
         <button
           type="button"
           onClick={() => openSignUp()}
-          className={`rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-500 ${
-            solid ? 'bg-black text-white' : 'bg-white text-black'
+          className={`cursor-pointer rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-500 hover:-translate-y-0.5 hover:shadow-lg ${
+            solid ? 'bg-black text-white hover:shadow-black/20' : 'bg-white text-black hover:shadow-white/40'
           }`}
         >
           Sign up
@@ -144,16 +144,16 @@ function FallbackAuthArea({ solid }) {
     <>
       <a
         href="/sign-in"
-        className={`text-sm font-medium transition-colors ${
-          solid ? 'text-black hover:text-ink' : 'text-white hover:text-white/80'
+        className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+          solid ? 'text-black hover:bg-surface' : 'text-white hover:bg-white/10'
         }`}
       >
         Sign in
       </a>
       <a
         href="/sign-up"
-        className={`rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-500 ${
-          solid ? 'bg-black text-white' : 'bg-white text-black'
+        className={`cursor-pointer rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-500 hover:-translate-y-0.5 hover:shadow-lg ${
+          solid ? 'bg-black text-white hover:shadow-black/20' : 'bg-white text-black hover:shadow-white/40'
         }`}
       >
         Sign up
