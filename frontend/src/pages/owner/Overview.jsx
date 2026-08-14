@@ -145,8 +145,8 @@ export default function Overview() {
       <div className="rounded-card border border-line bg-background shadow-card">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <h2 className="font-heading text-lg font-semibold text-ink">Recent bookings</h2>
-          <Button to="/owner/hotels" variant="ghost" size="sm">
-            Manage hotels
+          <Button to="/owner/bookings" variant="ghost" size="sm">
+            View all
           </Button>
         </div>
         <RecentBookings bookings={recent} />

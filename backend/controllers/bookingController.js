@@ -2,7 +2,12 @@ const asyncHandler = require('express-async-handler')
 const Booking = require('../models/Booking')
 const Room = require('../models/Room')
 const Hotel = require('../models/Hotel')
-const { findAccountByClerkId } = require('../services/userAccountService')
+const { findAccountByClerkId, findAccountById } = require('../services/userAccountService')
+const {
+  sendBookingReceivedEmail,
+  sendBookingCancelledEmail,
+  sendBookingNotificationEmail,
+} = require('../utils/emailService')
 const { isStaff } = require('../utils/roles')
 
 const NIGHT_MS = 1000 * 60 * 60 * 24
@@ -67,6 +72,22 @@ const createBooking = asyncHandler(async (req, res) => {
     status: 'pending',
     paymentStatus: 'unpaid',
   })
+
+  const hotel = await Hotel.findById(room.hotel).select('name owner ownerModel')
+  const bookingForEmail = { ...booking.toObject(), hotel, room }
+
+  await sendBookingReceivedEmail({ to: user.email, name: user.name, booking: bookingForEmail })
+
+  if (hotel?.owner) {
+    const owner = await findAccountById(hotel.owner)
+    if (owner?.email) {
+      await sendBookingNotificationEmail({
+        to: owner.email,
+        ownerName: owner.name,
+        booking: bookingForEmail,
+      })
+    }
+  }
 
   res.status(201).json({ success: true, booking })
 })
@@ -165,6 +186,17 @@ const cancelBooking = asyncHandler(async (req, res) => {
 
   booking.status = 'cancelled'
   await booking.save()
+
+  const populated = await Booking.findById(booking._id)
+    .populate('user', 'name email')
+    .populate('hotel')
+    .populate('room')
+
+  await sendBookingCancelledEmail({
+    to: populated.user?.email,
+    name: populated.user?.name,
+    booking: populated,
+  })
 
   res.status(200).json({ success: true, booking })
 })

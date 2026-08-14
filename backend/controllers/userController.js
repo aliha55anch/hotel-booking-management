@@ -9,6 +9,7 @@ const {
   deleteAccount,
 } = require('../services/userAccountService')
 const { VALID_ROLES, isStaff } = require('../utils/roles')
+const { sendProfileUpdatedEmail } = require('../utils/emailService')
 
 const getMyProfile = asyncHandler(async (req, res) => {
   const user = await findAccountByClerkId(req.auth.userId)
@@ -42,6 +43,8 @@ const updateMyProfile = asyncHandler(async (req, res) => {
     res.status(404)
     throw new Error('User not found. Webhook may not have synced this user yet.')
   }
+
+  await sendProfileUpdatedEmail({ to: user.email, name: user.name })
 
   res.status(200).json({ success: true, user })
 })

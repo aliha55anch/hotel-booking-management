@@ -7,6 +7,11 @@ export const getMyProfile = async (token) => {
   return data
 }
 
+export const updateMyProfile = async (payload, token) => {
+  const { data } = await api.put('/users/me', payload, { headers: authHeaders(token) })
+  return data
+}
+
 export const getAllUsers = async (token) => {
   const { data } = await api.get('/users', { headers: authHeaders(token) })
   return data

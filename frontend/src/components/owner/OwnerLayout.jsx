@@ -6,12 +6,13 @@ import { getMyProfile } from '../../services/userService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { CLERK_PUBLISHABLE_KEY } from '../../lib/config.js'
 import { OwnerContext } from './ownerContext.js'
-import { MenuIcon, CloseIcon, GridIcon, HotelIcon, BedIcon, AlertIcon, LogoutIcon } from '../ui/icons.jsx'
+import { MenuIcon, CloseIcon, GridIcon, HotelIcon, BedIcon, CalendarIcon, AlertIcon, LogoutIcon } from '../ui/icons.jsx'
 
 const navItems = [
   { to: '/owner', label: 'Overview', icon: GridIcon, end: true },
   { to: '/owner/hotels', label: 'My hotels', icon: HotelIcon },
   { to: '/owner/rooms', label: 'My rooms', icon: BedIcon },
+  { to: '/owner/bookings', label: 'Bookings', icon: CalendarIcon },
 ]
 
 const navClass = ({ isActive }) =>

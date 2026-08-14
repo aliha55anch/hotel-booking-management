@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler')
 const stripe = require('../config/stripe')
 const Booking = require('../models/Booking')
 const { findAccountByClerkId } = require('../services/userAccountService')
-const sendEmail = require('../utils/sendEmail')
+const { sendBookingConfirmedEmail } = require('../utils/emailService')
 const { isStaff } = require('../utils/roles')
 
 const createPaymentIntent = asyncHandler(async (req, res) => {
@@ -79,23 +79,13 @@ const stripeWebhook = asyncHandler(async (req, res) => {
       if (bookingId) {
         await Booking.findByIdAndUpdate(bookingId, { paymentStatus: 'paid', status: 'confirmed' })
 
-        const booking = await Booking.findById(bookingId).populate('user', 'email').populate('hotel').populate('room')
+        const booking = await Booking.findById(bookingId).populate('user', 'name email').populate('hotel').populate('room')
 
         if (booking) {
-          await sendEmail({
+          await sendBookingConfirmedEmail({
             to: booking.user?.email,
-            subject: 'Booking confirmed',
-            html: `
-              <h2>Booking confirmed</h2>
-              <p>Your booking is confirmed and paid.</p>
-              <ul>
-                <li>Hotel: ${booking.hotel?.name}</li>
-                <li>Room: ${booking.room?.roomType || 'N/A'}</li>
-                <li>Check-in: ${new Date(booking.checkInDate).toDateString()}</li>
-                <li>Check-out: ${new Date(booking.checkOutDate).toDateString()}</li>
-                <li>Total: $${booking.totalPrice}</li>
-              </ul>
-            `,
+            name: booking.user?.name,
+            booking,
           })
         }
       }

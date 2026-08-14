@@ -22,7 +22,14 @@ connectDB()
 
 const app = express()
 
-app.use(cors())
+// Allow any origin in development; in production restrict to the origins listed
+// in CORS_ORIGIN (comma-separated), e.g. the deployed frontend URL.
+const allowedOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+
+app.use(cors(allowedOrigins.length ? { origin: allowedOrigins } : undefined))
 
 app.use('/api/webhooks', webhookRoutes)
 app.use('/api/stripe', stripeRoutes.webhookRouter)

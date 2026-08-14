@@ -13,6 +13,7 @@ import ManageOffers from "./pages/admin/ManageOffers.jsx";
 import OwnerOverview from "./pages/owner/Overview.jsx";
 import OwnerHotels from "./pages/owner/MyHotels.jsx";
 import OwnerRooms from "./pages/owner/MyRooms.jsx";
+import OwnerBookings from "./pages/owner/Bookings.jsx";
 import Home from "./pages/Home.jsx";
 import Hotels from "./pages/Hotels.jsx";
 import HotelDetail from "./pages/HotelDetail.jsx";
@@ -21,6 +22,7 @@ import OfferDetail from "./pages/OfferDetail.jsx";
 import About from "./pages/About.jsx";
 import MyBookings from "./pages/MyBookings.jsx";
 import Payment from "./pages/Payment.jsx";
+import Profile from "./pages/Profile.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 function Layout() {
@@ -51,6 +53,7 @@ function App() {
         <Route index element={<OwnerOverview />} />
         <Route path="hotels" element={<OwnerHotels />} />
         <Route path="rooms" element={<OwnerRooms />} />
+        <Route path="bookings" element={<OwnerBookings />} />
       </Route>
 
       <Route element={<Layout />}>
@@ -62,6 +65,14 @@ function App() {
           element={
             <ProtectedRoute>
               <MyBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />

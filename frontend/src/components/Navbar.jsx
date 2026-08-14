@@ -13,6 +13,7 @@ const links = [
 ]
 
 const accountLinks = [
+  { to: '/profile', label: 'Profile' },
   { to: '/my-bookings', label: 'My Bookings' },
   { to: '/owner', label: 'Owner', roles: ['hotelOwner', 'admin', 'owner'] },
   { to: '/admin', label: 'Admin', roles: ['admin', 'owner'] },
@@ -178,26 +179,16 @@ export default function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-40 transition-all duration-500 ${
+      className={`sticky top-0 z-40 border-b transition-[background-color,border-color,box-shadow] duration-500 ${
         solid
-          ? 'border-b border-line bg-background/90 text-ink shadow-sm backdrop-blur-md'
-          : 'bg-transparent text-white'
+          ? 'border-line bg-background/95 text-ink shadow-sm'
+          : 'border-transparent bg-transparent text-white'
       }`}
     >
-      <nav
-        className={`mx-auto flex max-w-7xl items-center justify-between px-4 transition-all duration-300 sm:px-6 lg:px-8 ${
-          scrolled ? 'h-14' : 'h-18'
-        }`}
-      >
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-          <FaviconIcon className={`w-auto transition-all duration-300 ${scrolled ? 'h-6' : 'h-7'}`} />
-          <span
-            className={`font-heading font-semibold transition-all duration-300 ${
-              scrolled ? 'text-lg' : 'text-xl'
-            }`}
-          >
-            StayHub
-          </span>
+          <FaviconIcon className="h-7 w-auto" />
+          <span className="font-heading text-xl font-semibold">StayHub</span>
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">

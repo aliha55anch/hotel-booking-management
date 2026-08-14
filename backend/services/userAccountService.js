@@ -1,6 +1,7 @@
 const User = require('../models/User')
 const Owner = require('../models/Owner')
 const Admin = require('../models/Admin')
+const { sendWelcomeEmail } = require('../utils/emailService')
 
 // Role -> model/collection. The role is implied by the collection the account
 // lives in: users -> `users`, hotelOwner/owner -> `owners`, admin -> `admins`.
@@ -74,7 +75,13 @@ const createAccount = async ({ clerkId, name, email, image, role } = {}) => {
   if (resolvedRole === 'owner') account.role = 'owner'
 
   const doc = await model.create(account)
-  return decorate(doc)
+  const decorated = decorate(doc)
+
+  if (email) {
+    await sendWelcomeEmail({ to: email, name: account.name })
+  }
+
+  return decorated
 }
 
 // Updates an account in its own collection. A role change moves the account
