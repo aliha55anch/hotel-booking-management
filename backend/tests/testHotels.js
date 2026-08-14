@@ -3,7 +3,7 @@ const { createHotel, updateHotel, deleteHotel, getAllHotels } = require('../cont
 const { createRoom } = require('../controllers/roomController')
 const Hotel = require('../models/Hotel')
 const Room = require('../models/Room')
-const User = require('../models/User')
+const { findAccountByClerkId } = require('../services/userAccountService')
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -27,7 +27,7 @@ const mockRes = () => {
 
 const run = async () => {
   await connectDB()
-  const admin = await User.findOne({ clerkId: 'test_clerk_admin' })
+  const admin = await findAccountByClerkId('test_clerk_admin')
 
   const staleHotels = await Hotel.find({ name: 'Pearl Continental' }).select('_id')
   const staleIds = staleHotels.map((hotel) => hotel._id)

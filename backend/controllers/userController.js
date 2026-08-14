@@ -1,11 +1,17 @@
 const asyncHandler = require('express-async-handler')
-const User = require('../models/User')
 const Hotel = require('../models/Hotel')
 const Booking = require('../models/Booking')
+const {
+  findAccountByClerkId,
+  findAccountById,
+  listAccounts,
+  updateAccount,
+  deleteAccount,
+} = require('../services/userAccountService')
 const { VALID_ROLES, isStaff } = require('../utils/roles')
 
 const getMyProfile = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ clerkId: req.auth.userId })
+  const user = await findAccountByClerkId(req.auth.userId)
 
   if (!user) {
     res.status(404)
@@ -30,9 +36,7 @@ const updateMyProfile = asyncHandler(async (req, res) => {
     throw new Error('No updatable fields provided')
   }
 
-  const user = await User.findOneAndUpdate({ clerkId: req.auth.userId }, updates, {
-    returnDocument: 'after',
-  })
+  const user = await updateAccount(req.auth.userId, updates)
 
   if (!user) {
     res.status(404)
@@ -43,12 +47,12 @@ const updateMyProfile = asyncHandler(async (req, res) => {
 })
 
 const getAllUsers = asyncHandler(async (req, res) => {
-  const users = await User.find().select('-__v')
+  const users = await listAccounts()
   res.status(200).json({ success: true, count: users.length, users })
 })
 
 const getUserById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id).select('-__v')
+  const user = await findAccountById(req.params.id)
 
   if (!user) {
     res.status(404)
@@ -71,7 +75,7 @@ const updateUser = asyncHandler(async (req, res) => {
     throw new Error(`Invalid role. Allowed roles: ${VALID_ROLES.join(', ')}`)
   }
 
-  const user = await User.findById(req.params.id)
+  const user = await findAccountById(req.params.id)
 
   if (!user) {
     res.status(404)
@@ -100,17 +104,13 @@ const updateUser = asyncHandler(async (req, res) => {
     throw new Error('Admins cannot change the role of another admin')
   }
 
-  const updated = await User.findByIdAndUpdate(
-    req.params.id,
-    { $set: { role } },
-    { returnDocument: 'after', runValidators: true }
-  )
+  const updated = await updateAccount(user.clerkId, { role })
 
   res.status(200).json({ success: true, user: updated })
 })
 
 const deleteUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id)
+  const user = await findAccountById(req.params.id)
 
   if (!user) {
     res.status(404)
@@ -139,7 +139,7 @@ const deleteUser = asyncHandler(async (req, res) => {
     throw new Error('Admins cannot delete another admin')
   }
 
-  await User.findByIdAndDelete(req.params.id)
+  await deleteAccount(user.clerkId)
   await Hotel.updateMany({ owner: user._id }, { $set: { owner: null } })
   await Booking.deleteMany({ user: user._id })
 

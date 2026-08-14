@@ -3,7 +3,7 @@ const Hotel = require('../models/Hotel')
 const Room = require('../models/Room')
 const Booking = require('../models/Booking')
 const Review = require('../models/Review')
-const User = require('../models/User')
+const { findAccountByClerkId } = require('../services/userAccountService')
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -145,8 +145,9 @@ const hotels = [
 const run = async () => {
   await connectDB()
 
-  const admin = await User.findOne({ clerkId: 'test_clerk_admin' })
+  const admin = await findAccountByClerkId('test_clerk_admin')
   const owner = admin ? admin._id : null
+  const ownerModel = admin ? admin.userModel : undefined
 
   await Hotel.deleteMany({})
   await Room.deleteMany({})
@@ -156,7 +157,7 @@ const run = async () => {
 
   for (const data of hotels) {
     const { rooms, ...hotelData } = data
-    const hotel = await Hotel.create({ ...hotelData, owner })
+    const hotel = await Hotel.create({ ...hotelData, owner, ownerModel })
 
     for (const room of rooms) {
       await Room.create({ hotel: hotel._id, ...room })

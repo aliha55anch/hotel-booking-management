@@ -1,5 +1,5 @@
 const { Webhook } = require('svix')
-const User = require('../models/User')
+const { createAccount, updateAccount, deleteAccount } = require('../services/userAccountService')
 
 const webhookHandler = async (req, res) => {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
@@ -32,32 +32,25 @@ const webhookHandler = async (req, res) => {
   const getName = (user) => [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.username || null
 
   switch (type) {
-    case 'user.created': {
-      const isFirstUser = (await User.countDocuments()) === 0
-      await User.create({
+    case 'user.created':
+      await createAccount({
         clerkId: data.id,
         name: getName(data),
         email: getEmail(data),
         image: data.image_url || null,
-        role: isFirstUser ? 'owner' : 'user',
       })
       break
-    }
 
     case 'user.updated':
-      await User.findOneAndUpdate(
-        { clerkId: data.id },
-        {
-          name: getName(data),
-          email: getEmail(data),
-          image: data.image_url || null,
-        },
-        { returnDocument: 'after' }
-      )
+      await updateAccount(data.id, {
+        name: getName(data),
+        email: getEmail(data),
+        image: data.image_url || null,
+      })
       break
 
     case 'user.deleted':
-      await User.findOneAndDelete({ clerkId: data.id })
+      await deleteAccount(data.id)
       break
 
     default:

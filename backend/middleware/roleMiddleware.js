@@ -1,9 +1,9 @@
-const User = require('../models/User')
+const { findAccountByClerkId } = require('../services/userAccountService')
 const { isStaff } = require('../utils/roles')
 
 const checkAdmin = async (req, res, next) => {
   try {
-    const user = await User.findOne({ clerkId: req.auth.userId })
+    const user = await findAccountByClerkId(req.auth.userId)
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' })
@@ -22,7 +22,7 @@ const checkAdmin = async (req, res, next) => {
 
 const checkOwner = async (req, res, next) => {
   try {
-    const user = await User.findOne({ clerkId: req.auth.userId })
+    const user = await findAccountByClerkId(req.auth.userId)
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' })

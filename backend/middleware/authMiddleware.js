@@ -1,5 +1,5 @@
 const { clerkMiddleware, requireAuth: clerkRequireAuth, clerkClient } = require('@clerk/express')
-const User = require('../models/User')
+const { findAccountByClerkId, createAccount } = require('../services/userAccountService')
 
 const hasClerkKeys = () =>
   Boolean(process.env.CLERK_SECRET_KEY && process.env.CLERK_PUBLISHABLE_KEY)
@@ -36,7 +36,7 @@ const syncClerkUser = async (req, res, next) => {
 
     if (!hasClerkKeys() || !clerkId) return next()
 
-    const existing = await User.findOne({ clerkId })
+    const existing = await findAccountByClerkId(clerkId)
     if (existing) return next()
 
     const clerkUser = await clerkClient.users.getUser(clerkId)
@@ -45,9 +45,7 @@ const syncClerkUser = async (req, res, next) => {
 
     if (!email) return next()
 
-    const isFirstUser = (await User.countDocuments()) === 0
-
-    await User.create({
+    await createAccount({
       clerkId,
       name:
         [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ').trim() ||
@@ -55,7 +53,6 @@ const syncClerkUser = async (req, res, next) => {
         null,
       email,
       image: clerkUser.imageUrl || null,
-      role: isFirstUser ? 'owner' : 'user',
     })
 
     next()

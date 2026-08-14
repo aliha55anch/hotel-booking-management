@@ -1,14 +1,14 @@
 const asyncHandler = require('express-async-handler')
 const Booking = require('../models/Booking')
 const Room = require('../models/Room')
-const User = require('../models/User')
 const Hotel = require('../models/Hotel')
+const { findAccountByClerkId } = require('../services/userAccountService')
 const { isStaff } = require('../utils/roles')
 
 const NIGHT_MS = 1000 * 60 * 60 * 24
 
 const getLocalUser = async (clerkId) => {
-  return User.findOne({ clerkId })
+  return findAccountByClerkId(clerkId)
 }
 
 const createBooking = asyncHandler(async (req, res) => {
@@ -58,6 +58,7 @@ const createBooking = asyncHandler(async (req, res) => {
 
   const booking = await Booking.create({
     user: user._id,
+    userModel: user.userModel,
     room: room._id,
     hotel: room.hotel,
     checkInDate: checkIn,

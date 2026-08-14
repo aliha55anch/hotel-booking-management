@@ -24,7 +24,11 @@ const hotelSchema = new mongoose.Schema(
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      refPath: 'ownerModel',
+    },
+    ownerModel: {
+      type: String,
+      enum: ['Owner', 'Admin'],
     },
     rating: {
       type: Number,

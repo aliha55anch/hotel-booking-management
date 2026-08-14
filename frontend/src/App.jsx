@@ -9,6 +9,7 @@ import ManageHotels from "./pages/admin/ManageHotels.jsx";
 import ManageRooms from "./pages/admin/ManageRooms.jsx";
 import ManageBookings from "./pages/admin/ManageBookings.jsx";
 import ManageUsers from "./pages/admin/ManageUsers.jsx";
+import ManageOffers from "./pages/admin/ManageOffers.jsx";
 import OwnerOverview from "./pages/owner/Overview.jsx";
 import OwnerHotels from "./pages/owner/MyHotels.jsx";
 import OwnerRooms from "./pages/owner/MyRooms.jsx";
@@ -16,6 +17,7 @@ import Home from "./pages/Home.jsx";
 import Hotels from "./pages/Hotels.jsx";
 import HotelDetail from "./pages/HotelDetail.jsx";
 import Experience from "./pages/Experience.jsx";
+import OfferDetail from "./pages/OfferDetail.jsx";
 import About from "./pages/About.jsx";
 import MyBookings from "./pages/MyBookings.jsx";
 import Payment from "./pages/Payment.jsx";
@@ -42,6 +44,7 @@ function App() {
         <Route path="rooms" element={<ManageRooms />} />
         <Route path="bookings" element={<ManageBookings />} />
         <Route path="users" element={<ManageUsers />} />
+        <Route path="offers" element={<ManageOffers />} />
       </Route>
 
       <Route path="/owner" element={<OwnerLayout />}>
@@ -71,6 +74,7 @@ function App() {
           }
         />
         <Route path="/experience" element={<Experience />} />
+        <Route path="/offers/:id" element={<OfferDetail />} />
         <Route path="/about" element={<About />} />
         <Route path="*" element={<NotFound />} />
       </Route>

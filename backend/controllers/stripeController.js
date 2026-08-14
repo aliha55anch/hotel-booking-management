@@ -1,14 +1,14 @@
 const asyncHandler = require('express-async-handler')
 const stripe = require('../config/stripe')
 const Booking = require('../models/Booking')
-const User = require('../models/User')
+const { findAccountByClerkId } = require('../services/userAccountService')
 const sendEmail = require('../utils/sendEmail')
 const { isStaff } = require('../utils/roles')
 
 const createPaymentIntent = asyncHandler(async (req, res) => {
   const { bookingId } = req.body
 
-  const user = await User.findOne({ clerkId: req.auth.userId })
+  const user = await findAccountByClerkId(req.auth.userId)
 
   if (!user) {
     res.status(404)

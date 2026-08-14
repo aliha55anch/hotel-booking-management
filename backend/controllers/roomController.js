@@ -1,11 +1,11 @@
 const asyncHandler = require('express-async-handler')
 const Room = require('../models/Room')
 const Hotel = require('../models/Hotel')
-const User = require('../models/User')
+const { findAccountByClerkId } = require('../services/userAccountService')
 const { isStaff } = require('../utils/roles')
 
 const canManageHotel = async (hotel, req) => {
-  const user = req.auth?.userId ? await User.findOne({ clerkId: req.auth.userId }) : null
+  const user = req.auth?.userId ? await findAccountByClerkId(req.auth.userId) : null
   if (!user) return false
   if (isStaff(user.role)) return true
   return Boolean(hotel.owner && hotel.owner.toString() === user._id.toString())

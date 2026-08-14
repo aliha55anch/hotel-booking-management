@@ -1,13 +1,13 @@
 const asyncHandler = require('express-async-handler')
 const Hotel = require('../models/Hotel')
 const Room = require('../models/Room')
-const User = require('../models/User')
 const Booking = require('../models/Booking')
+const { findAccountByClerkId, updateAccount } = require('../services/userAccountService')
 const { isStaff } = require('../utils/roles')
 
 const getRequestUser = async (req) => {
   if (!req.auth?.userId) return null
-  return User.findOne({ clerkId: req.auth.userId })
+  return findAccountByClerkId(req.auth.userId)
 }
 
 const canManageHotel = (hotel, user) => {
@@ -175,6 +175,8 @@ const createHotel = asyncHandler(async (req, res) => {
 
   const { name, description, city, address, images, amenities } = req.body
 
+  const ownerModel = user.role === 'user' ? 'Owner' : user.userModel
+
   const hotel = await Hotel.create({
     name,
     description,
@@ -183,11 +185,11 @@ const createHotel = asyncHandler(async (req, res) => {
     images,
     amenities,
     owner: user._id,
+    ownerModel,
   })
 
   if (user.role === 'user') {
-    user.role = 'hotelOwner'
-    await user.save()
+    await updateAccount(user.clerkId, { role: 'hotelOwner' })
   }
 
   res.status(201).json({ success: true, hotel })

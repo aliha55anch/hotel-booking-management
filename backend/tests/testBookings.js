@@ -30,7 +30,6 @@ const mockRes = () => {
 const run = async () => {
   await connectDB()
 
-  const admin = await User.findOne({ clerkId: 'test_clerk_admin' })
   const normalUser = await User.findOneAndUpdate(
     { clerkId: 'test_clerk_user' },
     { $setOnInsert: { clerkId: 'test_clerk_user', name: 'Test User', email: 'user@test.com' } },

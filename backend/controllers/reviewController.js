@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler')
 const Review = require('../models/Review')
 const Hotel = require('../models/Hotel')
-const User = require('../models/User')
+const { findAccountByClerkId } = require('../services/userAccountService')
 const { isStaff } = require('../utils/roles')
 
 const updateHotelRating = async (hotelId) => {
@@ -16,7 +16,7 @@ const updateHotelRating = async (hotelId) => {
 const createReview = asyncHandler(async (req, res) => {
   const { hotel, rating, comment } = req.body
 
-  const user = await User.findOne({ clerkId: req.auth.userId })
+  const user = await findAccountByClerkId(req.auth.userId)
 
   if (!user) {
     res.status(404)
@@ -25,7 +25,7 @@ const createReview = asyncHandler(async (req, res) => {
 
   let review
   try {
-    review = await Review.create({ user: user._id, hotel, rating, comment })
+    review = await Review.create({ user: user._id, userModel: user.userModel, hotel, rating, comment })
   } catch (error) {
     if (error.code === 11000) {
       res.status(400)
@@ -46,7 +46,7 @@ const getReviewsByHotel = asyncHandler(async (req, res) => {
 })
 
 const deleteReview = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ clerkId: req.auth.userId })
+  const user = await findAccountByClerkId(req.auth.userId)
 
   if (!user) {
     res.status(404)

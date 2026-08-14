@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { assets, exclusiveOffers, testimonials } from '../assets/assets.js'
+import { assets, testimonials } from '../assets/assets.js'
 import { getHotels } from '../services/hotelService.js'
+import { getOffers } from '../services/offerService.js'
 import { subscribeNewsletter } from '../services/newsletterService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
 import { hotelRoomImages } from '../lib/siteImages.js'
@@ -285,6 +286,33 @@ function FeaturedDestinations() {
 }
 
 function ExclusiveOffers() {
+  const [offers, setOffers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+
+    getOffers({ limit: 3 })
+      .then((data) => {
+        if (!cancelled) setOffers(data.offers || [])
+      })
+      .catch(() => {
+        if (!cancelled) setOffers([])
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const formatExpiry = (value) => {
+    if (!value) return ''
+    return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  }
+
   return (
     <section className="py-12">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -301,29 +329,51 @@ function ExclusiveOffers() {
         </div>
 
         <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {exclusiveOffers.map((offer) => (
-            <div
-              key={offer._id}
-              className="group relative flex min-h-64 flex-col items-start justify-between gap-1 rounded-xl bg-cover bg-center bg-no-repeat px-4 pt-12 text-white md:pt-18"
-              style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${offer.image})` }}
-            >
-              <span className="absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800">
-                {offer.priceOff}% OFF
-              </span>
-              <div>
-                <p className="font-display text-2xl font-medium">{offer.title}</p>
-                <p>{offer.description}</p>
-                <p className="mt-3 text-xs text-white/70">Expires {offer.expiryDate}</p>
-              </div>
-              <Link
-                to="/hotels"
-                className="mb-5 mt-4 flex cursor-pointer items-center gap-2 font-medium"
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex min-h-64 animate-pulse items-end rounded-xl bg-slate-200 px-4 pb-5 pt-12"
               >
-                View Offers
-                <img className="invert transition-all group-hover:translate-x-1" src={assets.arrowIcon} alt="arrow-icon" />
-              </Link>
-            </div>
-          ))}
+                <div className="w-full space-y-2">
+                  <div className="h-5 w-1/2 rounded bg-slate-300" />
+                  <div className="h-4 w-3/4 rounded bg-slate-300" />
+                </div>
+              </div>
+            ))
+          ) : offers.length > 0 ? (
+            offers.map((offer) => (
+              <div
+                key={offer._id}
+                className="group relative flex min-h-64 flex-col items-start justify-between gap-1 rounded-xl bg-cover bg-center bg-no-repeat px-4 pt-12 text-white md:pt-18"
+                style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${offer.image})` }}
+              >
+                {offer.discountPercent > 0 && (
+                  <span className="absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800">
+                    {offer.discountPercent}% OFF
+                  </span>
+                )}
+                <div>
+                  <p className="font-display text-2xl font-medium">{offer.title}</p>
+                  <p>{offer.description}</p>
+                  {offer.expiryDate && (
+                    <p className="mt-3 text-xs text-white/70">Expires {formatExpiry(offer.expiryDate)}</p>
+                  )}
+                </div>
+                <Link
+                  to={`/offers/${offer._id}`}
+                  className="mb-5 mt-4 flex cursor-pointer items-center gap-2 font-medium"
+                >
+                  View Offers
+                  <img className="invert transition-all group-hover:translate-x-1" src={assets.arrowIcon} alt="arrow-icon" />
+                </Link>
+              </div>
+            ))
+          ) : (
+            <p className="col-span-full mt-10 text-center text-sm text-gray-500">
+              No exclusive offers available right now — check back soon.
+            </p>
+          )}
         </div>
       </div>
     </section>

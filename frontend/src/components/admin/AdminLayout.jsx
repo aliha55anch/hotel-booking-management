@@ -6,12 +6,13 @@ import { getMyProfile } from '../../services/userService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { CLERK_PUBLISHABLE_KEY } from '../../lib/config.js'
 import { AdminContext } from './adminContext.js'
-import { MenuIcon, CloseIcon, GridIcon, HotelIcon, BedIcon, CalendarIcon, UsersIcon, AlertIcon, LogoutIcon } from '../ui/icons.jsx'
+import { MenuIcon, CloseIcon, GridIcon, HotelIcon, BedIcon, CalendarIcon, UsersIcon, AlertIcon, LogoutIcon, FlameIcon } from '../ui/icons.jsx'
 
 const navItems = [
   { to: '/admin', label: 'Overview', icon: GridIcon, end: true },
   { to: '/admin/hotels', label: 'Hotels', icon: HotelIcon },
   { to: '/admin/rooms', label: 'Rooms', icon: BedIcon },
+  { to: '/admin/offers', label: 'Offers', icon: FlameIcon },
   { to: '/admin/bookings', label: 'Bookings', icon: CalendarIcon },
   { to: '/admin/users', label: 'Users', icon: UsersIcon },
 ]

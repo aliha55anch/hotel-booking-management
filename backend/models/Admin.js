@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const accountSchema = require('./accountSchema')
 
-const User = mongoose.model('User', accountSchema, 'users')
+const Admin = mongoose.model('Admin', accountSchema, 'admins')
 
-module.exports = User
+module.exports = Admin

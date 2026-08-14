@@ -1,6 +1,14 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
-import { StarIcon, CalendarIcon, CheckIcon } from '../components/ui/icons.jsx'
-import { exclusiveOffers, testimonials } from '../assets/assets.js'
+import { StarIcon, CalendarIcon, CheckIcon, ArrowRightIcon } from '../components/ui/icons.jsx'
+import { testimonials } from '../assets/assets.js'
+import { getOffers } from '../services/offerService.js'
+
+const formatExpiry = (value) => {
+  if (!value) return ''
+  return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+}
 
 function Stars({ rating }) {
   return (
@@ -13,6 +21,28 @@ function Stars({ rating }) {
 }
 
 export default function Experience() {
+  const [offers, setOffers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+
+    getOffers()
+      .then((data) => {
+        if (!cancelled) setOffers(data.offers || [])
+      })
+      .catch(() => {
+        if (!cancelled) setOffers([])
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <>
       <section className="relative -mt-18 overflow-hidden bg-linear-to-b from-primary-soft/70 via-background/50 to-background">
@@ -34,35 +64,53 @@ export default function Experience() {
         </div>
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {exclusiveOffers.map((offer) => (
-            <article
-              key={offer._id}
-              className="flex flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card"
-            >
-              <div className="relative h-40 overflow-hidden bg-surface">
-                {offer.image && (
-                  <img
-                    src={offer.image}
-                    alt={offer.title}
-                    loading="lazy"
-                    className="h-full w-full object-cover"
-                  />
-                )}
-                <span className="absolute left-4 top-4 rounded-btn bg-error px-3 py-1 text-sm font-semibold text-white">
-                  Save {offer.priceOff}%
-                </span>
-              </div>
-              <div className="flex flex-1 flex-col gap-3 p-5">
-                <h3 className="font-heading text-lg font-semibold text-ink">{offer.title}</h3>
-                <p className="flex-1 text-sm text-muted">{offer.description}</p>
-                <p className="flex items-center gap-2 text-sm font-medium text-primary">
-                  <CalendarIcon className="h-4 w-4" />
-                  Valid until {offer.expiryDate}
-                </p>
-                <Button to="/hotels">Book now</Button>
-              </div>
-            </article>
-          ))}
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-72 animate-pulse rounded-card border border-line bg-surface" />
+            ))
+          ) : offers.length > 0 ? (
+            offers.map((offer) => (
+              <Link
+                key={offer._id}
+                to={`/offers/${offer._id}`}
+                className="group flex flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card transition-shadow hover:shadow-card-hover"
+              >
+                <div className="relative h-40 overflow-hidden bg-surface">
+                  {offer.image ? (
+                    <img
+                      src={offer.image}
+                      alt={offer.title}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-linear-to-br from-primary-soft to-primary/10" />
+                  )}
+                  {offer.discountPercent > 0 && (
+                    <span className="absolute left-4 top-4 rounded-btn bg-error px-3 py-1 text-sm font-semibold text-white">
+                      Save {offer.discountPercent}%
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-1 flex-col gap-3 p-5">
+                  <h3 className="font-heading text-lg font-semibold text-ink">{offer.title}</h3>
+                  <p className="flex-1 text-sm text-muted">{offer.description}</p>
+                  <p className="flex items-center gap-2 text-sm font-medium text-primary">
+                    <CalendarIcon className="h-4 w-4" />
+                    Valid until {formatExpiry(offer.expiryDate)}
+                  </p>
+                  <span className="inline-flex items-center gap-2 text-sm font-medium text-primary">
+                    View offer
+                    <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <div className="col-span-full rounded-card border border-line bg-surface p-12 text-center">
+              <p className="text-sm text-muted">No exclusive offers are available right now. Check back soon.</p>
+            </div>
+          )}
         </div>
       </section>
 
