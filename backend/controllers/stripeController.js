@@ -1,18 +1,19 @@
 const asyncHandler = require('express-async-handler')
 const stripe = require('../config/stripe')
 const Booking = require('../models/Booking')
-const { findAccountByClerkId } = require('../services/userAccountService')
+const { findAccountById } = require('../services/userAccountService')
 const { sendBookingConfirmedEmail } = require('../utils/emailService')
+const { getPkrToUsdRate } = require('../utils/exchangeRate')
 const { isStaff } = require('../utils/roles')
 
 const createPaymentIntent = asyncHandler(async (req, res) => {
   const { bookingId } = req.body
 
-  const user = await findAccountByClerkId(req.auth.userId)
+  const user = await findAccountById(req.auth.userId)
 
   if (!user) {
     res.status(404)
-    throw new Error('User not found. Webhook may not have synced this user yet.')
+    throw new Error('User not found')
   }
 
   const booking = await Booking.findById(bookingId)
@@ -42,8 +43,11 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
     throw new Error('Stripe is not configured. Add STRIPE_SECRET_KEY to .env')
   }
 
+  const rate = await getPkrToUsdRate()
+  const amountUsd = Math.round(booking.totalPrice * rate * 100)
+
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(booking.totalPrice * 100),
+    amount: amountUsd,
     currency: 'usd',
     metadata: { bookingId: booking._id.toString() },
   })
@@ -52,9 +56,16 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
     success: true,
     clientSecret: paymentIntent.client_secret,
     paymentIntentId: paymentIntent.id,
-    amount: booking.totalPrice,
+    amount: amountUsd / 100,
+    amountPkr: booking.totalPrice,
+    rate,
     currency: 'usd',
   })
+})
+
+const getUsdRate = asyncHandler(async (req, res) => {
+  const rate = await getPkrToUsdRate()
+  res.json({ success: true, rate, base: 'PKR', target: 'USD' })
 })
 
 const stripeWebhook = asyncHandler(async (req, res) => {
@@ -105,4 +116,4 @@ const stripeWebhook = asyncHandler(async (req, res) => {
   res.status(200).json({ received: true })
 })
 
-module.exports = { createPaymentIntent, stripeWebhook }
+module.exports = { createPaymentIntent, stripeWebhook, getUsdRate }

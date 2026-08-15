@@ -5,7 +5,7 @@ const { createRoom } = require('../controllers/roomController')
 const Booking = require('../models/Booking')
 const Room = require('../models/Room')
 const Hotel = require('../models/Hotel')
-const User = require('../models/User')
+const { getTestAdmin, getTestUser } = require('./testHelpers')
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -30,16 +30,15 @@ const mockRes = () => {
 const run = async () => {
   await connectDB()
 
-  const normalUser = await User.findOneAndUpdate(
-    { clerkId: 'test_clerk_user' },
-    { $setOnInsert: { clerkId: 'test_clerk_user', name: 'Test User', email: 'user@test.com' } },
-    { upsert: true, returnDocument: 'after' }
-  )
+  const admin = await getTestAdmin()
+  const user = await getTestUser()
+  const adminId = admin._id
+  const userId = user._id
 
   let res = mockRes()
   await createHotel(
     {
-      auth: { userId: 'test_clerk_admin' },
+      auth: { userId: adminId },
       body: { name: 'Pearl Continental', city: 'Islamabad', address: 'Club Road' },
     },
     res,
@@ -50,7 +49,7 @@ const run = async () => {
   res = mockRes()
   await createRoom(
     {
-      auth: { userId: 'test_clerk_admin' },
+      auth: { userId: adminId },
       body: { hotel: hotelId, roomType: 'Deluxe', pricePerNight: 150, capacity: 2 },
     },
     res,
@@ -61,7 +60,7 @@ const run = async () => {
   res = mockRes()
   await createBooking(
     {
-      auth: { userId: 'test_clerk_admin' },
+      auth: { userId: adminId },
       body: { room: roomId, checkInDate: '2026-12-01', checkOutDate: '2026-12-04' },
     },
     res,
@@ -73,7 +72,7 @@ const run = async () => {
   res = mockRes()
   await createBooking(
     {
-      auth: { userId: 'test_clerk_admin' },
+      auth: { userId: adminId },
       body: { room: roomId, checkInDate: '2026-12-02', checkOutDate: '2026-12-05' },
     },
     res,
@@ -84,7 +83,7 @@ const run = async () => {
   res = mockRes()
   await createBooking(
     {
-      auth: { userId: 'test_clerk_admin' },
+      auth: { userId: adminId },
       body: { room: roomId, checkInDate: '2026-12-04', checkOutDate: '2026-12-06' },
     },
     res,
@@ -96,7 +95,7 @@ const run = async () => {
   res = mockRes()
   await createBooking(
     {
-      auth: { userId: 'test_clerk_admin' },
+      auth: { userId: adminId },
       body: { room: roomId, checkInDate: '2026-12-06', checkOutDate: '2026-12-05' },
     },
     res,
@@ -105,16 +104,16 @@ const run = async () => {
   console.log('INVALID DATES REJECTED:', res.statusCode === 400, '| msg:', res.body.message)
 
   res = mockRes()
-  await getMyBookings({ auth: { userId: 'test_clerk_admin' } }, res, res.next)
+  await getMyBookings({ auth: { userId: adminId } }, res, res.next)
   const mine = res.body.bookings
   console.log('MY BOOKINGS:', res.statusCode, '| count:', mine.length, '| populated room price:', mine[0].room.pricePerNight, '| populated hotel name:', mine[0].hotel.name)
 
   res = mockRes()
-  await cancelBooking({ auth: { userId: 'test_clerk_user' }, params: { id: first._id.toString() } }, res, res.next)
+  await cancelBooking({ auth: { userId }, params: { id: first._id.toString() } }, res, res.next)
   console.log('CANCEL BY NON-OWNER BLOCKED:', res.statusCode === 403, '| msg:', res.body.message)
 
   res = mockRes()
-  await cancelBooking({ auth: { userId: 'test_clerk_admin' }, params: { id: first._id.toString() } }, res, res.next)
+  await cancelBooking({ auth: { userId: adminId }, params: { id: first._id.toString() } }, res, res.next)
   console.log('CANCEL BY OWNER:', res.statusCode, '| status:', res.body.booking.status)
 
   res = mockRes()
@@ -124,7 +123,6 @@ const run = async () => {
   await Booking.deleteMany({ _id: { $in: [first._id, second._id] } })
   await Room.findByIdAndDelete(roomId)
   await Hotel.findByIdAndDelete(hotelId)
-  await User.findByIdAndDelete(normalUser._id)
   process.exit(0)
 }
 

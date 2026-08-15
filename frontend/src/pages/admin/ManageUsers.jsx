@@ -109,7 +109,7 @@ export default function ManageUsers() {
             </thead>
             <tbody className="divide-y divide-line">
               {users.map((user) => {
-                const isSelf = user.clerkId === me?.clerkId
+                const isSelf = user._id === me?._id
                 const isOwnerRow = user.role === 'owner'
                 const isAdminRow = user.role === 'admin'
                 const isOwnerViewer = me?.role === 'owner'
@@ -181,7 +181,7 @@ export default function ManageUsers() {
           </span>
           <div>
             <h2 className="font-heading text-xl font-semibold text-ink">No users yet</h2>
-            <p className="mt-1 text-sm text-muted">Users appear here once they sign up through Clerk.</p>
+            <p className="mt-1 text-sm text-muted">Users appear here once they sign up.</p>
           </div>
         </div>
       )}

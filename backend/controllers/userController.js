@@ -2,7 +2,6 @@ const asyncHandler = require('express-async-handler')
 const Hotel = require('../models/Hotel')
 const Booking = require('../models/Booking')
 const {
-  findAccountByClerkId,
   findAccountById,
   listAccounts,
   updateAccount,
@@ -12,11 +11,11 @@ const { VALID_ROLES, isStaff } = require('../utils/roles')
 const { sendProfileUpdatedEmail } = require('../utils/emailService')
 
 const getMyProfile = asyncHandler(async (req, res) => {
-  const user = await findAccountByClerkId(req.auth.userId)
+  const user = await findAccountById(req.auth.userId)
 
   if (!user) {
     res.status(404)
-    throw new Error('User not found. Webhook may not have synced this user yet.')
+    throw new Error('User not found')
   }
 
   res.status(200).json({ success: true, user })
@@ -41,7 +40,7 @@ const updateMyProfile = asyncHandler(async (req, res) => {
 
   if (!user) {
     res.status(404)
-    throw new Error('User not found. Webhook may not have synced this user yet.')
+    throw new Error('User not found')
   }
 
   await sendProfileUpdatedEmail({ to: user.email, name: user.name })
@@ -85,7 +84,7 @@ const updateUser = asyncHandler(async (req, res) => {
     throw new Error('User not found')
   }
 
-  if (user.clerkId === req.auth.userId) {
+  if (user._id.toString() === req.auth.userId) {
     res.status(403)
     throw new Error('Admins cannot change their own role')
   }
@@ -107,7 +106,7 @@ const updateUser = asyncHandler(async (req, res) => {
     throw new Error('Admins cannot change the role of another admin')
   }
 
-  const updated = await updateAccount(user.clerkId, { role })
+  const updated = await updateAccount(user._id, { role })
 
   res.status(200).json({ success: true, user: updated })
 })
@@ -120,7 +119,7 @@ const deleteUser = asyncHandler(async (req, res) => {
     throw new Error('User not found')
   }
 
-  if (user.clerkId === req.auth.userId) {
+  if (user._id.toString() === req.auth.userId) {
     res.status(403)
     throw new Error('Admins cannot delete their own account')
   }
@@ -142,7 +141,7 @@ const deleteUser = asyncHandler(async (req, res) => {
     throw new Error('Admins cannot delete another admin')
   }
 
-  await deleteAccount(user.clerkId)
+  await deleteAccount(user._id)
   await Hotel.updateMany({ owner: user._id }, { $set: { owner: null } })
   await Booking.deleteMany({ user: user._id })
 

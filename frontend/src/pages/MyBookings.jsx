@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useAuth } from '@clerk/clerk-react'
 import Button from '../components/ui/Button.jsx'
 import BookingCard from '../components/booking/BookingCard.jsx'
 import { CalendarIcon } from '../components/ui/icons.jsx'
 import { getMyBookings, cancelBooking } from '../services/bookingService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
-import { CLERK_PUBLISHABLE_KEY } from '../lib/config.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
 function BookingsSkeleton() {
   return (
@@ -126,31 +125,8 @@ function BookingsContent({ token }) {
   )
 }
 
-function ClerkBookings() {
-  const { isLoaded, isSignedIn, getToken } = useAuth()
-  const [token, setToken] = useState(null)
-
-  useEffect(() => {
-    let cancelled = false
-
-    if (!isLoaded) return
-    if (!isSignedIn) return
-
-    getToken().then((value) => {
-      if (!cancelled) setToken(value)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [isLoaded, isSignedIn, getToken])
-
-  if (!isLoaded || !token) return <BookingsSkeleton />
-
-  return <BookingsContent token={token} />
-}
-
 export default function MyBookings() {
-  if (CLERK_PUBLISHABLE_KEY) return <ClerkBookings />
-  return <BookingsContent token={undefined} />
+  const { token, loading } = useAuth()
+  if (loading) return <BookingsSkeleton />
+  return <BookingsContent token={token} />
 }

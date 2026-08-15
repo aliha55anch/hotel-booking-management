@@ -6,7 +6,7 @@ const { createBooking, cancelBooking } = require('../controllers/bookingControll
 const Booking = require('../models/Booking')
 const Room = require('../models/Room')
 const Hotel = require('../models/Hotel')
-const User = require('../models/User')
+const { getTestAdmin, getTestUser } = require('./testHelpers')
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -31,16 +31,15 @@ const mockRes = () => {
 const run = async () => {
   await connectDB()
 
-  await User.findOneAndUpdate(
-    { clerkId: 'test_clerk_user' },
-    { $setOnInsert: { clerkId: 'test_clerk_user', name: 'Test User', email: 'user@test.com' } },
-    { upsert: true, returnDocument: 'after' }
-  )
+  const admin = await getTestAdmin()
+  const user = await getTestUser()
+  const adminId = admin._id
+  const userId = user._id
 
   let res = mockRes()
   await createHotel(
     {
-      auth: { userId: 'test_clerk_admin' },
+      auth: { userId: adminId },
       body: { name: 'Pearl Continental', city: 'Islamabad', address: 'Club Road' },
     },
     res,
@@ -50,7 +49,7 @@ const run = async () => {
 
   res = mockRes()
   await createRoom(
-    { auth: { userId: 'test_clerk_admin' }, body: { hotel: hotelId, roomType: 'Deluxe', pricePerNight: 150 } },
+    { auth: { userId: adminId }, body: { hotel: hotelId, roomType: 'Deluxe', pricePerNight: 150 } },
     res,
     res.next
   )
@@ -63,7 +62,7 @@ const run = async () => {
     end.setDate(end.getDate() + 2)
     res = mockRes()
     await createBooking(
-      { auth: { userId: 'test_clerk_admin' }, body: { room: roomId, checkInDate: start, checkOutDate: end } },
+      { auth: { userId: adminId }, body: { room: roomId, checkInDate: start, checkOutDate: end } },
       res,
       res.next
     )
@@ -76,7 +75,7 @@ const run = async () => {
 
   res = mockRes()
   await createPaymentIntent(
-    { auth: { userId: 'test_clerk_user' }, body: { bookingId: bookingA._id.toString() } },
+    { auth: { userId }, body: { bookingId: bookingA._id.toString() } },
     res,
     res.next
   )
@@ -84,17 +83,26 @@ const run = async () => {
 
   res = mockRes()
   await createPaymentIntent(
-    { auth: { userId: 'test_clerk_admin' }, body: { bookingId: bookingA._id.toString() } },
+    { auth: { userId: adminId }, body: { bookingId: bookingA._id.toString() } },
     res,
     res.next
   )
-  console.log('OWNER, NO STRIPE KEY:', res.statusCode === 500, '| msg:', res.body.message)
+  console.log(
+    'OWNER PAYMENT INTENT:',
+    res.statusCode === 201,
+    '| has clientSecret:',
+    Boolean(res.body.clientSecret),
+    '| amountUsd:',
+    res.body.amount,
+    '| currency:',
+    res.body.currency
+  )
 
   res = mockRes()
-  await cancelBooking({ auth: { userId: 'test_clerk_admin' }, params: { id: bookingB._id.toString() } }, res, res.next)
+  await cancelBooking({ auth: { userId: adminId }, params: { id: bookingB._id.toString() } }, res, res.next)
   res = mockRes()
   await createPaymentIntent(
-    { auth: { userId: 'test_clerk_admin' }, body: { bookingId: bookingB._id.toString() } },
+    { auth: { userId: adminId }, body: { bookingId: bookingB._id.toString() } },
     res,
     res.next
   )
@@ -103,7 +111,7 @@ const run = async () => {
   await Booking.findByIdAndUpdate(bookingC._id, { paymentStatus: 'paid' })
   res = mockRes()
   await createPaymentIntent(
-    { auth: { userId: 'test_clerk_admin' }, body: { bookingId: bookingC._id.toString() } },
+    { auth: { userId: adminId }, body: { bookingId: bookingC._id.toString() } },
     res,
     res.next
   )
@@ -116,7 +124,6 @@ const run = async () => {
   await Booking.deleteMany({ _id: { $in: [bookingA._id, bookingB._id, bookingC._id] } })
   await Room.findByIdAndDelete(roomId)
   await Hotel.findByIdAndDelete(hotelId)
-  await User.findOneAndDelete({ clerkId: 'test_clerk_user' })
   process.exit(0)
 }
 

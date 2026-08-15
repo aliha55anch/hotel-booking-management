@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler')
 const Booking = require('../models/Booking')
 const Room = require('../models/Room')
 const Hotel = require('../models/Hotel')
-const { findAccountByClerkId, findAccountById } = require('../services/userAccountService')
+const { findAccountById } = require('../services/userAccountService')
 const {
   sendBookingReceivedEmail,
   sendBookingCancelledEmail,
@@ -12,8 +12,8 @@ const { isStaff } = require('../utils/roles')
 
 const NIGHT_MS = 1000 * 60 * 60 * 24
 
-const getLocalUser = async (clerkId) => {
-  return findAccountByClerkId(clerkId)
+const getLocalUser = async (userId) => {
+  return findAccountById(userId)
 }
 
 const createBooking = asyncHandler(async (req, res) => {

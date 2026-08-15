@@ -10,6 +10,7 @@ const {
 const { createHotel } = require('../controllers/hotelController')
 const Offer = require('../models/Offer')
 const Hotel = require('../models/Hotel')
+const { getTestAdmin } = require('./testHelpers')
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -31,8 +32,8 @@ const mockRes = () => {
   return res
 }
 
-const adminReq = (body = {}, query = {}) => ({
-  auth: { userId: 'test_clerk_admin' },
+const adminReq = (adminId, body = {}, query = {}) => ({
+  auth: { userId: adminId },
   body,
   query,
   params: {},
@@ -41,11 +42,14 @@ const adminReq = (body = {}, query = {}) => ({
 const run = async () => {
   await connectDB()
 
+  const admin = await getTestAdmin()
+  const adminId = admin._id
+
   await Offer.deleteMany({ title: 'Test Exclusive Offer' })
   const hotelRes = mockRes()
   await createHotel(
     {
-      auth: { userId: 'test_clerk_admin' },
+      auth: { userId: adminId },
       body: {
         name: 'Test Offer Hotel',
         description: 'Temp',
@@ -64,7 +68,7 @@ const run = async () => {
 
   res = mockRes()
   await createOffer(
-    adminReq({
+    adminReq(adminId, {
       title: 'Test Exclusive Offer',
       description: 'A test offer with a complete package option.',
       image: '/packages/p1.webp',
@@ -109,7 +113,7 @@ const run = async () => {
   res = mockRes()
   await updateOffer(
     {
-      auth: { userId: 'test_clerk_admin' },
+      auth: { userId: adminId },
       params: { id },
       body: { discountPercent: 40, packageOptions: [{ name: 'Complete Package', nights: 4, price: 36000 }] },
     },
@@ -118,11 +122,11 @@ const run = async () => {
   console.log('UPDATE:', res.statusCode, '| discount:', res.body.offer.discountPercent, '| nights:', res.body.offer.packageOptions[0].nights)
 
   res = mockRes()
-  await getAllOffers({ auth: { userId: 'test_clerk_admin' }, query: {} }, res)
+  await getAllOffers({ auth: { userId: adminId }, query: {} }, res)
   console.log('LIST ALL (staff):', res.statusCode, '| count:', res.body.offers.length)
 
   res = mockRes()
-  await deleteOffer({ auth: { userId: 'test_clerk_admin' }, params: { id } }, res)
+  await deleteOffer({ auth: { userId: adminId }, params: { id } }, res)
   console.log('DELETE:', res.statusCode, '| message:', res.body.message)
 
   const stillThere = await Offer.findById(id)

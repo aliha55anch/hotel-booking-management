@@ -1,11 +1,11 @@
 # StayHub — Hotel Booking System
 
-Full-stack hotel booking platform: React + Vite frontend, Express + MongoDB (Mongoose) backend, Clerk auth, Stripe payments.
+Full-stack hotel booking platform: React + Vite frontend, Express + MongoDB (Mongoose) backend, email + password auth (JWT), Stripe payments.
 
 ## Stack
 
-- **Frontend:** React 19, Vite 8, Tailwind CSS v4, react-hook-form, Clerk (React)
-- **Backend:** Node.js, Express 5, Mongoose, Clerk (Express), Stripe, Nodemailer
+- **Frontend:** React 19, Vite 8, Tailwind CSS v4, react-hook-form
+- **Backend:** Node.js, Express 5, Mongoose, jsonwebtoken, bcryptjs, Stripe, Nodemailer
 - **Database:** MongoDB (local or Atlas)
 
 ## Setup
@@ -24,18 +24,13 @@ npm run dev            # http://localhost:5000
 | Key | Purpose | Required |
 | --- | --- | --- |
 | `MONGO_URI` | MongoDB connection string | Yes |
-| `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY` | Auth (Clerk dashboard) | For real auth |
-| `CLERK_WEBHOOK_SECRET` | Clerk user sync webhook | For user sync |
-| `DEV_USER_ID` | Fallback identity when Clerk keys are empty | Only in fallback |
+| `JWT_SECRET` | Signs auth tokens (any long random string) | Yes |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Card payments | For Stripe |
 | `EMAIL_USER`, `EMAIL_PASS` | Booking confirmation emails | For email |
 | `CORS_ORIGIN` | Comma-separated browser origins allowed in production | For production |
-| `NODE_ENV` | `development` / `production` (disables auth fallback) | For production |
+| `NODE_ENV` | `development` / `production` | For production |
 
-> **Fallback mode:** with empty Clerk keys the API runs unauthenticated and every request
-> acts as `DEV_USER_ID` (default `test_clerk_admin`). Booking, "my bookings" and the
-> owner/admin areas are limited to that identity. `NODE_ENV=production` disables the
-> fallback (auth requests return 503 until real keys are added).
+> First account created via the public sign-up endpoint becomes the system `owner`.
 
 ### 2. Frontend
 
@@ -50,7 +45,6 @@ npm run dev            # http://localhost:5173
 
 | Key | Purpose | Required |
 | --- | --- | --- |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Sign-in / sign-up (Clerk dashboard) | For real auth |
 | `VITE_API_URL` | Backend base URL (`http://localhost:5000/api`) | Yes |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Card payments | For Stripe |
 
@@ -64,14 +58,13 @@ The app is split for hosting: the React frontend goes to **Vercel**, the Express
    - Root directory: `backend`, start command: `npm start`. `render.yaml` is included and configures this automatically.
 2. Add the environment variables from `backend/.env.example` in the Render dashboard:
    - `MONGO_URI` — MongoDB Atlas connection string
-   - `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, `CLERK_WEBHOOK_SECRET`
+   - `JWT_SECRET` — a long random string for signing auth tokens
    - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (register the webhook URL below)
    - `EMAIL_USER`, `EMAIL_PASS`
    - `NODE_ENV=production`
    - `CORS_ORIGIN` — set to your Vercel frontend URL, e.g. `https://your-app.vercel.app`
 3. After deploy, note the API URL (e.g. `https://stayhub-api.onrender.com/api`).
 4. Register webhooks in the dashboards:
-   - Clerk: endpoint `https://your-api.onrender.com/api/webhooks/clerk` (user created/updated events) with the signing secret.
    - Stripe: endpoint `https://your-api.onrender.com/api/stripe/webhook` with `whsec_...`.
    - Email: use a Gmail app password for `EMAIL_USER` / `EMAIL_PASS`.
 
@@ -80,10 +73,8 @@ The app is split for hosting: the React frontend goes to **Vercel**, the Express
 1. Create a new Vercel project pointing at the `frontend` directory (it auto-detects Vite; `vercel.json` provides SPA rewrites).
 2. Add the environment variables:
    - `VITE_API_URL` — `https://your-api.onrender.com/api`
-   - `VITE_CLERK_PUBLISHABLE_KEY` — your Clerk publishable key
    - `VITE_STRIPE_PUBLISHABLE_KEY` — your Stripe publishable key
 3. Deploy. The live URL is your Vercel project URL (e.g. `https://your-app.vercel.app`).
-4. Back in Clerk, add that URL to **Allowed origins** and the sign-in/redirect URLs.
 
 > The first account that signs up becomes the system `owner` (only happens when the `User`
 > collection is empty), so sign up before inviting others.
@@ -124,7 +115,6 @@ npm run preview   # preview the build
 | `PUT /api/bookings/:id` | Update booking status (admin) |
 | `DELETE /api/reviews/:id` | Delete review (author, hotel owner, or admin) |
 | `POST /api/newsletter/subscribe` | Save a newsletter subscriber email |
-| `POST /api/webhooks/clerk` | Clerk user sync webhook (needs `CLERK_WEBHOOK_SECRET`) |
 | `POST /api/stripe/webhook` | Stripe payment webhook (needs `STRIPE_WEBHOOK_SECRET`) |
 
 ## Notes

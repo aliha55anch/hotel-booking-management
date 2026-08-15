@@ -14,17 +14,17 @@
     "test": "node tests/testHotels.js && node tests/testRooms.js && node tests/testBookings.js && node tests/testReviews.js && node tests/testStripe.js && node tests/testOffers.js && node tests/testAccounts.js"
   },
   "dependencies": {
-    "@clerk/express": "^2.1.54",
     "@stripe/react-stripe-js": "^6.8.1",
     "@stripe/stripe-js": "^9.13.0",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.2",
     "nodemailer": "^9.0.5",
-    "stripe": "^22.5.0",
-    "svix": "^1.99.1"
+    "stripe": "^22.5.0"
   },
   "devDependencies": {
     "c8": "^12.0.0",

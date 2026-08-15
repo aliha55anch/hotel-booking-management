@@ -2,11 +2,6 @@ const mongoose = require('mongoose')
 
 const accountSchema = new mongoose.Schema(
   {
-    clerkId: {
-      type: String,
-      required: true,
-      unique: true,
-    },
     name: {
       type: String,
     },
@@ -14,6 +9,12 @@ const accountSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    password: {
+      type: String,
+      select: false,
     },
     image: {
       type: String,

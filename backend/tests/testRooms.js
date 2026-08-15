@@ -3,6 +3,7 @@ const { createRoom, updateRoom, deleteRoom } = require('../controllers/roomContr
 const { createHotel } = require('../controllers/hotelController')
 const Room = require('../models/Room')
 const Hotel = require('../models/Hotel')
+const { getTestAdmin } = require('./testHelpers')
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -27,10 +28,13 @@ const mockRes = () => {
 const run = async () => {
   await connectDB()
 
+  const admin = await getTestAdmin()
+  const adminId = admin._id
+
   let res = mockRes()
   await createHotel(
     {
-      auth: { userId: 'test_clerk_admin' },
+      auth: { userId: adminId },
       body: {
         name: 'Pearl Continental',
         city: 'Islamabad',
@@ -46,7 +50,7 @@ const run = async () => {
   res = mockRes()
   await createRoom(
     {
-      auth: { userId: 'test_clerk_admin' },
+      auth: { userId: adminId },
       body: {
         hotel: hotelId,
         roomType: 'Deluxe',
@@ -65,13 +69,13 @@ const run = async () => {
 
   res = mockRes()
   await updateRoom(
-    { auth: { userId: 'test_clerk_admin' }, params: { id: roomId }, body: { pricePerNight: 200, roomType: 'Suite' } },
+    { auth: { userId: adminId }, params: { id: roomId }, body: { pricePerNight: 200, roomType: 'Suite' } },
     res
   )
   console.log('UPDATE:', res.statusCode, '| type:', res.body.room.roomType, '| price:', res.body.room.pricePerNight)
 
   res = mockRes()
-  await deleteRoom({ auth: { userId: 'test_clerk_admin' }, params: { id: roomId } }, res)
+  await deleteRoom({ auth: { userId: adminId }, params: { id: roomId } }, res)
   console.log('DELETE:', res.statusCode, '| message:', res.body.message)
 
   const gone = await Room.findById(roomId)

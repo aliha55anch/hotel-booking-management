@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAuth, useClerk } from '@clerk/clerk-react'
 import Button from '../components/ui/Button.jsx'
 import Modal from '../components/ui/Modal.jsx'
 import RoomCard from '../components/hotel/RoomCard.jsx'
@@ -9,11 +8,10 @@ import { MapPinIcon, StarIcon, HotelIcon, ChevronLeftIcon, CalendarIcon, TrashIc
 import { getHotelById } from '../services/hotelService.js'
 import { getRoomsByHotel } from '../services/roomService.js'
 import { getReviewsByHotel, createReview, deleteReview } from '../services/reviewService.js'
-import { getMyProfile } from '../services/userService.js'
 import { checkAvailability } from '../services/bookingService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
 import { formatPrice } from '../lib/format.js'
-import { CLERK_PUBLISHABLE_KEY } from '../lib/config.js'
+import { useAuth } from '../context/AuthContext.jsx'
 import { galleryFor } from '../lib/siteImages.js'
 
 const formatDate = (iso) => {
@@ -31,8 +29,7 @@ const modalInputClass =
 
 function BookingModal({ hotel, open, onClose }) {
   const navigate = useNavigate()
-  const { isLoaded, isSignedIn } = useAuth()
-  const { openSignIn } = useClerk()
+  const { user } = useAuth()
   const [checkIn, setCheckIn] = useState('')
   const [checkOut, setCheckOut] = useState('')
   const [guests, setGuests] = useState(1)
@@ -64,9 +61,9 @@ function BookingModal({ hotel, open, onClose }) {
 
       const paymentUrl = `/payment?hotel=${hotel._id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`
 
-      if (CLERK_PUBLISHABLE_KEY && isLoaded && !isSignedIn) {
+      if (!user) {
         onClose()
-        openSignIn({ redirectUrl: paymentUrl })
+        navigate('/login', { state: { from: { pathname: paymentUrl } } })
         return
       }
 
@@ -178,8 +175,8 @@ function DetailSkeleton() {
 }
 
 function ReviewForm({ hotelId, onCreated }) {
-  const { isLoaded, isSignedIn, getToken } = useAuth()
-  const { openSignIn } = useClerk()
+  const { user, token } = useAuth()
+  const navigate = useNavigate()
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
   const [status, setStatus] = useState('idle')
@@ -188,9 +185,8 @@ function ReviewForm({ hotelId, onCreated }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!isLoaded) return
-    if (!isSignedIn) {
-      openSignIn({ redirectUrl: window.location.href })
+    if (!user) {
+      navigate('/login', { state: { from: { pathname: window.location.pathname } } })
       return
     }
 
@@ -198,7 +194,6 @@ function ReviewForm({ hotelId, onCreated }) {
     setError(null)
 
     try {
-      const token = await getToken()
       const { review } = await createReview(
         { hotel: hotelId, rating, comment: comment.trim() },
         token
@@ -306,52 +301,23 @@ export default function HotelDetail() {
   const [notFound, setNotFound] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
   const [showBooking, setShowBooking] = useState(false)
-  const [me, setMe] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
   const [deleteError, setDeleteError] = useState(null)
 
-  const { isLoaded, isSignedIn, userId, getToken } = useAuth()
-  const myClerkId = isLoaded && isSignedIn ? userId : null
-
-  useEffect(() => {
-    let cancelled = false
-    if (!isLoaded || !isSignedIn) {
-      setMe(null)
-      return () => {
-        cancelled = true
-      }
-    }
-
-    getToken()
-      .then((token) => {
-        if (cancelled) return
-        return getMyProfile(token)
-      })
-      .then((data) => {
-        if (!cancelled) setMe(data.user)
-      })
-      .catch(() => {
-        if (!cancelled) setMe(null)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [isLoaded, isSignedIn, getToken])
+  const { user, token } = useAuth()
+  const myUserId = user?._id ? String(user._id) : null
 
   const canDeleteReview = (review) => {
-    if (!myClerkId) return false
-    if (review.user?.clerkId === myClerkId) return true
-    if (!me) return false
-    if (me.role === 'admin') return true
-    return Boolean(hotel?.owner && me._id && hotel.owner === me._id)
+    if (!myUserId) return false
+    if (review.user?._id && String(review.user._id) === myUserId) return true
+    if (user?.role === 'admin') return true
+    return Boolean(hotel?.owner && user?._id && hotel.owner === user._id)
   }
 
   const handleDeleteReview = async (reviewId) => {
     setDeletingId(reviewId)
     setDeleteError(null)
     try {
-      const token = await getToken()
       await deleteReview(reviewId, token)
       setReviews((prev) => prev.filter((review) => review._id !== reviewId))
     } catch (err) {
@@ -538,12 +504,10 @@ export default function HotelDetail() {
 
       <section className="mt-10">
         <h2 className="font-heading text-xl font-semibold text-ink">Reviews</h2>
-        {CLERK_PUBLISHABLE_KEY && (
-          <ReviewForm
-            hotelId={hotel._id}
-            onCreated={(review) => setReviews((prev) => [review, ...prev])}
-          />
-        )}
+        <ReviewForm
+          hotelId={hotel._id}
+          onCreated={(review) => setReviews((prev) => [review, ...prev])}
+        />
         {deleteError && <p className="mt-3 text-sm text-error">{deleteError}</p>}
         <ReviewList
           reviews={reviews}

@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs')
 const User = require('../models/User')
 const Owner = require('../models/Owner')
 const Admin = require('../models/Admin')
@@ -31,17 +32,19 @@ const decorate = (doc) => {
 // Only one top-level "owner" account is allowed across the whole system.
 const hasOwner = async () => (await Owner.countDocuments({ role: 'owner' })) > 0
 
-const findAccountByClerkId = async (clerkId) => {
+const findAccountById = async (id) => {
   for (const model of ACCOUNT_MODELS) {
-    const doc = await model.findOne({ clerkId })
+    const doc = await model.findById(id)
     if (doc) return decorate(doc)
   }
   return null
 }
 
-const findAccountById = async (id) => {
+const findAccountByEmail = async (email) => {
+  if (!email) return null
+  const normalized = String(email).trim().toLowerCase()
   for (const model of ACCOUNT_MODELS) {
-    const doc = await model.findById(id)
+    const doc = await model.findOne({ email: normalized })
     if (doc) return decorate(doc)
   }
   return null
@@ -58,11 +61,11 @@ const listAccounts = async () => {
 
 // Creates an account in the collection matching its role. Without an explicit
 // role, the first account becomes the owner and everyone else a user.
-const createAccount = async ({ clerkId, name, email, image, role } = {}) => {
-  if (!clerkId) throw new Error('clerkId is required')
+const createAccount = async ({ name, email, image, role, password } = {}) => {
+  if (!email) throw new Error('Email is required')
 
-  const existing = await findAccountByClerkId(clerkId)
-  if (existing) return existing
+  const existing = await findAccountByEmail(email)
+  if (existing) throw new Error('An account with this email already exists')
 
   const resolvedRole = role || (await hasOwner() ? 'user' : 'owner')
 
@@ -71,7 +74,8 @@ const createAccount = async ({ clerkId, name, email, image, role } = {}) => {
   }
 
   const model = ROLE_TO_MODEL[resolvedRole]
-  const account = { clerkId, name, email, image }
+  const account = { name, email, image }
+  if (password) account.password = await bcrypt.hash(password, 10)
   if (resolvedRole === 'owner') account.role = 'owner'
 
   const doc = await model.create(account)
@@ -86,11 +90,11 @@ const createAccount = async ({ clerkId, name, email, image, role } = {}) => {
 
 // Updates an account in its own collection. A role change moves the account
 // to the matching collection, keeping the same _id.
-const updateAccount = async (clerkId, updates = {}) => {
-  const existing = await findAccountByClerkId(clerkId)
+const updateAccount = async (id, updates = {}) => {
+  const existing = await findAccountById(id)
   if (!existing) return null
 
-  const { role, ...rest } = updates
+  const { role, password, ...rest } = updates
   const currentRole = existing.role
 
   if (role && role !== currentRole) {
@@ -100,8 +104,9 @@ const updateAccount = async (clerkId, updates = {}) => {
 
     const fromModel = ROLE_TO_MODEL[currentRole]
     const toModel = ROLE_TO_MODEL[role]
-    const set = { clerkId, ...rest }
+    const set = { ...rest }
     if (role === 'owner') set.role = 'owner'
+    if (password) set.password = await bcrypt.hash(password, 10)
 
     if (fromModel === toModel) {
       const updated = await toModel.findByIdAndUpdate(existing._id, { $set: set }, { returnDocument: 'after' })
@@ -110,32 +115,50 @@ const updateAccount = async (clerkId, updates = {}) => {
 
     const moved = await toModel.findByIdAndUpdate(
       existing._id,
-      { $set: set },
+      { $set: { name: existing.name, email: existing.email, image: existing.image, ...set } },
       { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
     )
-    await fromModel.deleteOne({ clerkId })
+    await fromModel.deleteOne({ _id: existing._id })
     return decorate(moved)
   }
 
   const model = ROLE_TO_MODEL[currentRole]
   const set = { ...rest }
   if (role) set.role = role
+  if (password) set.password = await bcrypt.hash(password, 10)
 
-  const updated = await model.findOneAndUpdate({ clerkId }, { $set: set }, { returnDocument: 'after' })
+  const updated = await model.findByIdAndUpdate(existing._id, { $set: set }, { returnDocument: 'after' })
   return decorate(updated)
 }
 
-const deleteAccount = async (clerkId) => {
-  if (!clerkId) return
-  await Promise.all(ACCOUNT_MODELS.map((model) => model.deleteOne({ clerkId })))
+const deleteAccount = async (id) => {
+  if (!id) return
+  await Promise.all(ACCOUNT_MODELS.map((model) => model.deleteOne({ _id: id })))
+}
+
+// Used by the login flow only. Returns the account including the hashed
+// password when the credentials match, otherwise null.
+const verifyCredentials = async ({ email, password }) => {
+  if (!email || !password) return null
+  const normalized = String(email).trim().toLowerCase()
+
+  for (const model of ACCOUNT_MODELS) {
+    const doc = await model.findOne({ email: normalized }).select('+password')
+    if (doc && doc.password) {
+      const matches = await bcrypt.compare(password, doc.password)
+      if (matches) return decorate(doc)
+    }
+  }
+  return null
 }
 
 module.exports = {
   createAccount,
   updateAccount,
   deleteAccount,
-  findAccountByClerkId,
   findAccountById,
+  findAccountByEmail,
+  verifyCredentials,
   listAccounts,
   hasOwner,
 }

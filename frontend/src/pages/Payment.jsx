@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { useAuth, useClerk } from '@clerk/clerk-react'
 import Button from '../components/ui/Button.jsx'
 import {
   BedIcon,
@@ -15,10 +14,11 @@ import {
 } from '../components/ui/icons.jsx'
 import { getHotelById } from '../services/hotelService.js'
 import { checkAvailability, createBooking } from '../services/bookingService.js'
-import { createPaymentIntent } from '../services/stripeService.js'
+import { createPaymentIntent, getExchangeRate } from '../services/stripeService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
-import { formatPrice } from '../lib/format.js'
-import { CLERK_PUBLISHABLE_KEY, STRIPE_PUBLISHABLE_KEY } from '../lib/config.js'
+import { formatPrice, formatUsd } from '../lib/format.js'
+import { STRIPE_PUBLISHABLE_KEY } from '../lib/config.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24
 
@@ -43,10 +43,26 @@ const runCheckout = async ({ roomId, checkIn, checkOut, token, stripe, elements 
 
 function CheckoutLayout({ hotel, rooms, checkIn, checkOut, guests, initialRoomId, onSubmit, status, error, showCard, stripeReady }) {
   const [roomId, setRoomId] = useState(initialRoomId || '')
+  const [usdRate, setUsdRate] = useState(null)
 
   useEffect(() => {
     if (rooms.length && !rooms.some((room) => room._id === roomId)) setRoomId(rooms[0]._id)
   }, [rooms, roomId])
+
+  useEffect(() => {
+    if (!showCard) return
+    let cancelled = false
+    getExchangeRate()
+      .then(({ rate }) => {
+        if (!cancelled) setUsdRate(rate)
+      })
+      .catch(() => {
+        if (!cancelled) setUsdRate(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [showCard])
 
   const selectedRoom = rooms.find((room) => room._id === roomId) || rooms[0]
 
@@ -178,6 +194,12 @@ function CheckoutLayout({ hotel, rooms, checkIn, checkOut, guests, initialRoomId
                 <dt className="font-semibold text-ink">Total</dt>
                 <dd className="text-xl font-semibold text-primary">{formatPrice(total)}</dd>
               </div>
+              {showCard && usdRate && total > 0 && (
+                <div className="mt-2 flex items-center justify-between rounded-btn bg-primary-soft px-3 py-2 text-sm">
+                  <dt className="font-medium text-ink">You pay (approx.)</dt>
+                  <dd className="font-semibold text-primary">{formatUsd(total * usdRate)}</dd>
+                </div>
+              )}
             </dl>
           ) : (
             <p className="mt-4 text-sm text-muted">Select a room to see the total.</p>
@@ -229,9 +251,8 @@ function CheckoutLayout({ hotel, rooms, checkIn, checkOut, guests, initialRoomId
   )
 }
 
-function ClerkStripeCheckout(props) {
-  const { isLoaded, isSignedIn, getToken } = useAuth()
-  const { openSignIn } = useClerk()
+function StripeCheckout(props) {
+  const { token } = useAuth()
   const stripe = useStripe()
   const elements = useElements()
   const navigate = useNavigate()
@@ -239,20 +260,12 @@ function ClerkStripeCheckout(props) {
   const [error, setError] = useState(null)
 
   const handleSubmit = async (room) => {
-    if (!isLoaded) return
-
-    if (!isSignedIn) {
-      openSignIn({ redirectUrl: window.location.href })
-      return
-    }
-
     if (status === 'submitting') return
 
     setStatus('submitting')
     setError(null)
 
     try {
-      const token = await getToken()
       await runCheckout({
         roomId: room._id,
         checkIn: props.checkIn,
@@ -280,28 +293,19 @@ function ClerkStripeCheckout(props) {
   )
 }
 
-function ClerkSimpleCheckout(props) {
-  const { isLoaded, isSignedIn, getToken } = useAuth()
-  const { openSignIn } = useClerk()
+function SimpleCheckout(props) {
+  const { token } = useAuth()
   const navigate = useNavigate()
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
 
   const handleSubmit = async (room) => {
-    if (!isLoaded) return
-
-    if (!isSignedIn) {
-      openSignIn({ redirectUrl: window.location.href })
-      return
-    }
-
     if (status === 'submitting') return
 
     setStatus('submitting')
     setError(null)
 
     try {
-      const token = await getToken()
       await runCheckout({ roomId: room._id, checkIn: props.checkIn, checkOut: props.checkOut, token })
       navigate('/my-bookings', { replace: true })
     } catch (err) {
@@ -313,92 +317,18 @@ function ClerkSimpleCheckout(props) {
   return <CheckoutLayout {...props} onSubmit={handleSubmit} status={status} error={error} showCard={false} />
 }
 
-function GuestStripeCheckout(props) {
-  const stripe = useStripe()
-  const elements = useElements()
-  const navigate = useNavigate()
-  const [status, setStatus] = useState('idle')
-  const [error, setError] = useState(null)
-
-  const handleSubmit = async (room) => {
-    if (status === 'submitting') return
-
-    setStatus('submitting')
-    setError(null)
-
-    try {
-      await runCheckout({
-        roomId: room._id,
-        checkIn: props.checkIn,
-        checkOut: props.checkOut,
-        token: null,
-        stripe,
-        elements,
-      })
-      navigate('/my-bookings', { replace: true })
-    } catch (err) {
-      setError(getApiErrorMessage(err, 'Could not complete the booking'))
-      setStatus('error')
-    }
-  }
-
-  return (
-    <CheckoutLayout
-      {...props}
-      onSubmit={handleSubmit}
-      status={status}
-      error={error}
-      showCard
-      stripeReady={!!stripe && !!elements}
-    />
-  )
-}
-
-function GuestSimpleCheckout(props) {
-  const navigate = useNavigate()
-  const [status, setStatus] = useState('idle')
-  const [error, setError] = useState(null)
-
-  const handleSubmit = async (room) => {
-    if (status === 'submitting') return
-
-    setStatus('submitting')
-    setError(null)
-
-    try {
-      await runCheckout({ roomId: room._id, checkIn: props.checkIn, checkOut: props.checkOut, token: null })
-      navigate('/my-bookings', { replace: true })
-    } catch (err) {
-      setError(getApiErrorMessage(err, 'Could not complete the booking'))
-      setStatus('error')
-    }
-  }
-
-  return <CheckoutLayout {...props} onSubmit={handleSubmit} status={status} error={error} showCard={false} />
-}
-
 function PaymentCheckout(props) {
-  const clerk = Boolean(CLERK_PUBLISHABLE_KEY)
   const stripe = Boolean(stripePromise)
 
-  if (clerk && stripe) {
-    return (
-      <Elements stripe={stripePromise}>
-        <ClerkStripeCheckout {...props} />
-      </Elements>
-    )
-  }
-
-  if (clerk) return <ClerkSimpleCheckout {...props} />
   if (stripe) {
     return (
       <Elements stripe={stripePromise}>
-        <GuestStripeCheckout {...props} />
+        <StripeCheckout {...props} />
       </Elements>
     )
   }
 
-  return <GuestSimpleCheckout {...props} />
+  return <SimpleCheckout {...props} />
 }
 
 export default function Payment() {

@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth, useClerk } from '@clerk/clerk-react'
 import Button from '../ui/Button.jsx'
 import AmenitiesList from './AmenitiesList.jsx'
 import { BedIcon, UsersIcon, CalendarIcon } from '../ui/icons.jsx'
 import { formatPrice } from '../../lib/format.js'
-import { CLERK_PUBLISHABLE_KEY } from '../../lib/config.js'
+import { useAuth } from '../../context/AuthContext.jsx'
 import { imageFor } from '../../lib/siteImages.js'
 import { roomPrimaryImage } from '../../lib/images.js'
 
@@ -19,35 +18,8 @@ const todayISO = () => {
 const dateInputClass =
   'h-11 w-full rounded-btn border border-line bg-background px-4 text-sm text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
 
-function ClerkBookButton({ paymentUrl, disabled, onNoDates }) {
-  const { isLoaded, isSignedIn } = useAuth()
-  const { openSignIn } = useClerk()
-  const navigate = useNavigate()
-
-  const handleBook = () => {
-    if (!isLoaded) return
-
-    if (disabled || !paymentUrl) {
-      if (onNoDates) onNoDates()
-      return
-    }
-
-    if (!isSignedIn) {
-      openSignIn({ redirectUrl: paymentUrl })
-      return
-    }
-
-    navigate(paymentUrl)
-  }
-
-  return (
-    <Button type="button" size="md" className="w-full" disabled={!isLoaded} onClick={handleBook}>
-      Book Now
-    </Button>
-  )
-}
-
-function GuestBookButton({ paymentUrl, disabled, onNoDates }) {
+function BookButton({ paymentUrl, disabled, onNoDates }) {
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   const handleBook = () => {
@@ -55,6 +27,12 @@ function GuestBookButton({ paymentUrl, disabled, onNoDates }) {
       if (onNoDates) onNoDates()
       return
     }
+
+    if (!user) {
+      navigate('/login', { state: { from: { pathname: paymentUrl } } })
+      return
+    }
+
     navigate(paymentUrl)
   }
 
@@ -63,11 +41,6 @@ function GuestBookButton({ paymentUrl, disabled, onNoDates }) {
       Book Now
     </Button>
   )
-}
-
-function BookButton(props) {
-  if (CLERK_PUBLISHABLE_KEY) return <ClerkBookButton {...props} />
-  return <GuestBookButton {...props} />
 }
 
 export default function RoomCard({ room, hotelId }) {

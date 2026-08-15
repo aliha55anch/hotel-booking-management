@@ -2,7 +2,7 @@ const connectDB = require('../config/db')
 const dotenv = require('dotenv')
 const Offer = require('../models/Offer')
 const Hotel = require('../models/Hotel')
-const { findAccountByClerkId } = require('../services/userAccountService')
+const { findAccountByEmail } = require('../services/userAccountService')
 
 dotenv.config()
 
@@ -123,7 +123,7 @@ const offers = [
 const run = async () => {
   await connectDB()
 
-  const admin = await findAccountByClerkId(process.env.DEV_USER_ID || 'test_clerk_admin')
+  const admin = await findAccountByEmail('admin@test.com')
   const owner = admin ? admin._id : null
   const ownerModel = admin ? admin.userModel : undefined
 

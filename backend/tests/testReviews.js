@@ -3,7 +3,7 @@ const { createReview, getReviewsByHotel, deleteReview } = require('../controller
 const { createHotel } = require('../controllers/hotelController')
 const Review = require('../models/Review')
 const Hotel = require('../models/Hotel')
-const User = require('../models/User')
+const { getTestAdmin, getTestUser } = require('./testHelpers')
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -33,16 +33,15 @@ const getHotelRating = async (id) => {
 const run = async () => {
   await connectDB()
 
-  await User.findOneAndUpdate(
-    { clerkId: 'test_clerk_user' },
-    { $setOnInsert: { clerkId: 'test_clerk_user', name: 'Test User', email: 'user@test.com' } },
-    { upsert: true, returnDocument: 'after' }
-  )
+  const admin = await getTestAdmin()
+  const user = await getTestUser()
+  const adminId = admin._id
+  const userId = user._id
 
   let res = mockRes()
   await createHotel(
     {
-      auth: { userId: 'test_clerk_admin' },
+      auth: { userId: adminId },
       body: { name: 'Pearl Continental', city: 'Islamabad', address: 'Club Road' },
     },
     res,
@@ -52,7 +51,7 @@ const run = async () => {
 
   res = mockRes()
   await createReview(
-    { auth: { userId: 'test_clerk_admin' }, body: { hotel: hotelId, rating: 5, comment: 'Great stay' } },
+    { auth: { userId: adminId }, body: { hotel: hotelId, rating: 5, comment: 'Great stay' } },
     res,
     res.next
   )
@@ -61,7 +60,7 @@ const run = async () => {
 
   res = mockRes()
   await createReview(
-    { auth: { userId: 'test_clerk_admin' }, body: { hotel: hotelId, rating: 2, comment: 'Duplicate attempt' } },
+    { auth: { userId: adminId }, body: { hotel: hotelId, rating: 2, comment: 'Duplicate attempt' } },
     res,
     res.next
   )
@@ -69,7 +68,7 @@ const run = async () => {
 
   res = mockRes()
   await createReview(
-    { auth: { userId: 'test_clerk_user' }, body: { hotel: hotelId, rating: 3, comment: 'Decent' } },
+    { auth: { userId }, body: { hotel: hotelId, rating: 3, comment: 'Decent' } },
     res,
     res.next
   )
@@ -82,16 +81,15 @@ const run = async () => {
   console.log('LIST:', res.statusCode, '| count:', reviews.length, '| user name populated:', reviews[0].user.name === 'Test Admin', '| email excluded:', reviews[0].user.email === undefined)
 
   res = mockRes()
-  await deleteReview({ auth: { userId: 'test_clerk_user' }, params: { id: first._id.toString() } }, res, res.next)
+  await deleteReview({ auth: { userId }, params: { id: first._id.toString() } }, res, res.next)
   console.log('DELETE BY NON-OWNER BLOCKED:', res.statusCode === 403, '| msg:', res.body.message)
 
   res = mockRes()
-  await deleteReview({ auth: { userId: 'test_clerk_admin' }, params: { id: first._id.toString() } }, res, res.next)
+  await deleteReview({ auth: { userId: adminId }, params: { id: first._id.toString() } }, res, res.next)
   console.log('DELETE BY OWNER:', res.statusCode, '| rating recomputed to 3:', (await getHotelRating(hotelId)) === 3)
 
   await Review.deleteMany({ _id: { $in: [first._id, second._id] } })
   await Hotel.findByIdAndDelete(hotelId)
-  await User.findOneAndDelete({ clerkId: 'test_clerk_user' })
   process.exit(0)
 }
 

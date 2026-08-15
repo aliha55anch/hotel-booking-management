@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Link, Outlet, Navigate } from 'react-router-dom'
-import { UserButton, useAuth } from '@clerk/clerk-react'
+import { NavLink, Link, Outlet, Navigate, useNavigate } from 'react-router-dom'
 import Button from '../ui/Button.jsx'
+import { useAuth } from '../../context/AuthContext.jsx'
 import { getMyProfile } from '../../services/userService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
-import { CLERK_PUBLISHABLE_KEY } from '../../lib/config.js'
 import { OwnerContext } from './ownerContext.js'
 import { MenuIcon, CloseIcon, GridIcon, HotelIcon, BedIcon, CalendarIcon, AlertIcon, LogoutIcon } from '../ui/icons.jsx'
 
@@ -45,7 +44,7 @@ function OwnerError({ message, onRetry }) {
   )
 }
 
-function SidebarContent({ user, onClose }) {
+function SidebarContent({ user, onClose, onLogout }) {
   return (
     <>
       <div className="flex h-16 items-center gap-2 border-b border-line px-4">
@@ -84,7 +83,14 @@ function SidebarContent({ user, onClose }) {
             <p className="truncate text-sm font-semibold text-ink">{user.name || 'Partner'}</p>
             <p className="text-xs text-muted">Hotel partner</p>
           </div>
-          {CLERK_PUBLISHABLE_KEY && <UserButton afterSignOutUrl="/" />}
+          <button
+            type="button"
+            onClick={onLogout}
+            aria-label="Sign out"
+            className="flex h-9 w-9 items-center justify-center rounded-btn text-muted transition-colors hover:bg-surface hover:text-ink"
+          >
+            <LogoutIcon className="h-4 w-4" />
+          </button>
         </div>
         <Link
           to="/"
@@ -99,7 +105,7 @@ function SidebarContent({ user, onClose }) {
   )
 }
 
-function OwnerShell({ token }) {
+function OwnerShell({ token, handleLogout }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -155,7 +161,7 @@ function OwnerShell({ token }) {
             menuOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          <SidebarContent user={user} onClose={() => setMenuOpen(false)} />
+          <SidebarContent user={user} onClose={() => setMenuOpen(false)} onLogout={handleLogout} />
         </aside>
 
         {menuOpen && (
@@ -170,32 +176,20 @@ function OwnerShell({ token }) {
   )
 }
 
-function ClerkOwner() {
-  const { isLoaded, isSignedIn, getToken } = useAuth()
-  const [token, setToken] = useState(null)
-
-  useEffect(() => {
-    let cancelled = false
-
-    if (!isLoaded || !isSignedIn) return
-
-    getToken().then((value) => {
-      if (!cancelled) setToken(value)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [isLoaded, isSignedIn, getToken])
-
-  if (!isLoaded) return <FullScreenSkeleton />
-  if (!isSignedIn) return <Navigate to="/" replace />
-  if (!token) return <FullScreenSkeleton />
-
-  return <OwnerShell token={token} />
-}
-
 export default function OwnerLayout() {
-  if (CLERK_PUBLISHABLE_KEY) return <ClerkOwner />
-  return <OwnerShell token={undefined} />
+  const { token, user, loading, logout } = useAuth()
+  const navigate = useNavigate()
+
+  if (loading) return <FullScreenSkeleton />
+  if (!user) return <Navigate to="/login" replace />
+
+  return (
+    <OwnerShell
+      token={token}
+      handleLogout={() => {
+        logout()
+        navigate('/')
+      }}
+    />
+  )
 }

@@ -1,11 +1,11 @@
 const asyncHandler = require('express-async-handler')
 const Offer = require('../models/Offer')
-const { findAccountByClerkId } = require('../services/userAccountService')
+const { findAccountById } = require('../services/userAccountService')
 const { isStaff } = require('../utils/roles')
 
 const getRequestUser = async (req) => {
   if (!req.auth?.userId) return null
-  return findAccountByClerkId(req.auth.userId)
+  return findAccountById(req.auth.userId)
 }
 
 const getOffers = asyncHandler(async (req, res) => {

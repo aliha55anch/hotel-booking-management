@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler')
 const Review = require('../models/Review')
 const Hotel = require('../models/Hotel')
-const { findAccountByClerkId } = require('../services/userAccountService')
+const { findAccountById } = require('../services/userAccountService')
 const { isStaff } = require('../utils/roles')
 
 const updateHotelRating = async (hotelId) => {
@@ -16,11 +16,11 @@ const updateHotelRating = async (hotelId) => {
 const createReview = asyncHandler(async (req, res) => {
   const { hotel, rating, comment } = req.body
 
-  const user = await findAccountByClerkId(req.auth.userId)
+  const user = await findAccountById(req.auth.userId)
 
   if (!user) {
     res.status(404)
-    throw new Error('User not found. Webhook may not have synced this user yet.')
+    throw new Error('User not found')
   }
 
   let review
@@ -40,17 +40,17 @@ const createReview = asyncHandler(async (req, res) => {
 })
 
 const getReviewsByHotel = asyncHandler(async (req, res) => {
-  const reviews = await Review.find({ hotel: req.params.hotelId }).populate('user', 'name image clerkId')
+  const reviews = await Review.find({ hotel: req.params.hotelId }).populate('user', 'name image')
 
   res.status(200).json({ success: true, count: reviews.length, reviews })
 })
 
 const deleteReview = asyncHandler(async (req, res) => {
-  const user = await findAccountByClerkId(req.auth.userId)
+  const user = await findAccountById(req.auth.userId)
 
   if (!user) {
     res.status(404)
-    throw new Error('User not found. Webhook may not have synced this user yet.')
+    throw new Error('User not found')
   }
 
   const review = await Review.findById(req.params.id)

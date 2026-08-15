@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { useAuth } from '@clerk/clerk-react'
 import Button from '../components/ui/Button.jsx'
 import { PencilIcon, MailIcon } from '../components/ui/icons.jsx'
 import { getMyProfile, updateMyProfile } from '../services/userService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
 import { inputClass, labelClass } from '../components/admin/formClasses.js'
-import { CLERK_PUBLISHABLE_KEY } from '../lib/config.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const MAX_IMAGE_SIZE = 512
 
@@ -218,30 +217,8 @@ function ProfileContent({ token }) {
   )
 }
 
-function ClerkProfile() {
-  const { isLoaded, isSignedIn, getToken } = useAuth()
-  const [token, setToken] = useState(null)
-
-  useEffect(() => {
-    let cancelled = false
-
-    if (!isLoaded || !isSignedIn) return
-
-    getToken().then((value) => {
-      if (!cancelled) setToken(value)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [isLoaded, isSignedIn, getToken])
-
-  if (!isLoaded || !token) return <ProfileSkeleton />
-
-  return <ProfileContent token={token} />
-}
-
 export default function Profile() {
-  if (CLERK_PUBLISHABLE_KEY) return <ClerkProfile />
-  return <ProfileContent token={undefined} />
+  const { token, loading } = useAuth()
+  if (loading) return <ProfileSkeleton />
+  return <ProfileContent token={token} />
 }

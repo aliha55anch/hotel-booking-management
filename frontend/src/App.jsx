@@ -23,6 +23,8 @@ import About from "./pages/About.jsx";
 import MyBookings from "./pages/MyBookings.jsx";
 import Payment from "./pages/Payment.jsx";
 import Profile from "./pages/Profile.jsx";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 function Layout() {
@@ -58,6 +60,8 @@ function App() {
 
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/hotels" element={<Hotels />} />
         <Route path="/hotels/:id" element={<HotelDetail />} />
         <Route

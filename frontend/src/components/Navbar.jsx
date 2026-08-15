@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Link, useLocation } from 'react-router-dom'
-import { SignedIn, SignedOut, UserButton, useClerk, useAuth } from '@clerk/clerk-react'
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { MenuIcon, CloseIcon, FaviconIcon } from './ui/icons.jsx'
-import { getMyProfile } from '../services/userService.js'
-import { CLERK_PUBLISHABLE_KEY } from '../lib/config.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const links = [
   { to: '/', label: 'Home', end: true },
@@ -47,119 +45,65 @@ function NavLinks({ solid, onNavigate, items }) {
 }
 
 function AccountLinks({ solid, onNavigate }) {
-  if (!CLERK_PUBLISHABLE_KEY) return <FallbackAccountLinks solid={solid} onNavigate={onNavigate} />
-  return <ClerkAccountLinks solid={solid} onNavigate={onNavigate} />
-}
-
-function ClerkAccountLinks({ solid, onNavigate }) {
-  const { isLoaded, isSignedIn, getToken } = useAuth()
-  const [role, setRole] = useState(null)
-
-  useEffect(() => {
-    if (!isLoaded || !isSignedIn) return
-
-    let cancelled = false
-    getToken()
-      .then((token) => getMyProfile(token))
-      .then((data) => {
-        if (!cancelled) setRole(data.user?.role || null)
-      })
-      .catch(() => {
-        if (!cancelled) setRole(null)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [isLoaded, isSignedIn, getToken])
-
-  if (!isLoaded || !isSignedIn) return null
-
+  const { user } = useAuth()
+  const role = user?.role || null
   const visible = accountLinks.filter((link) => !link.roles || link.roles.includes(role))
   return <NavLinks solid={solid} onNavigate={onNavigate} items={visible} />
 }
 
-function FallbackAccountLinks({ solid, onNavigate }) {
-  const [role, setRole] = useState(null)
-  const [ready, setReady] = useState(false)
+function AuthArea({ solid }) {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
 
-  useEffect(() => {
-    let cancelled = false
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
-    getMyProfile()
-      .then((data) => {
-        if (!cancelled) setRole(data.user?.role || null)
-      })
-      .catch(() => {
-        if (!cancelled) setRole(null)
-      })
-      .finally(() => {
-        if (!cancelled) setReady(true)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  if (!ready) return null
-
-  const visible = accountLinks.filter((link) => !link.roles || link.roles.includes(role))
-  return <NavLinks solid={solid} onNavigate={onNavigate} items={visible} />
-}
-
-function ClerkAuthArea({ solid }) {
-  const { openSignIn, openSignUp } = useClerk()
-
-  return (
-    <>
-      <SignedOut>
-        <button
-          type="button"
-          onClick={() => openSignIn()}
+  if (!user) {
+    return (
+      <>
+        <Link
+          to="/login"
           className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors ${
             solid ? 'text-black hover:bg-surface' : 'text-white hover:bg-white/10'
           }`}
         >
           Sign in
-        </button>
-        <button
-          type="button"
-          onClick={() => openSignUp()}
+        </Link>
+        <Link
+          to="/register"
           className={`cursor-pointer rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-500 hover:-translate-y-0.5 hover:shadow-lg ${
             solid ? 'bg-black text-white hover:shadow-black/20' : 'bg-white text-black hover:shadow-white/40'
           }`}
         >
           Sign up
-        </button>
-      </SignedOut>
-      <SignedIn>
-        <UserButton afterSignOutUrl="/" />
-      </SignedIn>
-    </>
-  )
-}
+        </Link>
+      </>
+    )
+  }
 
-function FallbackAuthArea({ solid }) {
   return (
-    <>
-      <a
-        href="/sign-in"
-        className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-          solid ? 'text-black hover:bg-surface' : 'text-white hover:bg-white/10'
+    <div className="flex items-center gap-3">
+      <Link to="/profile" className="flex items-center gap-2">
+        <span
+          className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
+            solid ? 'bg-primary/10 text-primary' : 'bg-white/20 text-white'
+          }`}
+        >
+          {(user.name || user.email || '?').charAt(0).toUpperCase()}
+        </span>
+      </Link>
+      <button
+        type="button"
+        onClick={handleLogout}
+        className={`cursor-pointer rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+          solid ? 'text-ink hover:bg-surface' : 'text-white hover:bg-white/10'
         }`}
       >
-        Sign in
-      </a>
-      <a
-        href="/sign-up"
-        className={`cursor-pointer rounded-full px-6 py-2.5 text-sm font-medium transition-all duration-500 hover:-translate-y-0.5 hover:shadow-lg ${
-          solid ? 'bg-black text-white hover:shadow-black/20' : 'bg-white text-black hover:shadow-white/40'
-        }`}
-      >
-        Sign up
-      </a>
-    </>
+        Sign out
+      </button>
+    </div>
   )
 }
 
@@ -197,7 +141,7 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-4 md:flex">
-          {CLERK_PUBLISHABLE_KEY ? <ClerkAuthArea solid={solid} /> : <FallbackAuthArea solid={solid} />}
+          <AuthArea solid={solid} />
         </div>
 
         <button
@@ -219,7 +163,7 @@ export default function Navbar() {
             <NavLinks solid items={links} onNavigate={() => setOpen(false)} />
             <AccountLinks solid onNavigate={() => setOpen(false)} />
             <div className="mt-2 flex flex-col gap-3">
-              {CLERK_PUBLISHABLE_KEY ? <ClerkAuthArea solid /> : <FallbackAuthArea solid />}
+              <AuthArea solid />
             </div>
           </div>
         </div>
