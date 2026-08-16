@@ -252,6 +252,24 @@ const getAllBookings = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, count: bookings.length, bookings })
 })
 
+const deleteBooking = asyncHandler(async (req, res) => {
+  if (req.user?.role !== 'admin') {
+    res.status(403)
+    throw new Error('Access denied. Only admins can delete bookings.')
+  }
+
+  const booking = await Booking.findById(req.params.id)
+
+  if (!booking) {
+    res.status(404)
+    throw new Error('Booking not found')
+  }
+
+  await Booking.findByIdAndDelete(req.params.id)
+
+  res.status(200).json({ success: true, message: 'Booking deleted' })
+})
+
 const getOwnerBookings = asyncHandler(async (req, res) => {
   const user = await getLocalUser(req.auth.userId)
 
@@ -301,6 +319,7 @@ module.exports = {
   updateBookingStatus,
   getAllBookings,
   getOwnerBookings,
+  deleteBooking,
   checkAvailability,
   cleanupExpiredBookings,
 }

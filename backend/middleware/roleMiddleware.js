@@ -31,7 +31,7 @@ const checkOwner = async (req, res, next) => {
       return next(new Error('User not found'))
     }
 
-    if (user.role !== 'hotelOwner' && !isStaff(user.role)) {
+    if (user.role !== 'hotelOwner' && user.role !== 'owner') {
       res.status(403)
       return next(new Error('Access denied. Hotel owners only.'))
     }

@@ -13,7 +13,7 @@ const links = [
 const accountLinks = [
   { to: '/profile', label: 'Profile' },
   { to: '/my-bookings', label: 'My Bookings' },
-  { to: '/owner', label: 'Owner', roles: ['hotelOwner', 'admin', 'owner'] },
+  { to: '/owner', label: 'Owner', roles: ['hotelOwner', 'owner'] },
   { to: '/admin', label: 'Admin', roles: ['admin', 'owner'] },
 ]
 

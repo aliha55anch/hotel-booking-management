@@ -7,6 +7,7 @@ const {
   updateBookingStatus,
   getAllBookings,
   getOwnerBookings,
+  deleteBooking,
   checkAvailability,
 } = require('../controllers/bookingController')
 const { checkAdmin, checkOwner } = require('../middleware/roleMiddleware')
@@ -19,6 +20,7 @@ router.get('/my', requireAuth(), getMyBookings)
 router.get('/owner', requireAuth(), checkOwner, getOwnerBookings)
 router.put('/:id/cancel', requireAuth(), cancelBooking)
 router.put('/:id', requireAuth(), checkAdmin, updateBookingStatus)
+router.delete('/:id', requireAuth(), checkAdmin, deleteBooking)
 router.get('/', requireAuth(), checkAdmin, getAllBookings)
 
 module.exports = router

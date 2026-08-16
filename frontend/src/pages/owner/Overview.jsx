@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getMyHotels } from '../../services/hotelService.js'
-import { getOwnerBookings } from '../../services/bookingService.js'
+import { getHotels, getMyHotels } from '../../services/hotelService.js'
+import { getOwnerBookings, getAllBookings } from '../../services/bookingService.js'
 import { useOwner } from '../../components/owner/ownerContext.js'
 import PageHeader from '../../components/admin/PageHeader.jsx'
 import { StatusBadge } from '../../components/admin/Badges.jsx'
@@ -77,7 +77,11 @@ export default function Overview() {
     setLoading(true)
     setError(null)
 
-    Promise.allSettled([getMyHotels(token), getOwnerBookings(token)])
+    const isTopOwner = user?.role === 'owner'
+    const hotelsReq = isTopOwner ? getHotels({ limit: 100 }) : getMyHotels(token)
+    const bookingsReq = isTopOwner ? getAllBookings(token) : getOwnerBookings(token)
+
+    Promise.allSettled([hotelsReq, bookingsReq])
       .then(([hotelRes, bookingRes]) => {
         if (cancelled) return
 
@@ -96,7 +100,8 @@ export default function Overview() {
           .reduce((sum, booking) => sum + (Number(booking.totalPrice) || 0), 0)
 
         setStats({
-          hotels: hotelData?.count || hotelData?.hotels?.length || 0,
+          hotels:
+            hotelData?.total || hotelData?.hotels?.length || hotelData?.count || 0,
           bookings: bookings.length,
           revenue,
         })
@@ -109,7 +114,7 @@ export default function Overview() {
     return () => {
       cancelled = true
     }
-  }, [token, reloadKey])
+  }, [token, user?.role, reloadKey])
 
   return (
     <div className="space-y-6">

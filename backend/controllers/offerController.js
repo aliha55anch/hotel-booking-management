@@ -13,8 +13,10 @@ const getOffers = asyncHandler(async (req, res) => {
 
   const query = Offer.find({ active: true }).sort({ createdAt: -1 })
 
-  const limitNum = Math.min(100, Math.max(1, Math.floor(Number(limit)) || 0))
-  if (limitNum > 0) query.limit(limitNum)
+  const limitNum = Number(limit)
+  if (Number.isFinite(limitNum) && limitNum > 0) {
+    query.limit(Math.min(100, Math.floor(limitNum)))
+  }
 
   const offers = await query.lean()
 

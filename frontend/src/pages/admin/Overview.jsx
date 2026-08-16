@@ -5,7 +5,7 @@ import { useAdmin } from '../../components/admin/adminContext.js'
 import PageHeader from '../../components/admin/PageHeader.jsx'
 import { StatusBadge } from '../../components/admin/Badges.jsx'
 import Button from '../../components/ui/Button.jsx'
-import { HotelIcon, CalendarIcon, WalletIcon } from '../../components/ui/icons.jsx'
+import { HotelIcon, CalendarIcon } from '../../components/ui/icons.jsx'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { formatPrice } from '../../lib/format.js'
 
@@ -66,7 +66,7 @@ function RecentBookings({ bookings }) {
 export default function Overview() {
   const { token, user } = useAdmin()
 
-  const [stats, setStats] = useState({ hotels: 0, bookings: 0, revenue: 0 })
+  const [stats, setStats] = useState({ hotels: 0, bookings: 0 })
   const [recent, setRecent] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -82,14 +82,10 @@ export default function Overview() {
         if (cancelled) return
 
         const bookings = bookingRes.bookings || []
-        const revenue = bookings
-          .filter((booking) => booking.paymentStatus === 'paid')
-          .reduce((sum, booking) => sum + (Number(booking.totalPrice) || 0), 0)
 
         setStats({
           hotels: hotelRes.total || hotelRes.hotels?.length || 0,
           bookings: bookings.length,
-          revenue,
         })
         setRecent(bookings.slice(0, 5))
       })
@@ -123,16 +119,15 @@ export default function Overview() {
       )}
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[0, 1, 2].map((i) => (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[0, 1].map((i) => (
             <div key={i} className="h-24 animate-pulse rounded-card bg-surface" />
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <StatCard icon={HotelIcon} label="Total hotels" value={stats.hotels} />
           <StatCard icon={CalendarIcon} label="Total bookings" value={stats.bookings} />
-          <StatCard icon={WalletIcon} label="Revenue (paid)" value={formatPrice(stats.revenue)} />
         </div>
       )}
 

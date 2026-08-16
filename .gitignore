@@ -14,6 +14,10 @@ node_modules/
 dist
 dist-ssr
 build
+.output/
+
+# Test coverage
+coverage/
 
 # Environment variables
 .env
@@ -22,6 +26,10 @@ build
 
 # Local files
 *.local
+
+# Deployment artifacts
+.vercel/
+.netlify/
 
 # Editor directories and files
 .vscode/*

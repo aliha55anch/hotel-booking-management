@@ -106,6 +106,11 @@ const updateUser = asyncHandler(async (req, res) => {
     throw new Error('Admins cannot change the role of another admin')
   }
 
+  if (role === 'admin' && actor.role !== 'owner') {
+    res.status(403)
+    throw new Error('Only the owner can assign the admin role')
+  }
+
   const updated = await updateAccount(user._id, { role })
 
   res.status(200).json({ success: true, user: updated })

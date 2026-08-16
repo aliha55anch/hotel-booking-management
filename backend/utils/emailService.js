@@ -300,6 +300,25 @@ const sendProfileUpdatedEmail = async ({ to, name }) => {
   })
 }
 
+const sendPasswordResetCodeEmail = async ({ to, name, code }) => {
+  if (!to) return
+  await sendEmail({
+    to,
+    subject: 'Your StayHub password reset code',
+    html: layout({
+      title: 'Reset your password',
+      subtitle: 'Here is your verification code',
+      content: `
+        <p>${greeting(name)}</p>
+        <p>We received a request to reset your StayHub password. Use the 6-digit code below to choose a new password:</p>
+        <div style="margin:24px 0; padding:20px; background:#f8f9fa; border:1px solid #e5e7eb; border-radius:12px; text-align:center; font-size:30px; font-weight:800; letter-spacing:10px; color:#0f766e;">${escape(code)}</div>
+        <p>This code expires in 15 minutes. If you did not request a password reset, you can safely ignore this email.</p>
+        ${helpNote()}
+      `,
+    }),
+  })
+}
+
 module.exports = {
   sendWelcomeEmail,
   sendBookingReceivedEmail,
@@ -307,4 +326,5 @@ module.exports = {
   sendBookingCancelledEmail,
   sendBookingNotificationEmail,
   sendProfileUpdatedEmail,
+  sendPasswordResetCodeEmail,
 }

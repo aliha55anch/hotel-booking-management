@@ -18,16 +18,17 @@ const ACCOUNT_MODELS = [User, Owner, Admin]
 const decorate = (doc) => {
   if (!doc) return null
   const modelName = doc.constructor.modelName
+  const account = typeof doc.toObject === 'function' ? doc.toObject() : { ...doc }
   if (modelName === 'Owner') {
-    doc.role = doc.role || 'hotelOwner'
+    account.role = account.role || 'hotelOwner'
   } else if (modelName === 'Admin') {
-    doc.role = 'admin'
+    account.role = 'admin'
   } else {
-    doc.role = 'user'
+    account.role = 'user'
   }
-  doc.userModel = modelName
-  doc.password = undefined
-  return doc
+  account.userModel = modelName
+  delete account.password
+  return account
 }
 
 // Only one top-level "owner" account is allowed across the whole system.
@@ -113,9 +114,11 @@ const updateAccount = async (id, updates = {}) => {
 
     const fromModel = ROLE_TO_MODEL[currentRole]
     const toModel = ROLE_TO_MODEL[role]
+    const source = await fromModel.findById(existing._id).select('+password')
     const set = { ...rest }
     if (role === 'owner') set.role = 'owner'
     if (password) set.password = await bcrypt.hash(password, 10)
+    else if (source?.password) set.password = source.password
 
     if (fromModel === toModel) {
       const updated = await toModel.findByIdAndUpdate(existing._id, { $set: set }, { returnDocument: 'after' })

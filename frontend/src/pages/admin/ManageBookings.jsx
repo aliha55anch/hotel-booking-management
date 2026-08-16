@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../../components/admin/PageHeader.jsx'
 import Button from '../../components/ui/Button.jsx'
 import { PaymentBadge } from '../../components/admin/Badges.jsx'
-import { CalendarIcon } from '../../components/ui/icons.jsx'
-import { getAllBookings, updateBookingStatus } from '../../services/bookingService.js'
+import ConfirmDialog from '../../components/admin/ConfirmDialog.jsx'
+import { CalendarIcon, TrashIcon } from '../../components/ui/icons.jsx'
+import { getAllBookings, updateBookingStatus, deleteBooking } from '../../services/bookingService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { formatPrice } from '../../lib/format.js'
 import { useAdmin } from '../../components/admin/adminContext.js'
@@ -34,7 +35,7 @@ const filterClass = (active) =>
 const selectClass =
   'h-9 rounded-btn border border-line bg-background px-2 text-xs font-medium text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
 
-function BookingRow({ booking, token, onChange }) {
+function BookingRow({ booking, token, canDelete, onChange, onDelete }) {
   const [updating, setUpdating] = useState(false)
   const [rowError, setRowError] = useState(null)
 
@@ -89,20 +90,56 @@ function BookingRow({ booking, token, onChange }) {
       <td className="px-4 py-3">
         <PaymentBadge status={booking.paymentStatus} />
       </td>
+      {canDelete && (
+        <td className="px-4 py-3">
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={updating}
+            onClick={() => onDelete(booking)}
+            className="!text-error hover:!bg-error/10"
+            title="Delete booking"
+          >
+            <TrashIcon className="h-4 w-4" />
+          </Button>
+        </td>
+      )}
     </tr>
   )
 }
 
 export default function ManageBookings() {
-  const { token } = useAdmin()
+  const { token, user } = useAdmin()
   const [bookings, setBookings] = useState([])
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [reloadKey, setReloadKey] = useState(0)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
+
+  const canDelete = user?.role === 'admin'
 
   const replaceBooking = (updated) => {
     setBookings((prev) => prev.map((booking) => (booking._id === updated._id ? updated : booking)))
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return
+
+    setDeleting(true)
+    setDeleteError(null)
+
+    try {
+      await deleteBooking(deleteTarget._id, token)
+      setBookings((prev) => prev.filter((booking) => booking._id !== deleteTarget._id))
+      setDeleteTarget(null)
+    } catch (err) {
+      setDeleteError(getApiErrorMessage(err, 'Could not delete the booking'))
+    } finally {
+      setDeleting(false)
+    }
   }
 
   useEffect(() => {
@@ -175,11 +212,19 @@ export default function ManageBookings() {
                 <th className="px-4 py-3 font-medium">Total</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Payment</th>
+                {canDelete && <th className="px-4 py-3 font-medium">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {visible.map((booking) => (
-                <BookingRow key={booking._id} booking={booking} token={token} onChange={replaceBooking} />
+                <BookingRow
+                  key={booking._id}
+                  booking={booking}
+                  token={token}
+                  canDelete={canDelete}
+                  onChange={replaceBooking}
+                  onDelete={setDeleteTarget}
+                />
               ))}
             </tbody>
           </table>
@@ -195,6 +240,26 @@ export default function ManageBookings() {
           </div>
         </div>
       )}
+
+      {deleteError && <p className="text-sm text-error">{deleteError}</p>}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete booking"
+        message={
+          deleteTarget
+            ? `Delete the booking for ${deleteTarget.user?.name || 'this guest'} at ${
+                deleteTarget.hotel?.name || 'this hotel'
+              }? This action cannot be undone.`
+            : ''
+        }
+        busy={deleting}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setDeleteTarget(null)
+          setDeleteError(null)
+        }}
+      />
     </div>
   )
 }

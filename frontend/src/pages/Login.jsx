@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
-import { FaviconIcon } from '../components/ui/icons.jsx'
+import { FaviconIcon, EyeIcon, EyeOffIcon } from '../components/ui/icons.jsx'
 import { inputClass, labelClass } from '../components/admin/formClasses.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { getApiErrorMessage } from '../lib/errors.js'
@@ -12,6 +12,7 @@ export default function Login() {
   const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -59,16 +60,35 @@ export default function Login() {
 
           <label className="block">
             <span className={labelClass}>Password</span>
-            <input
-              className={inputClass}
-              type="password"
-              required
-              autoComplete="current-password"
-              placeholder="Your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative">
+              <input
+                className={`${inputClass} pr-11`}
+                type={showPassword ? 'text' : 'password'}
+                required
+                autoComplete="current-password"
+                placeholder="Your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+              </button>
+            </div>
           </label>
+
+          <div className="flex justify-end">
+            <Link
+              to="/forgot-password"
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
 
           {error && <p className="text-sm text-error">{error}</p>}
 

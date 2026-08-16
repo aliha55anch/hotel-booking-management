@@ -142,11 +142,13 @@ export default function ManageUsers() {
                           onChange={(e) => handleRoleChange(user, e.target.value)}
                           className={selectClass}
                         >
-                          {roleOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
+                          {roleOptions
+                            .filter((option) => isOwnerViewer || option.value !== 'admin')
+                            .map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
                         </select>
                       )}
                     </td>

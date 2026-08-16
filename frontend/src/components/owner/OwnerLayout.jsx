@@ -204,7 +204,7 @@ export default function OwnerLayout() {
 
   if (loading) return <FullScreenSkeleton />
   if (!user) return <Navigate to="/login" replace />
-  if (user.role === 'user') return <AccessDenied />
+  if (user.role !== 'owner' && user.role !== 'hotelOwner') return <AccessDenied />
 
   return <OwnerShell token={token} handleLogout={logout} />
 }

@@ -47,3 +47,10 @@ export const updateBookingStatus = async (id, payload, token) => {
   })
   return data
 }
+
+export const deleteBooking = async (id, token) => {
+  const { data } = await api.delete(`/bookings/${id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  return data
+}
