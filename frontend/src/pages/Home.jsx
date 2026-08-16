@@ -5,6 +5,7 @@ import { getHotels } from '../services/hotelService.js'
 import { getOffers } from '../services/offerService.js'
 import { subscribeNewsletter } from '../services/newsletterService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
+import { resolveImageUrl } from '../lib/images.js'
 import { hotelRoomImages } from '../lib/siteImages.js'
 import { formatPrice } from '../lib/format.js'
 
@@ -48,7 +49,8 @@ function HeroSearch() {
   const [guests, setGuests] = useState(1)
 
   const today = todayISO()
-  const datesValid = !checkIn || !checkOut || checkOut > checkIn
+  const hasOneDate = Boolean(checkIn) !== Boolean(checkOut)
+  const datesValid = !hasOneDate && (!checkIn || checkOut > checkIn)
 
   const onSubmit = (e) => {
     e.preventDefault()
@@ -56,8 +58,10 @@ function HeroSearch() {
 
     const params = new URLSearchParams()
     if (destination.trim()) params.set('city', destination.trim())
-    if (checkIn) params.set('checkIn', checkIn)
-    if (checkOut) params.set('checkOut', checkOut)
+    if (checkIn && checkOut) {
+      params.set('checkIn', checkIn)
+      params.set('checkOut', checkOut)
+    }
     if (guests > 1) params.set('guests', String(guests))
     const qs = params.toString()
     navigate(qs ? `/hotels?${qs}` : '/hotels')
@@ -126,7 +130,11 @@ function HeroSearch() {
           className={searchFieldClass}
         />
         {!datesValid && (
-          <p className="mt-1 text-xs text-red-400">Check-out must be after check-in.</p>
+          <p className="mt-1 text-xs text-red-400">
+            {hasOneDate
+              ? 'Please select both check-in and check-out dates.'
+              : 'Check-out must be after check-in.'}
+          </p>
         )}
       </div>
 
@@ -310,7 +318,16 @@ function ExclusiveOffers() {
 
   const formatExpiry = (value) => {
     if (!value) return ''
-    return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    const date = new Date(value)
+    const isDateOnly =
+      date.getUTCHours() === 0 &&
+      date.getUTCMinutes() === 0 &&
+      date.getUTCSeconds() === 0 &&
+      date.getUTCMilliseconds() === 0
+    const local = isDateOnly
+      ? new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+      : date
+    return local.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
   }
 
   return (
@@ -346,7 +363,7 @@ function ExclusiveOffers() {
               <div
                 key={offer._id}
                 className="group relative flex min-h-64 flex-col items-start justify-between gap-1 rounded-xl bg-cover bg-center bg-no-repeat px-4 pt-12 text-white md:pt-18"
-                style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${offer.image})` }}
+                style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${resolveImageUrl(offer.image)})` }}
               >
                 {offer.discountPercent > 0 && (
                   <span className="absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800">

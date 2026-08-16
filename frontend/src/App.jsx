@@ -56,6 +56,7 @@ function App() {
         <Route path="hotels" element={<OwnerHotels />} />
         <Route path="rooms" element={<OwnerRooms />} />
         <Route path="bookings" element={<OwnerBookings />} />
+        <Route path="users" element={<ManageUsers />} />
       </Route>
 
       <Route element={<Layout />}>

@@ -26,13 +26,29 @@ const getAllHotels = asyncHandler(async (req, res) => {
   }
 
   if (rating) {
-    filter.rating = { $gte: Number(rating) }
+    const ratingNum = Number(rating)
+    if (!Number.isFinite(ratingNum) || ratingNum < 0 || ratingNum > 5) {
+      res.status(400)
+      throw new Error('rating must be a number between 0 and 5')
+    }
+    filter.rating = { $gte: ratingNum }
   }
 
-  const guestsNum = Number(guests) || 0
+  const guestsNum = Math.max(0, Number(guests) || 0)
 
   const minPriceNum = minPrice !== undefined && minPrice !== '' ? Number(minPrice) : null
   const maxPriceNum = maxPrice !== undefined && maxPrice !== '' ? Number(maxPrice) : null
+
+  if ((minPriceNum != null && (!Number.isFinite(minPriceNum) || minPriceNum < 0)) ||
+      (maxPriceNum != null && (!Number.isFinite(maxPriceNum) || maxPriceNum < 0))) {
+    res.status(400)
+    throw new Error('Invalid price range')
+  }
+
+  if (minPriceNum != null && maxPriceNum != null && minPriceNum > maxPriceNum) {
+    res.status(400)
+    throw new Error('minPrice cannot be greater than maxPrice')
+  }
 
   let checkInDate = null
   let checkOutDate = null
@@ -51,8 +67,8 @@ const getAllHotels = asyncHandler(async (req, res) => {
     }
   }
 
-  const pageNum = Number(page)
-  const limitNum = Number(limit)
+  const pageNum = Math.max(1, Math.floor(Number(page)) || 1)
+  const limitNum = Math.min(100, Math.max(1, Math.floor(Number(limit)) || 10))
   const skip = (pageNum - 1) * limitNum
 
   let hotels = await Hotel.find(filter).lean()
@@ -157,7 +173,7 @@ const getMyHotels = asyncHandler(async (req, res) => {
 
   if (!user) {
     res.status(404)
-    throw new Error('User not found. Webhook may not have synced this user yet.')
+    throw new Error('User not found')
   }
 
   const hotels = await Hotel.find({ owner: user._id }).sort({ createdAt: -1 })
@@ -170,10 +186,20 @@ const createHotel = asyncHandler(async (req, res) => {
 
   if (!user) {
     res.status(404)
-    throw new Error('User not found. Webhook may not have synced this user yet.')
+    throw new Error('User not found')
   }
 
   const { name, description, city, address, images, amenities } = req.body
+
+  if (!name || !String(name).trim()) {
+    res.status(400)
+    throw new Error('Hotel name is required')
+  }
+
+  if (!city || !String(city).trim()) {
+    res.status(400)
+    throw new Error('Hotel city is required')
+  }
 
   const ownerModel = user.role === 'user' ? 'Owner' : user.userModel
 
@@ -210,9 +236,30 @@ const updateHotel = asyncHandler(async (req, res) => {
     throw new Error('Access denied. Only the hotel owner or an admin can update this hotel.')
   }
 
+  const allowedFields = ['name', 'description', 'city', 'address', 'images', 'amenities']
+  const updates = {}
+  for (const field of allowedFields) {
+    if (req.body[field] !== undefined) updates[field] = req.body[field]
+  }
+
+  if (updates.name !== undefined && !String(updates.name).trim()) {
+    res.status(400)
+    throw new Error('Hotel name cannot be empty')
+  }
+
+  if (updates.city !== undefined && !String(updates.city).trim()) {
+    res.status(400)
+    throw new Error('Hotel city cannot be empty')
+  }
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400)
+    throw new Error('Nothing to update')
+  }
+
   const updated = await Hotel.findByIdAndUpdate(
     req.params.id,
-    { $set: req.body },
+    { $set: updates },
     { returnDocument: 'after', runValidators: true }
   )
 

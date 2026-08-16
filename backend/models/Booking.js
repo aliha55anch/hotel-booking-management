@@ -44,11 +44,21 @@ const bookingSchema = new mongoose.Schema(
       enum: ['unpaid', 'paid', 'refunded'],
       default: 'unpaid',
     },
+    stripePaymentIntentId: {
+      type: String,
+    },
+    amountUsd: {
+      type: Number,
+    },
   },
   {
     timestamps: true,
   }
 )
+
+bookingSchema.index({ room: 1, checkInDate: 1, checkOutDate: 1 })
+bookingSchema.index({ hotel: 1 })
+bookingSchema.index({ status: 1, paymentStatus: 1, checkInDate: 1 })
 
 const Booking = mongoose.model('Booking', bookingSchema)
 

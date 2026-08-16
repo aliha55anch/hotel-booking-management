@@ -12,14 +12,24 @@ import {
 } from '../components/ui/icons.jsx'
 import { getOfferById } from '../services/offerService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
+import { resolveImageUrl } from '../lib/images.js'
 import { formatPrice } from '../lib/format.js'
 
 const formatDate = (value) => {
   if (!value) return ''
-  return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+  const date = new Date(value)
+  const isDateOnly =
+    date.getUTCHours() === 0 &&
+    date.getUTCMinutes() === 0 &&
+    date.getUTCSeconds() === 0 &&
+    date.getUTCMilliseconds() === 0
+  const local = isDateOnly
+    ? new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+    : date
+  return local.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
-const offerImg = (offer) => offer?.image || '/packages/p1.webp'
+const offerImg = (offer) => resolveImageUrl(offer?.image || '/packages/p1.webp')
 
 function DetailSkeleton() {
   return (

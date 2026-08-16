@@ -84,8 +84,9 @@ export default function Overview() {
         const hotelData = hotelRes.status === 'fulfilled' ? hotelRes.value : null
         const bookingData = bookingRes.status === 'fulfilled' ? bookingRes.value : null
 
-        if (!hotelData && bookingRes.status === 'rejected') {
-          setError(getApiErrorMessage(bookingRes.reason, 'Could not load overview'))
+        if (hotelRes.status === 'rejected' || bookingRes.status === 'rejected') {
+          const reason = hotelRes.status === 'rejected' ? hotelRes.reason : bookingRes.reason
+          setError(getApiErrorMessage(reason, 'Could not load overview'))
           return
         }
 

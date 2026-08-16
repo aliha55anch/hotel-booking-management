@@ -4,10 +4,20 @@ import Button from '../components/ui/Button.jsx'
 import { StarIcon, CalendarIcon, CheckIcon, ArrowRightIcon } from '../components/ui/icons.jsx'
 import { testimonials } from '../assets/assets.js'
 import { getOffers } from '../services/offerService.js'
+import { resolveImageUrl } from '../lib/images.js'
 
 const formatExpiry = (value) => {
   if (!value) return ''
-  return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+  const date = new Date(value)
+  const isDateOnly =
+    date.getUTCHours() === 0 &&
+    date.getUTCMinutes() === 0 &&
+    date.getUTCSeconds() === 0 &&
+    date.getUTCMilliseconds() === 0
+  const local = isDateOnly
+    ? new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+    : date
+  return local.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 function Stars({ rating }) {
@@ -78,7 +88,7 @@ export default function Experience() {
                 <div className="relative h-40 overflow-hidden bg-surface">
                   {offer.image ? (
                     <img
-                      src={offer.image}
+                      src={resolveImageUrl(offer.image)}
                       alt={offer.title}
                       loading="lazy"
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"

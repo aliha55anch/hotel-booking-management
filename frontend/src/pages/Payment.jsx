@@ -211,6 +211,7 @@ function CheckoutLayout({ hotel, rooms, checkIn, checkOut, guests, initialRoomId
               <div className="rounded-btn border border-line bg-background px-3 py-3">
                 <CardElement
                   options={{
+                    hidePostalCode: true,
                     style: {
                       base: {
                         fontSize: '15px',

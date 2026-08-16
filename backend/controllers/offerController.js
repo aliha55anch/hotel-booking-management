@@ -13,7 +13,7 @@ const getOffers = asyncHandler(async (req, res) => {
 
   const query = Offer.find({ active: true }).sort({ createdAt: -1 })
 
-  const limitNum = Number(limit)
+  const limitNum = Math.min(100, Math.max(1, Math.floor(Number(limit)) || 0))
   if (limitNum > 0) query.limit(limitNum)
 
   const offers = await query.lean()
@@ -51,7 +51,7 @@ const createOffer = asyncHandler(async (req, res) => {
 
   if (!user) {
     res.status(404)
-    throw new Error('User not found. Webhook may not have synced this user yet.')
+    throw new Error('User not found')
   }
 
   if (!isStaff(user.role)) {
@@ -60,6 +60,24 @@ const createOffer = asyncHandler(async (req, res) => {
   }
 
   const { title, description, image, discountPercent, expiryDate, highlights, packageOptions, active } = req.body
+
+  if (!title || !String(title).trim()) {
+    res.status(400)
+    throw new Error('Offer title is required')
+  }
+
+  if (!description || !String(description).trim()) {
+    res.status(400)
+    throw new Error('Offer description is required')
+  }
+
+  if (discountPercent !== undefined) {
+    const discountNum = Number(discountPercent)
+    if (!Number.isFinite(discountNum) || discountNum < 0 || discountNum > 100) {
+      res.status(400)
+      throw new Error('discountPercent must be between 0 and 100')
+    }
+  }
 
   const offer = await Offer.create({
     title,
@@ -92,9 +110,43 @@ const updateOffer = asyncHandler(async (req, res) => {
     throw new Error('Access denied. Only staff can update offers.')
   }
 
+  const allowedFields = [
+    'title',
+    'description',
+    'image',
+    'discountPercent',
+    'expiryDate',
+    'highlights',
+    'packageOptions',
+    'active',
+  ]
+  const updates = {}
+  for (const field of allowedFields) {
+    if (req.body[field] !== undefined) updates[field] = req.body[field]
+  }
+
+  if (updates.title !== undefined && !String(updates.title).trim()) {
+    res.status(400)
+    throw new Error('Offer title cannot be empty')
+  }
+
+  if (updates.discountPercent !== undefined) {
+    const discountNum = Number(updates.discountPercent)
+    if (!Number.isFinite(discountNum) || discountNum < 0 || discountNum > 100) {
+      res.status(400)
+      throw new Error('discountPercent must be between 0 and 100')
+    }
+    updates.discountPercent = discountNum
+  }
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400)
+    throw new Error('Nothing to update')
+  }
+
   const updated = await Offer.findByIdAndUpdate(
     req.params.id,
-    { $set: req.body },
+    { $set: updates },
     { returnDocument: 'after', runValidators: true }
   )
 

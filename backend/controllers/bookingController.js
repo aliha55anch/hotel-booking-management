@@ -23,7 +23,7 @@ const createBooking = asyncHandler(async (req, res) => {
 
   if (!user) {
     res.status(404)
-    throw new Error('User not found. Webhook may not have synced this user yet.')
+    throw new Error('User not found')
   }
 
   const room = await Room.findById(roomId)
@@ -97,7 +97,7 @@ const getMyBookings = asyncHandler(async (req, res) => {
 
   if (!user) {
     res.status(404)
-    throw new Error('User not found. Webhook may not have synced this user yet.')
+    throw new Error('User not found')
   }
 
   const bookings = await Booking.find({ user: user._id })
@@ -164,7 +164,7 @@ const cancelBooking = asyncHandler(async (req, res) => {
 
   if (!user) {
     res.status(404)
-    throw new Error('User not found. Webhook may not have synced this user yet.')
+    throw new Error('User not found')
   }
 
   const booking = await Booking.findById(req.params.id)
@@ -257,7 +257,7 @@ const getOwnerBookings = asyncHandler(async (req, res) => {
 
   if (!user) {
     res.status(404)
-    throw new Error('User not found. Webhook may not have synced this user yet.')
+    throw new Error('User not found')
   }
 
   const ownedHotels = await Hotel.find({ owner: user._id }).select('_id')

@@ -14,10 +14,12 @@ const formatPrice = (value) => {
 
 const formatDate = (iso) => {
   if (!iso) return ''
-  return new Date(iso).toDateString()
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-// Badge styles pulled from the site palette (index.css theme tokens).
+// Badge colors pulled from the site palette (frontend/src/index.css theme tokens).
 const STATUS_BADGES = {
   pending: { bg: '#fef3c7', text: '#b45309', dot: '#f59e0b' },
   confirmed: { bg: '#d1fae5', text: '#047857', dot: '#10b981' },
@@ -50,24 +52,41 @@ const helpNote = () => `
   </table>
 `
 
+// Responsive shell: 600px on desktop, full-width + stacked rows on mobile.
+// Table-based layout keeps Outlook happy; the <style> media query handles phones.
+// The header uses a solid bgcolor fallback so older clients show teal, not gray.
 const layout = ({ title, subtitle, content }) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
-  <title>${escape(title)}</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>${escape(title)}</title>
+<style>
+  @media only screen and (max-width: 620px) {
+    .container { width: 100% !important; }
+    .wrap-pad { padding: 16px 12px !important; }
+    .header-pad { padding: 24px 20px !important; }
+    .card-pad { padding: 24px 20px !important; }
+    .feature-cell { display: block !important; width: 100% !important; padding: 0 0 12px 0 !important; }
+    .sum-head-cell { display: block !important; width: 100% !important; text-align: left !important; }
+    .sum-label, .sum-value { display: block !important; width: 100% !important; text-align: left !important; box-sizing: border-box; }
+    .sum-label { padding-bottom: 2px !important; }
+    .sum-value { padding-top: 0 !important; }
+  }
+</style>
 </head>
 <body style="margin:0; padding:0; background:#f8f9fa; font-family:'Outfit','Segoe UI',Arial,Helvetica,sans-serif; -webkit-font-smoothing:antialiased;">
-  <div style="background:#f8f9fa; padding:32px 16px;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:0 auto;">
+  <div class="wrap-pad" style="background:#f8f9fa; padding:32px 16px;">
+    <table class="container" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:0 auto;">
       <tr>
         <td>
           <!-- Brand header -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
-              <td style="background:linear-gradient(135deg,#0d9488 0%,#0f766e 100%); border-radius:16px 16px 0 0; padding:28px 32px;">
+              <td class="header-pad" bgcolor="#0d9488" style="background:linear-gradient(135deg,#0d9488 0%,#0f766e 100%); border-radius:16px 16px 0 0; padding:28px 32px;">
                 <table role="presentation" cellpadding="0" cellspacing="0">
                   <tr>
                     <td style="vertical-align:middle;">
@@ -87,7 +106,7 @@ const layout = ({ title, subtitle, content }) => `
           <!-- Body card -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
-              <td style="background:#ffffff; border:1px solid #e5e7eb; border-top:0; border-radius:0 0 16px 16px; padding:32px; font-size:14px; color:#1a1a1a; line-height:1.7;">
+              <td class="card-pad" style="background:#ffffff; border:1px solid #e5e7eb; border-top:0; border-radius:0 0 16px 16px; padding:32px; font-size:14px; color:#1a1a1a; line-height:1.7;">
                 ${content}
               </td>
             </tr>
@@ -113,8 +132,8 @@ const layout = ({ title, subtitle, content }) => `
 
 const row = (label, value, highlight = false) => `
   <tr>
-    <td style="padding:12px 18px; font-size:13px; color:#6b7280; ${highlight ? 'border-top:1px solid #e5e7eb; background:#f8f9fa; font-weight:600;' : ''}">${escape(label)}</td>
-    <td align="right" style="padding:12px 18px; font-size:13px; color:#1a1a1a; font-weight:600; ${highlight ? 'border-top:1px solid #e5e7eb; background:#f8f9fa;' : ''}">${value}</td>
+    <td class="sum-label" style="padding:12px 18px; font-size:13px; color:#6b7280; ${highlight ? 'border-top:1px solid #e5e7eb; background:#f8f9fa; font-weight:600;' : ''}">${escape(label)}</td>
+    <td class="sum-value" align="right" style="padding:12px 18px; font-size:13px; color:#1a1a1a; font-weight:600; ${highlight ? 'border-top:1px solid #e5e7eb; background:#f8f9fa;' : ''}">${value}</td>
   </tr>
 `
 
@@ -126,11 +145,11 @@ const bookingSummary = (booking) => {
   return `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden;">
       <tr>
-        <td style="padding:14px 18px; background:#f8f9fa; border-bottom:1px solid #e5e7eb;">
+        <td class="sum-head-cell" style="padding:14px 18px; background:#f8f9fa; border-bottom:1px solid #e5e7eb;">
           <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#0d9488;">Booking reference</div>
           <div style="font-size:16px; font-weight:700; color:#1a1a1a; margin-top:2px;">#${escape(ref || '—')}</div>
         </td>
-        <td align="right" style="padding:14px 18px; background:#f8f9fa; border-bottom:1px solid #e5e7eb;">
+        <td class="sum-head-cell" align="right" style="padding:14px 18px; background:#f8f9fa; border-bottom:1px solid #e5e7eb; text-align:right;">
           ${badge({ label: booking.status || 'pending', colors: statusStyle })}
         </td>
       </tr>
@@ -145,7 +164,7 @@ const bookingSummary = (booking) => {
 }
 
 const featureBox = ({ step, title, text }) => `
-  <td width="33%" style="padding:0 6px;">
+  <td class="feature-cell" width="33%" style="padding:0 6px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td style="background:#f8f9fa; border:1px solid #e5e7eb; border-radius:12px; padding:18px 12px; text-align:center;">

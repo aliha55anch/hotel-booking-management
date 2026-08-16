@@ -78,6 +78,8 @@ const offerSchema = new mongoose.Schema(
   }
 )
 
+offerSchema.index({ active: 1 })
+
 const Offer = mongoose.model('Offer', offerSchema)
 
 module.exports = Offer

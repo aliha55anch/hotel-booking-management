@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Link, Outlet, Navigate, useNavigate } from 'react-router-dom'
+import { NavLink, Link, Outlet, Navigate } from 'react-router-dom'
 import Button from '../ui/Button.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { getMyProfile } from '../../services/userService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { OwnerContext } from './ownerContext.js'
-import { MenuIcon, CloseIcon, GridIcon, HotelIcon, BedIcon, CalendarIcon, AlertIcon, LogoutIcon } from '../ui/icons.jsx'
+import { MenuIcon, CloseIcon, GridIcon, HotelIcon, BedIcon, CalendarIcon, UsersIcon, AlertIcon, LogoutIcon } from '../ui/icons.jsx'
 
 const navItems = [
   { to: '/owner', label: 'Overview', icon: GridIcon, end: true },
@@ -44,6 +44,23 @@ function OwnerError({ message, onRetry }) {
   )
 }
 
+function AccessDenied() {
+  return (
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="flex max-w-md flex-col items-center gap-4 rounded-card border border-line bg-surface p-10 text-center">
+        <span className="flex h-14 w-14 items-center justify-center rounded-btn bg-error/10 text-error">
+          <AlertIcon className="h-7 w-7" />
+        </span>
+        <div>
+          <h1 className="font-heading text-xl font-semibold text-ink">Access denied</h1>
+          <p className="mt-1 text-sm text-muted">You need an owner or hotel partner account to view this area.</p>
+        </div>
+        <Button to="/">Back to site</Button>
+      </div>
+    </div>
+  )
+}
+
 function SidebarContent({ user, onClose, onLogout }) {
   return (
     <>
@@ -72,6 +89,12 @@ function SidebarContent({ user, onClose, onLogout }) {
             {label}
           </NavLink>
         ))}
+        {user?.role === 'owner' && (
+          <NavLink to="/owner/users" className={navClass} onClick={onClose}>
+            <UsersIcon className="h-5 w-5 shrink-0" />
+            Users
+          </NavLink>
+        )}
       </nav>
 
       <div className="border-t border-line p-4">
@@ -178,18 +201,10 @@ function OwnerShell({ token, handleLogout }) {
 
 export default function OwnerLayout() {
   const { token, user, loading, logout } = useAuth()
-  const navigate = useNavigate()
 
   if (loading) return <FullScreenSkeleton />
   if (!user) return <Navigate to="/login" replace />
+  if (user.role === 'user') return <AccessDenied />
 
-  return (
-    <OwnerShell
-      token={token}
-      handleLogout={() => {
-        logout()
-        navigate('/')
-      }}
-    />
-  )
+  return <OwnerShell token={token} handleLogout={logout} />
 }

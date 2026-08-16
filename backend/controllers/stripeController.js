@@ -52,6 +52,10 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
     metadata: { bookingId: booking._id.toString() },
   })
 
+  booking.stripePaymentIntentId = paymentIntent.id
+  booking.amountUsd = amountUsd
+  await booking.save()
+
   res.status(201).json({
     success: true,
     clientSecret: paymentIntent.client_secret,
@@ -86,25 +90,52 @@ const stripeWebhook = asyncHandler(async (req, res) => {
 
   switch (event.type) {
     case 'payment_intent.succeeded': {
-      const bookingId = event.data.object.metadata?.bookingId
-      if (bookingId) {
-        await Booking.findByIdAndUpdate(bookingId, { paymentStatus: 'paid', status: 'confirmed' })
+      const intent = event.data.object
+      const bookingId = intent.metadata?.bookingId
+      if (!bookingId) break
 
-        const booking = await Booking.findById(bookingId).populate('user', 'name email').populate('hotel').populate('room')
+      const booking = await Booking.findById(bookingId)
 
-        if (booking) {
-          await sendBookingConfirmedEmail({
-            to: booking.user?.email,
-            name: booking.user?.name,
-            booking,
-          })
-        }
+      if (!booking) {
+        console.error(`[stripe] Webhook received for unknown booking ${bookingId}`)
+        break
+      }
+
+      if (booking.paymentStatus === 'paid' && booking.status === 'confirmed') {
+        console.log(`[stripe] Ignoring duplicate payment_intent.succeeded for ${bookingId}`)
+        break
+      }
+
+      if (booking.stripePaymentIntentId && intent.id !== booking.stripePaymentIntentId) {
+        res.status(400)
+        throw new Error(`Payment intent ${intent.id} does not match booking ${bookingId}`)
+      }
+
+      if (booking.amountUsd != null && intent.amount !== booking.amountUsd) {
+        res.status(400)
+        throw new Error(`Payment amount ${intent.amount} does not match booking ${bookingId}`)
+      }
+
+      await Booking.findByIdAndUpdate(bookingId, { paymentStatus: 'paid', status: 'confirmed' })
+
+      const populated = await Booking.findById(bookingId).populate('user', 'name email').populate('hotel').populate('room')
+
+      if (populated) {
+        await sendBookingConfirmedEmail({
+          to: populated.user?.email,
+          name: populated.user?.name,
+          booking: populated,
+        })
       }
       break
     }
     case 'payment_intent.payment_failed': {
-      const bookingId = event.data.object.metadata?.bookingId
-      if (bookingId) {
+      const intent = event.data.object
+      const bookingId = intent.metadata?.bookingId
+      if (!bookingId) break
+
+      const booking = await Booking.findById(bookingId)
+      if (booking && booking.paymentStatus !== 'paid') {
         await Booking.findByIdAndUpdate(bookingId, { paymentStatus: 'unpaid' })
       }
       break

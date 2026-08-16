@@ -26,6 +26,7 @@ const decorate = (doc) => {
     doc.role = 'user'
   }
   doc.userModel = modelName
+  doc.password = undefined
   return doc
 }
 
@@ -65,12 +66,18 @@ const createAccount = async ({ name, email, image, role, password } = {}) => {
   if (!email) throw new Error('Email is required')
 
   const existing = await findAccountByEmail(email)
-  if (existing) throw new Error('An account with this email already exists')
+  if (existing) {
+    const err = new Error('An account with this email already exists')
+    err.statusCode = 400
+    throw err
+  }
 
   const resolvedRole = role || (await hasOwner() ? 'user' : 'owner')
 
   if (resolvedRole === 'owner' && (await hasOwner())) {
-    throw new Error('Only one owner account is allowed')
+    const err = new Error('Only one owner account is allowed')
+    err.statusCode = 400
+    throw err
   }
 
   const model = ROLE_TO_MODEL[resolvedRole]
@@ -99,7 +106,9 @@ const updateAccount = async (id, updates = {}) => {
 
   if (role && role !== currentRole) {
     if (role === 'owner' && (await hasOwner())) {
-      throw new Error('Only one owner account is allowed')
+      const err = new Error('Only one owner account is allowed')
+      err.statusCode = 400
+      throw err
     }
 
     const fromModel = ROLE_TO_MODEL[currentRole]

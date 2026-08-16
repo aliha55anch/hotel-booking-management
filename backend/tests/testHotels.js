@@ -69,7 +69,7 @@ const run = async () => {
   console.log('ROOM CREATE:', res.statusCode, '| price:', res.body.room.pricePerNight)
 
   res = mockRes()
-  await getAllHotels({ query: {} }, res, res.next)
+  await getAllHotels({ query: { limit: 100 } }, res, res.next)
   const listed = res.body.hotels.find((h) => h._id.toString() === hotelId)
   console.log('LIST WITH PRICEFROM:', res.statusCode, '| priceFrom:', listed.priceFrom, '| matches room price:', listed.priceFrom === 150)
 

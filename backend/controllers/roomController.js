@@ -20,8 +20,8 @@ const getAllRooms = asyncHandler(async (req, res) => {
     filter.hotel = hotel
   }
 
-  const pageNum = Number(page)
-  const limitNum = Number(limit)
+  const pageNum = Math.max(1, Math.floor(Number(page)) || 1)
+  const limitNum = Math.min(100, Math.max(1, Math.floor(Number(limit)) || 10))
   const skip = (pageNum - 1) * limitNum
 
   const [rooms, total] = await Promise.all([
@@ -65,10 +65,21 @@ const createRoom = asyncHandler(async (req, res) => {
     throw new Error('Access denied. Only the hotel owner or an admin can manage its rooms.')
   }
 
+  const pricePerNightNum = Number(pricePerNight)
+  if (!Number.isFinite(pricePerNightNum) || pricePerNightNum <= 0) {
+    res.status(400)
+    throw new Error('pricePerNight must be a positive number')
+  }
+
+  if (capacity !== undefined && (!Number.isInteger(Number(capacity)) || Number(capacity) < 1)) {
+    res.status(400)
+    throw new Error('capacity must be a positive integer')
+  }
+
   const room = await Room.create({
     hotel,
     roomType,
-    pricePerNight,
+    pricePerNight: pricePerNightNum,
     capacity,
     images,
     isAvailable,
@@ -93,9 +104,34 @@ const updateRoom = asyncHandler(async (req, res) => {
     throw new Error('Access denied. Only the hotel owner or an admin can manage its rooms.')
   }
 
+  const allowedFields = ['roomType', 'pricePerNight', 'capacity', 'images', 'isAvailable', 'amenities']
+  const updates = {}
+  for (const field of allowedFields) {
+    if (req.body[field] !== undefined) updates[field] = req.body[field]
+  }
+
+  if (updates.pricePerNight !== undefined) {
+    const priceNum = Number(updates.pricePerNight)
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      res.status(400)
+      throw new Error('pricePerNight must be a positive number')
+    }
+    updates.pricePerNight = priceNum
+  }
+
+  if (updates.capacity !== undefined && (!Number.isInteger(Number(updates.capacity)) || Number(updates.capacity) < 1)) {
+    res.status(400)
+    throw new Error('capacity must be a positive integer')
+  }
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400)
+    throw new Error('Nothing to update')
+  }
+
   const updated = await Room.findByIdAndUpdate(
     req.params.id,
-    { $set: req.body },
+    { $set: updates },
     { returnDocument: 'after', runValidators: true }
   )
 

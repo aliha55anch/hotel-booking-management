@@ -6,17 +6,19 @@ const checkAdmin = async (req, res, next) => {
     const user = await findAccountById(req.auth.userId)
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' })
+      res.status(404)
+      return next(new Error('User not found'))
     }
 
     if (!isStaff(user.role)) {
-      return res.status(403).json({ success: false, message: 'Access denied. Admins only.' })
+      res.status(403)
+      return next(new Error('Access denied. Admins only.'))
     }
 
     req.user = user
     next()
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message })
+    next(error)
   }
 }
 
@@ -25,17 +27,19 @@ const checkOwner = async (req, res, next) => {
     const user = await findAccountById(req.auth.userId)
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' })
+      res.status(404)
+      return next(new Error('User not found'))
     }
 
     if (user.role !== 'hotelOwner' && !isStaff(user.role)) {
-      return res.status(403).json({ success: false, message: 'Access denied. Hotel owners only.' })
+      res.status(403)
+      return next(new Error('Access denied. Hotel owners only.'))
     }
 
     req.user = user
     next()
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message })
+    next(error)
   }
 }
 

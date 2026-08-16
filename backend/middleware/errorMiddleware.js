@@ -4,10 +4,25 @@ const notFound = (req, res, next) => {
 }
 
 const errorHandler = (err, req, res, next) => {
-  const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500
+  let statusCode =
+    err.statusCode || (res.statusCode && res.statusCode !== 200 ? res.statusCode : 500)
+  let message = err.message
+
+  if (err.name === 'CastError') {
+    statusCode = 400
+    message = 'Invalid id format'
+  }
+
+  if (err.name === 'ValidationError') {
+    statusCode = 400
+    message = Object.values(err.errors)
+      .map((e) => e.message)
+      .join(', ')
+  }
 
   res.status(statusCode).json({
-    message: err.message,
+    success: false,
+    message,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   })
 }

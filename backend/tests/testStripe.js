@@ -119,7 +119,7 @@ const run = async () => {
 
   res = mockRes()
   await stripeWebhook({ headers: {}, body: Buffer.from('{}') }, res, res.next)
-  console.log('WEBHOOK NO SECRET:', res.statusCode === 500, '| msg:', res.body.message)
+  console.log('WEBHOOK MISSING SIGNATURE:', res.statusCode === 400, '| msg:', res.body.message)
 
   await Booking.deleteMany({ _id: { $in: [bookingA._id, bookingB._id, bookingC._id] } })
   await Room.findByIdAndDelete(roomId)

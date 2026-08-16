@@ -6,7 +6,7 @@ import { UsersIcon, TrashIcon } from '../../components/ui/icons.jsx'
 import { RoleBadge } from '../../components/admin/Badges.jsx'
 import { getAllUsers, updateUserRole, deleteUser } from '../../services/userService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
-import { useAdmin } from '../../components/admin/adminContext.js'
+import { useAuth } from '../../context/AuthContext.jsx'
 
 const roleOptions = [
   { value: 'user', label: 'User' },
@@ -18,7 +18,7 @@ const selectClass =
   'h-9 rounded-btn border border-line bg-background px-2 text-xs font-medium text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
 
 export default function ManageUsers() {
-  const { token, user: me } = useAdmin()
+  const { token, user: me } = useAuth()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

@@ -6,6 +6,7 @@ import OfferForm from '../../components/admin/OfferForm.jsx'
 import { PlusIcon, PencilIcon, TrashIcon, FlameIcon, BedIcon } from '../../components/ui/icons.jsx'
 import { getAllOffers, deleteOffer } from '../../services/offerService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
+import { resolveImageUrl } from '../../lib/images.js'
 import { useAdmin } from '../../components/admin/adminContext.js'
 
 const formatDate = (value) => {
@@ -20,7 +21,7 @@ function OfferRow({ offer, onEdit, onDelete }) {
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-16 shrink-0 items-center justify-center overflow-hidden rounded-btn bg-linear-to-br from-primary-soft to-primary/10 text-primary">
             {offer.image ? (
-              <img src={offer.image} alt="" className="h-full w-full object-cover" />
+              <img src={resolveImageUrl(offer.image)} alt="" className="h-full w-full object-cover" />
             ) : (
               <FlameIcon className="h-5 w-5" />
             )}

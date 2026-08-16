@@ -33,6 +33,8 @@ const roomSchema = new mongoose.Schema(
   }
 )
 
+roomSchema.index({ hotel: 1 })
+
 const Room = mongoose.model('Room', roomSchema)
 
 module.exports = Room

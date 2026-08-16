@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { API_URL } from '../lib/config.js'
-import { getStoredToken } from '../lib/token.js'
+import { getStoredToken, clearStoredToken } from '../lib/token.js'
 
 const api = axios.create({
   baseURL: API_URL,
@@ -13,5 +13,17 @@ api.interceptors.request.use((config) => {
   }
   return config
 })
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const url = error.config?.url || ''
+    if (error.response?.status === 401 && !url.includes('/auth/login')) {
+      clearStoredToken()
+      window.dispatchEvent(new CustomEvent('stayhub:unauthorized'))
+    }
+    return Promise.reject(error)
+  }
+)
 
 export default api

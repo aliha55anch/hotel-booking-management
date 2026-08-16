@@ -14,6 +14,16 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const handleUnauthorized = () => {
+      clearStoredToken()
+      setToken(null)
+      setUser(null)
+    }
+    window.addEventListener('stayhub:unauthorized', handleUnauthorized)
+    return () => window.removeEventListener('stayhub:unauthorized', handleUnauthorized)
+  }, [])
+
+  useEffect(() => {
     let cancelled = false
 
     const restore = async () => {

@@ -40,6 +40,9 @@ const hotelSchema = new mongoose.Schema(
   }
 )
 
+hotelSchema.index({ city: 1 })
+hotelSchema.index({ rating: -1 })
+
 const Hotel = mongoose.model('Hotel', hotelSchema)
 
 module.exports = Hotel

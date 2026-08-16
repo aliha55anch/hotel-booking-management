@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Link, Outlet, Navigate, useNavigate } from 'react-router-dom'
+import { NavLink, Link, Outlet, Navigate } from 'react-router-dom'
 import Button from '../ui/Button.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { getMyProfile } from '../../services/userService.js'
@@ -199,18 +199,9 @@ function AdminShell({ token, handleLogout }) {
 
 export default function AdminLayout() {
   const { token, user, loading, logout } = useAuth()
-  const navigate = useNavigate()
 
   if (loading) return <FullScreenSkeleton />
   if (!user) return <Navigate to="/login" replace />
 
-  return (
-    <AdminShell
-      token={token}
-      handleLogout={() => {
-        logout()
-        navigate('/')
-      }}
-    />
-  )
+  return <AdminShell token={token} handleLogout={logout} />
 }
