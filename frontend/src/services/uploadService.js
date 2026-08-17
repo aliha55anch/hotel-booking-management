@@ -5,11 +5,6 @@ export const uploadImages = async (files, token) => {
   for (const file of files) {
     formData.append('images', file)
   }
-  const { data } = await api.post('/upload', formData, {
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      'Content-Type': 'multipart/form-data',
-    },
-  })
+  const { data } = await api.post('/upload', formData)
   return data.urls
 }
