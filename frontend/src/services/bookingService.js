@@ -54,3 +54,10 @@ export const deleteBooking = async (id, token) => {
   })
   return data
 }
+
+export const lookupBooking = async (code, token) => {
+  const { data } = await api.get(`/bookings/lookup/${code}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  return data
+}

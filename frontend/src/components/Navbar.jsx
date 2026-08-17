@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { MenuIcon, CloseIcon, FaviconIcon } from './ui/icons.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useCurrency } from '../context/CurrencyContext.jsx'
 
 const links = [
   { to: '/', label: 'Home', end: true },
@@ -107,6 +108,26 @@ function AuthArea({ solid }) {
   )
 }
 
+function CurrencyToggle({ solid }) {
+  const { currency, toggle } = useCurrency()
+  return (
+    <button
+      type="button"
+      onClick={() => toggle()}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+        solid
+          ? 'border-line bg-surface text-ink hover:border-primary/40'
+          : 'border-white/30 bg-white/10 text-white hover:bg-white/20'
+      }`}
+      title="Toggle currency"
+    >
+      <span>{currency === 'PKR' ? 'Rs' : '$'}</span>
+      <span className="opacity-60">|</span>
+      <span>{currency === 'PKR' ? 'PKR' : 'USD'}</span>
+    </button>
+  )
+}
+
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -141,6 +162,7 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-4 md:flex">
+          <CurrencyToggle solid={solid} />
           <AuthArea solid={solid} />
         </div>
 
@@ -163,6 +185,7 @@ export default function Navbar() {
             <NavLinks solid items={links} onNavigate={() => setOpen(false)} />
             <AccountLinks solid onNavigate={() => setOpen(false)} />
             <div className="mt-2 flex flex-col gap-3">
+              <CurrencyToggle solid />
               <AuthArea solid />
             </div>
           </div>

@@ -59,7 +59,7 @@ function BookingModal({ hotel, open, onClose }) {
         return
       }
 
-      const paymentUrl = `/payment?hotel=${hotel._id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`
+      const paymentUrl = `/booking?hotel=${hotel._id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`
 
       if (!user) {
         onClose()

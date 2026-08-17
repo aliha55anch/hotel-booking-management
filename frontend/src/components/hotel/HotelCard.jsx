@@ -33,7 +33,7 @@ export default function HotelCard({ hotel, image }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-4">
-        <h3 className="truncate font-heading text-base font-semibold text-ink">{hotel.name}</h3>
+        <h3 className="line-clamp-2 font-heading text-sm font-semibold leading-snug text-ink">{hotel.name}</h3>
         <p className="flex items-center gap-1 text-xs text-muted">
           <MapPinIcon className="h-3.5 w-3.5" />
           {hotel.city}

@@ -5,6 +5,7 @@ import './index.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
+import { CurrencyProvider } from './context/CurrencyContext.jsx'
 
 const root = createRoot(document.getElementById('root'))
 
@@ -13,7 +14,9 @@ root.render(
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <CurrencyProvider>
+            <App />
+          </CurrencyProvider>
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>

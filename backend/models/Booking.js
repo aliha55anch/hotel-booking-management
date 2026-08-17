@@ -50,6 +50,11 @@ const bookingSchema = new mongoose.Schema(
     amountUsd: {
       type: Number,
     },
+    confirmationCode: {
+      type: String,
+      unique: true,
+      index: true,
+    },
   },
   {
     timestamps: true,

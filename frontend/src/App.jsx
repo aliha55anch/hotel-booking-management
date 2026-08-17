@@ -17,6 +17,7 @@ import OwnerBookings from "./pages/owner/Bookings.jsx";
 import Home from "./pages/Home.jsx";
 import Hotels from "./pages/Hotels.jsx";
 import HotelDetail from "./pages/HotelDetail.jsx";
+import Booking from "./pages/Booking.jsx";
 import Experience from "./pages/Experience.jsx";
 import OfferDetail from "./pages/OfferDetail.jsx";
 import About from "./pages/About.jsx";
@@ -69,6 +70,14 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/hotels" element={<Hotels />} />
         <Route path="/hotels/:id" element={<HotelDetail />} />
+        <Route
+          path="/booking"
+          element={
+            <ProtectedRoute>
+              <Booking />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/my-bookings"
           element={

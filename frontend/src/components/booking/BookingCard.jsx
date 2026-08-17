@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import QRCode from 'qrcode'
 import Button from '../ui/Button.jsx'
-import { BedIcon, CalendarIcon } from '../ui/icons.jsx'
+import { BedIcon, CalendarIcon, CheckIcon } from '../ui/icons.jsx'
 import { formatPrice } from '../../lib/format.js'
 import { imageFor } from '../../lib/siteImages.js'
 import { roomPrimaryImage, hotelPrimaryImage } from '../../lib/images.js'
@@ -24,11 +25,31 @@ const paymentStyles = {
 
 export default function BookingCard({ booking, onCancel, cancelling }) {
   const [confirming, setConfirming] = useState(false)
+  const [showQr, setShowQr] = useState(false)
+  const [qrDataUrl, setQrDataUrl] = useState('')
+  const [copied, setCopied] = useState(false)
 
   const status = booking.status || 'pending'
   const paymentStatus = booking.paymentStatus || 'unpaid'
   const cancelled = status === 'cancelled'
   const image = roomPrimaryImage(booking.room) || hotelPrimaryImage(booking.hotel) || imageFor(booking._id)
+  const code = booking.confirmationCode
+
+  useEffect(() => {
+    if (showQr && code) {
+      QRCode.toDataURL(code, { width: 200, margin: 2, color: { dark: '#1a1a1a', light: '#ffffff' } })
+        .then(setQrDataUrl)
+        .catch(() => {})
+    }
+  }, [showQr, code])
+
+  const copyCode = () => {
+    if (!code) return
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   return (
     <div className="flex flex-col gap-4 rounded-card border border-line bg-background p-4 shadow-card sm:flex-row sm:p-5">
@@ -72,6 +93,31 @@ export default function BookingCard({ booking, onCancel, cancelling }) {
             {paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1)}
           </span>
         </div>
+
+        {code && !cancelled && (
+          <div className="mt-1 rounded-card border border-dashed border-primary/40 bg-primary-soft/30 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted">Confirmation code</p>
+                <p className="mt-0.5 font-mono text-lg font-bold tracking-widest text-ink">{code}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" onClick={copyCode}>
+                  {copied ? <CheckIcon className="h-4 w-4" /> : 'Copy'}
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setShowQr((prev) => !prev)}>
+                  {showQr ? 'Hide QR' : 'Show QR'}
+                </Button>
+              </div>
+            </div>
+            {showQr && qrDataUrl && (
+              <div className="mt-3 flex flex-col items-center gap-2">
+                <img src={qrDataUrl} alt="Booking QR Code" className="h-40 w-40 rounded-card border border-line" />
+                <p className="text-xs text-muted">Show this QR code at the hotel front desk</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {cancelled ? (
           <p className="text-sm font-medium text-muted">This booking has been cancelled.</p>

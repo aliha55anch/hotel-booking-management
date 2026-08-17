@@ -68,7 +68,7 @@ export default function RoomCard({ room, hotelId }) {
   const image = roomPrimaryImage(room) || imageFor(room._id)
   const paymentUrl =
     hotelId && validDates
-      ? `/payment?hotel=${hotelId}&checkIn=${checkIn}&checkOut=${checkOut}&guests=1&room=${room._id}`
+      ? `/booking?hotel=${hotelId}&checkIn=${checkIn}&checkOut=${checkOut}&guests=1&room=${room._id}`
       : ''
 
   return (

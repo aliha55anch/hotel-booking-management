@@ -61,6 +61,13 @@ const createBooking = asyncHandler(async (req, res) => {
   const numberOfNights = Math.ceil((checkOut - checkIn) / NIGHT_MS)
   const totalPrice = room.pricePerNight * numberOfNights
 
+  const generateCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    let code = ''
+    for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)]
+    return code
+  }
+
   const booking = await Booking.create({
     user: user._id,
     userModel: user.userModel,
@@ -71,6 +78,7 @@ const createBooking = asyncHandler(async (req, res) => {
     totalPrice,
     status: 'pending',
     paymentStatus: 'unpaid',
+    confirmationCode: generateCode(),
   })
 
   const hotel = await Hotel.findById(room.hotel).select('name owner ownerModel')
@@ -312,6 +320,27 @@ const cleanupExpiredBookings = async () => {
   return result.modifiedCount
 }
 
+const lookupBooking = asyncHandler(async (req, res) => {
+  const { code } = req.params
+
+  if (!code || !/^[A-Z0-9]{8}$/.test(code)) {
+    res.status(400)
+    throw new Error('Invalid confirmation code format')
+  }
+
+  const booking = await Booking.findOne({ confirmationCode: code })
+    .populate('user', 'name email')
+    .populate('room')
+    .populate('hotel', 'name city address')
+
+  if (!booking) {
+    res.status(404)
+    throw new Error('No booking found with this confirmation code')
+  }
+
+  res.status(200).json({ success: true, booking })
+})
+
 module.exports = {
   createBooking,
   getMyBookings,
@@ -322,4 +351,5 @@ module.exports = {
   deleteBooking,
   checkAvailability,
   cleanupExpiredBookings,
+  lookupBooking,
 }

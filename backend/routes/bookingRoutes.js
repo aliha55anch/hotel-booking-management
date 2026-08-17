@@ -9,12 +9,14 @@ const {
   getOwnerBookings,
   deleteBooking,
   checkAvailability,
+  lookupBooking,
 } = require('../controllers/bookingController')
 const { checkAdmin, checkOwner } = require('../middleware/roleMiddleware')
 
 const router = express.Router()
 
 router.get('/availability', checkAvailability)
+router.get('/lookup/:code', requireAuth(), lookupBooking)
 router.post('/', requireAuth(), createBooking)
 router.get('/my', requireAuth(), getMyBookings)
 router.get('/owner', requireAuth(), checkOwner, getOwnerBookings)
