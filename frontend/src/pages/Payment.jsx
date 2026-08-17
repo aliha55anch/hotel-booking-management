@@ -19,6 +19,7 @@ import { getApiErrorMessage } from '../lib/errors.js'
 import { formatPrice, formatUsd } from '../lib/format.js'
 import { STRIPE_PUBLISHABLE_KEY } from '../lib/config.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useCurrency } from '../context/CurrencyContext.jsx'
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24
 
@@ -42,6 +43,7 @@ const runCheckout = async ({ roomId, checkIn, checkOut, token, stripe, elements 
 }
 
 function CheckoutLayout({ hotel, rooms, checkIn, checkOut, guests, initialRoomId, onSubmit, status, error, showCard, stripeReady }) {
+  const { currency } = useCurrency()
   const [roomId, setRoomId] = useState(initialRoomId || '')
   const [usdRate, setUsdRate] = useState(null)
 
@@ -159,7 +161,7 @@ function CheckoutLayout({ hotel, rooms, checkIn, checkOut, guests, initialRoomId
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-lg font-semibold text-primary">{formatPrice(room.pricePerNight)}</p>
+                      <p className="text-lg font-semibold text-primary">{formatPrice(room.pricePerNight, currency)}</p>
                       <p className="text-xs text-muted">/ night</p>
                     </div>
                   </label>
@@ -182,9 +184,9 @@ function CheckoutLayout({ hotel, rooms, checkIn, checkOut, guests, initialRoomId
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <dt className="text-muted">
-                  {formatPrice(selectedRoom.pricePerNight)} × {nights} night{nights > 1 ? 's' : ''}
+                  {formatPrice(selectedRoom.pricePerNight, currency)} × {nights} night{nights > 1 ? 's' : ''}
                 </dt>
-                <dd className="font-medium text-ink">{formatPrice(total)}</dd>
+                <dd className="font-medium text-ink">{formatPrice(total, currency)}</dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-muted">Taxes & fees</dt>
@@ -192,7 +194,7 @@ function CheckoutLayout({ hotel, rooms, checkIn, checkOut, guests, initialRoomId
               </div>
               <div className="flex items-center justify-between border-t border-line pt-3">
                 <dt className="font-semibold text-ink">Total</dt>
-                <dd className="text-xl font-semibold text-primary">{formatPrice(total)}</dd>
+                <dd className="text-xl font-semibold text-primary">{formatPrice(total, currency)}</dd>
               </div>
               {showCard && usdRate && total > 0 && (
                 <div className="mt-2 flex items-center justify-between rounded-btn bg-primary-soft px-3 py-2 text-sm">

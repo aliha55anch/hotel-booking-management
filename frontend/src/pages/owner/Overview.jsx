@@ -8,6 +8,7 @@ import Button from '../../components/ui/Button.jsx'
 import { HotelIcon, CalendarIcon, WalletIcon, PlusIcon } from '../../components/ui/icons.jsx'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { formatPrice } from '../../lib/format.js'
+import { useCurrency } from '../../context/CurrencyContext.jsx'
 
 const formatDate = (iso) => {
   if (!iso) return ''
@@ -29,6 +30,7 @@ function StatCard({ icon: Icon, label, value }) {
 }
 
 function RecentBookings({ bookings }) {
+  const { currency } = useCurrency()
   if (!bookings.length) {
     return <p className="py-8 text-center text-sm text-muted">No bookings for your hotels yet.</p>
   }
@@ -51,7 +53,7 @@ function RecentBookings({ bookings }) {
               <td className="px-4 py-3 font-medium text-ink">{booking.user?.name || 'Guest'}</td>
               <td className="px-4 py-3 text-muted">{booking.hotel?.name || '—'}</td>
               <td className="px-4 py-3 text-muted">{formatDate(booking.checkInDate)}</td>
-              <td className="px-4 py-3 font-semibold text-ink">{formatPrice(booking.totalPrice)}</td>
+              <td className="px-4 py-3 font-semibold text-ink">{formatPrice(booking.totalPrice, currency)}</td>
               <td className="px-4 py-3">
                 <StatusBadge status={booking.status} />
               </td>
@@ -65,6 +67,7 @@ function RecentBookings({ bookings }) {
 
 export default function Overview() {
   const { token, user } = useOwner()
+  const { currency } = useCurrency()
 
   const [stats, setStats] = useState({ hotels: 0, bookings: 0, revenue: 0 })
   const [recent, setRecent] = useState([])
@@ -144,7 +147,7 @@ export default function Overview() {
         <div className="grid gap-4 sm:grid-cols-3">
           <StatCard icon={HotelIcon} label="My hotels" value={stats.hotels} />
           <StatCard icon={CalendarIcon} label="Total bookings" value={stats.bookings} />
-          <StatCard icon={WalletIcon} label="Revenue (paid)" value={formatPrice(stats.revenue)} />
+          <StatCard icon={WalletIcon} label="Revenue (paid)" value={formatPrice(stats.revenue, currency)} />
         </div>
       )}
 

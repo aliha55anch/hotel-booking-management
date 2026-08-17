@@ -3,6 +3,7 @@ import QRCode from 'qrcode'
 import Button from '../ui/Button.jsx'
 import { BedIcon, CalendarIcon, CheckIcon } from '../ui/icons.jsx'
 import { formatPrice } from '../../lib/format.js'
+import { useCurrency } from '../../context/CurrencyContext.jsx'
 import { imageFor } from '../../lib/siteImages.js'
 import { roomPrimaryImage, hotelPrimaryImage } from '../../lib/images.js'
 
@@ -24,6 +25,7 @@ const paymentStyles = {
 }
 
 export default function BookingCard({ booking, onCancel, cancelling }) {
+  const { currency } = useCurrency()
   const [confirming, setConfirming] = useState(false)
   const [showQr, setShowQr] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState('')
@@ -75,7 +77,7 @@ export default function BookingCard({ booking, onCancel, cancelling }) {
             <p className="mt-0.5 text-sm text-muted">{booking.room?.roomType || 'Room'}</p>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-lg font-semibold text-primary">{formatPrice(booking.totalPrice)}</p>
+            <p className="text-lg font-semibold text-primary">{formatPrice(booking.totalPrice, currency)}</p>
             <p className="text-xs text-muted">total</p>
           </div>
         </div>

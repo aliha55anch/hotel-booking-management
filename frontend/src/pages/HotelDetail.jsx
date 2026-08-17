@@ -12,6 +12,7 @@ import { checkAvailability } from '../services/bookingService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
 import { formatPrice } from '../lib/format.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useCurrency } from '../context/CurrencyContext.jsx'
 import { galleryFor } from '../lib/siteImages.js'
 
 const formatDate = (iso) => {
@@ -291,6 +292,7 @@ function ReviewList({ reviews, canDelete, onDelete, deletingId }) {
 
 export default function HotelDetail() {
   const { id } = useParams()
+  const { currency } = useCurrency()
 
   const [hotel, setHotel] = useState(null)
   const [rooms, setRooms] = useState([])
@@ -452,7 +454,7 @@ export default function HotelDetail() {
 
           {minPrice != null && (
             <p className="mt-4 text-lg">
-              <span className="text-2xl font-semibold text-primary">{formatPrice(minPrice)}</span>
+              <span className="text-2xl font-semibold text-primary">{formatPrice(minPrice, currency)}</span>
               <span className="text-muted"> / night from</span>
             </p>
           )}

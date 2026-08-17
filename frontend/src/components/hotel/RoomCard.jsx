@@ -5,6 +5,7 @@ import AmenitiesList from './AmenitiesList.jsx'
 import { BedIcon, UsersIcon, CalendarIcon } from '../ui/icons.jsx'
 import { formatPrice } from '../../lib/format.js'
 import { useAuth } from '../../context/AuthContext.jsx'
+import { useCurrency } from '../../context/CurrencyContext.jsx'
 import { imageFor } from '../../lib/siteImages.js'
 import { roomPrimaryImage } from '../../lib/images.js'
 
@@ -44,6 +45,7 @@ function BookButton({ paymentUrl, disabled, onNoDates }) {
 }
 
 export default function RoomCard({ room, hotelId }) {
+  const { currency } = useCurrency()
   const [checkIn, setCheckIn] = useState('')
   const [checkOut, setCheckOut] = useState('')
   const [showDates, setShowDates] = useState(false)
@@ -97,7 +99,7 @@ export default function RoomCard({ room, hotelId }) {
             </p>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-lg font-semibold text-primary">{formatPrice(room.pricePerNight)}</p>
+            <p className="text-lg font-semibold text-primary">{formatPrice(room.pricePerNight, currency)}</p>
             <p className="text-xs text-muted">/ night</p>
           </div>
         </div>
@@ -169,7 +171,7 @@ export default function RoomCard({ room, hotelId }) {
 
         {validDates && !unavailable && (
           <p className="text-sm text-muted">
-            {nights} night{nights > 1 ? 's' : ''} · <span className="font-semibold text-ink">{formatPrice(total)}</span> total
+            {nights} night{nights > 1 ? 's' : ''} · <span className="font-semibold text-ink">{formatPrice(total, currency)}</span> total
           </p>
         )}
       </div>

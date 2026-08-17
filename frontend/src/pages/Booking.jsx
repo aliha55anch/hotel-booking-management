@@ -15,6 +15,7 @@ import { checkAvailability, createBooking } from '../services/bookingService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
 import { formatPrice } from '../lib/format.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useCurrency } from '../context/CurrencyContext.jsx'
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24
 
@@ -33,6 +34,7 @@ export default function Booking() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { user, token } = useAuth()
+  const { currency } = useCurrency()
 
   const hotelId = searchParams.get('hotel')
   const initialCheckIn = searchParams.get('checkIn') || ''
@@ -297,9 +299,9 @@ export default function Booking() {
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-lg font-semibold text-primary">{formatPrice(room.pricePerNight)}</p>
+                      <p className="text-lg font-semibold text-primary">{formatPrice(room.pricePerNight, currency)}</p>
                       <p className="text-xs text-muted">/ night</p>
-                      <p className="mt-0.5 text-xs font-medium text-ink">{formatPrice(roomTotal)} total</p>
+                      <p className="mt-0.5 text-xs font-medium text-ink">{formatPrice(roomTotal, currency)} total</p>
                     </div>
                   </label>
                 )
@@ -345,9 +347,9 @@ export default function Booking() {
               <div className="border-t border-line pt-3">
                 <div className="flex items-center justify-between">
                   <dt className="text-muted">
-                    {formatPrice(selectedRoom.pricePerNight)} × {nights} night{nights > 1 ? 's' : ''}
+                    {formatPrice(selectedRoom.pricePerNight, currency)} × {nights} night{nights > 1 ? 's' : ''}
                   </dt>
-                  <dd className="font-medium text-ink">{formatPrice(total)}</dd>
+                  <dd className="font-medium text-ink">{formatPrice(total, currency)}</dd>
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-muted">Taxes & fees</dt>
@@ -355,7 +357,7 @@ export default function Booking() {
                 </div>
                 <div className="mt-2 flex items-center justify-between border-t border-line pt-3">
                   <dt className="font-semibold text-ink">Total</dt>
-                  <dd className="text-xl font-semibold text-primary">{formatPrice(total)}</dd>
+                  <dd className="text-xl font-semibold text-primary">{formatPrice(total, currency)}</dd>
                 </div>
               </div>
             </dl>

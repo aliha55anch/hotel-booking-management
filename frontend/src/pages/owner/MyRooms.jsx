@@ -8,17 +8,19 @@ import { getMyHotels } from '../../services/hotelService.js'
 import { getRoomsByHotel, deleteRoom } from '../../services/roomService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { formatPrice } from '../../lib/format.js'
+import { useCurrency } from '../../context/CurrencyContext.jsx'
 import { useOwner } from '../../components/owner/ownerContext.js'
 import { inputClass } from '../../components/admin/formClasses.js'
 
 function RoomRow({ room, onEdit, onDelete }) {
+  const { currency } = useCurrency()
   const available = room.isAvailable !== false
 
   return (
     <tr className="hover:bg-surface/60">
       <td className="px-4 py-3 font-semibold text-ink">{room.roomType || 'Room'}</td>
       <td className="px-4 py-3 font-semibold text-primary">
-        {formatPrice(room.pricePerNight)}
+        {formatPrice(room.pricePerNight, currency)}
         <span className="text-xs font-normal text-muted"> / night</span>
       </td>
       <td className="px-4 py-3">

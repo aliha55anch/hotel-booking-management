@@ -14,6 +14,7 @@ import { getOfferById } from '../services/offerService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
 import { resolveImageUrl } from '../lib/images.js'
 import { formatPrice } from '../lib/format.js'
+import { useCurrency } from '../context/CurrencyContext.jsx'
 
 const formatDate = (value) => {
   if (!value) return ''
@@ -54,6 +55,7 @@ function DetailSkeleton() {
 }
 
 function PackageCard({ option, selected, onSelect }) {
+  const { currency } = useCurrency()
   const savings = option.originalPrice && option.originalPrice > option.price ? option.originalPrice - option.price : 0
 
   return (
@@ -83,12 +85,12 @@ function PackageCard({ option, selected, onSelect }) {
       {option.description && <p className="text-sm leading-relaxed text-muted">{option.description}</p>}
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="text-2xl font-semibold text-primary">{formatPrice(option.price)}</span>
+        <span className="text-2xl font-semibold text-primary">{formatPrice(option.price, currency)}</span>
         {option.originalPrice && option.originalPrice > option.price && (
           <>
-            <span className="text-sm text-muted line-through">{formatPrice(option.originalPrice)}</span>
+            <span className="text-sm text-muted line-through">{formatPrice(option.originalPrice, currency)}</span>
             <span className="rounded-btn bg-error/10 px-2 py-0.5 text-xs font-semibold text-error">
-              Save {formatPrice(savings)}
+              Save {formatPrice(savings, currency)}
             </span>
           </>
         )}
@@ -110,6 +112,7 @@ function PackageCard({ option, selected, onSelect }) {
 
 export default function OfferDetail() {
   const { id } = useParams()
+  const { currency } = useCurrency()
 
   const [offer, setOffer] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
@@ -273,12 +276,12 @@ export default function OfferDetail() {
                   {selectedOption.originalPrice && selectedOption.originalPrice > selectedOption.price && (
                     <div className="flex items-center justify-between">
                       <dt className="text-muted">Regular price</dt>
-                      <dd className="text-muted line-through">{formatPrice(selectedOption.originalPrice)}</dd>
+                        <dd className="text-muted line-through">{formatPrice(selectedOption.originalPrice, currency)}</dd>
                     </div>
                   )}
                   <div className="flex items-center justify-between border-t border-line pt-3">
                     <dt className="font-semibold text-ink">Total</dt>
-                    <dd className="text-xl font-semibold text-primary">{formatPrice(selectedOption.price)}</dd>
+                    <dd className="text-xl font-semibold text-primary">{formatPrice(selectedOption.price, currency)}</dd>
                   </div>
                 </dl>
                 <ul className="mt-4 space-y-1.5 border-t border-line pt-4">

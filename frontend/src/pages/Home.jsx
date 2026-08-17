@@ -8,6 +8,7 @@ import { getApiErrorMessage } from '../lib/errors.js'
 import { resolveImageUrl } from '../lib/images.js'
 import { hotelRoomImages } from '../lib/siteImages.js'
 import { formatPrice } from '../lib/format.js'
+import { useCurrency } from '../context/CurrencyContext.jsx'
 
 const cities = [
   'Islamabad',
@@ -186,6 +187,7 @@ function Hero() {
 }
 
 function RoomCard({ hotel, index }) {
+  const { currency } = useCurrency()
   const src = hotelRoomImages[index % hotelRoomImages.length]
 
   return (
@@ -213,7 +215,7 @@ function RoomCard({ hotel, index }) {
         </div>
         <div className="mt-4 flex items-center justify-between">
           <p>
-            <span className="text-xl text-gray-800">{hotel.priceFrom ? formatPrice(hotel.priceFrom) : 'Rs ---'}</span>
+            <span className="text-xl text-gray-800">{hotel.priceFrom ? formatPrice(hotel.priceFrom, currency) : 'Rs ---'}</span>
             /night
           </p>
           <span className="cursor-pointer rounded border border-gray-300 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-50">

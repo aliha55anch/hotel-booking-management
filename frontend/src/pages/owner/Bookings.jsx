@@ -6,6 +6,7 @@ import { CalendarIcon } from '../../components/ui/icons.jsx'
 import { getOwnerBookings } from '../../services/bookingService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { formatPrice } from '../../lib/format.js'
+import { useCurrency } from '../../context/CurrencyContext.jsx'
 import { useOwner } from '../../components/owner/ownerContext.js'
 
 const formatDate = (iso) => {
@@ -27,6 +28,7 @@ const filterClass = (active) =>
 
 export default function Bookings() {
   const { token } = useOwner()
+  const { currency } = useCurrency()
   const [bookings, setBookings] = useState([])
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
@@ -117,7 +119,7 @@ export default function Bookings() {
                   <td className="px-4 py-3 text-muted">
                     {formatDate(booking.checkInDate)} → {formatDate(booking.checkOutDate)}
                   </td>
-                  <td className="px-4 py-3 font-semibold text-ink">{formatPrice(booking.totalPrice)}</td>
+                  <td className="px-4 py-3 font-semibold text-ink">{formatPrice(booking.totalPrice, currency)}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={booking.status} />
                   </td>

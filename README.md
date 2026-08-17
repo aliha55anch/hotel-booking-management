@@ -1,158 +1,243 @@
 # StayHub — Hotel Booking System
 
-Full-stack hotel booking platform: React + Vite frontend, Express + MongoDB (Mongoose) backend, email + password auth (JWT), Stripe payments.
+A full-stack hotel booking platform where users can browse hotels, book rooms, and pay online. Hotel owners manage their properties through a dedicated dashboard. Built with React + Vite on the frontend and Express + MongoDB on the backend.
 
-## Stack
+**Live:** [https://stayhubhotel.vercel.app](https://stayhubhotel.vercel.app)
 
-- **Frontend:** React 19, Vite 8, Tailwind CSS v4, react-hook-form
-- **Backend:** Node.js (>= 18), Express 5, Mongoose, jsonwebtoken, bcryptjs, Stripe, Nodemailer, helmet, compression, express-rate-limit
-- **Database:** MongoDB (local or Atlas)
+---
 
-## Setup
+## Tech Stack
+
+| Layer | Technologies |
+| --- | --- |
+| Frontend | React 19, Vite 8, Tailwind CSS v4, React Router, React Hook Form, Stripe.js, QRCode |
+| Backend | Node.js (>= 20), Express 5, Mongoose 9, JSON Web Tokens, bcryptjs, Multer, Nodemailer |
+| Database | MongoDB (Atlas or local) |
+| Payments | Stripe (card payments with webhook verification) |
+| Hosting | Vercel (frontend) + Railway (backend) |
+
+---
+
+## Features
+
+### For Guests
+- Search and filter hotels by city, price range, rating, and availability
+- View hotel details with photo gallery, room options, and reviews
+- Book rooms with date selection and real-time availability checking
+- View booking summary with confirmation code and QR code before confirming
+- Cancel bookings from the My Bookings page
+- Toggle between PKR and USD currency from the navbar
+- Secure authentication with JWT (register, login, forgot/reset password)
+
+### For Hotel Owners
+- Dashboard with booking stats, revenue, and recent activity
+- Create, edit, and delete hotels with image upload (drag-and-drop or URL)
+- Manage room types, pricing, and availability
+- View all bookings for owned hotels
+- Update booking statuses (confirm, cancel, complete)
+
+### For Admins
+- Full dashboard with platform-wide stats and charts
+- Manage all hotels, rooms, users, and bookings
+- Promote users to admin; delete non-admin users
+- Manage exclusive offers and promotions
+
+### Booking Verification
+- Every booking generates a unique 8-character confirmation code (e.g. `A3K7NP2B`)
+- Guests can show the QR code or code at hotel check-in
+- Hotel staff can look up bookings via `GET /api/bookings/lookup/:code`
+
+---
+
+## Project Structure
+
+```
+Hotel Booking System/
+├── backend/
+│   ├── controllers/        # Route handlers (auth, hotels, rooms, bookings, etc.)
+│   ├── middleware/          # Auth, role checks, upload config, error handling
+│   ├── models/             # Mongoose schemas (User, Hotel, Room, Booking, Review, Offer)
+│   ├── routes/             # Express route definitions
+│   ├── scripts/            # Seed scripts (admin, offers)
+│   ├── tests/              # API smoke tests
+│   ├── uploads/            # Uploaded images (gitignored, auto-created)
+│   ├── server.js           # Entry point
+│   └── .env.example        # Environment variable template
+└── frontend/
+    ├── src/
+    │   ├── components/     # Reusable UI (Navbar, Footer, forms, cards)
+    │   ├── context/        # React contexts (Auth, Currency)
+    │   ├── lib/            # Utilities (format, config, image helpers)
+    │   ├── pages/          # Route pages (Home, Hotels, Booking, admin/, owner/)
+    │   ├── services/       # API service functions (axios calls)
+    │   ├── App.jsx         # Route definitions
+    │   └── main.jsx        # Entry point with providers
+    ├── vercel.json         # SPA rewrites for Vercel
+    └── .env.example        # Environment variable template
+```
+
+---
+
+## Roles
+
+| Role | Capabilities |
+| --- | --- |
+| **user** | Browse hotels, book rooms, leave reviews, view bookings |
+| **hotelOwner** | All user features + manage own hotels/rooms/bookings via `/owner` dashboard |
+| **admin** | All user features + manage all hotels/rooms/users/bookings via `/admin` dashboard |
+| **owner** | The very first account created. Has all admin powers + can manage/delete other admins. Cannot be demoted or deleted. |
+
+> The first account registered via the sign-up page automatically becomes the **owner**.
+> Alternatively, run `npm run seed:admin` from the backend directory to create the owner/admin directly.
+
+---
+
+## Local Development
+
+### Prerequisites
+
+- Node.js >= 20
+- MongoDB (local instance or [Atlas](https://www.mongodb.com/atlas) cluster)
 
 ### 1. Backend
 
 ```bash
 cd backend
-cp .env.example .env   # then fill in your keys
+cp .env.example .env     # fill in your values
 npm install
-npm run dev            # http://localhost:5000
+npm run dev              # starts on http://localhost:5000
 ```
 
-`.env` keys:
+**Backend environment variables:**
 
-| Key | Purpose | Required |
+| Variable | Purpose | Required |
 | --- | --- | --- |
 | `MONGO_URI` | MongoDB connection string | Yes |
-| `JWT_SECRET` | Signs auth tokens (any long random string) | Yes |
-| `ADMIN_PASSWORD` | Password for the bootstrap owner/admin (`npm run seed:admin`) | Yes |
-| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Card payments | For Stripe |
-| `EMAIL_USER`, `EMAIL_PASS` | Booking confirmation emails | For email |
-| `EMAIL_ENABLED` | `true` sends real emails even outside production | No |
-| `CORS_ORIGIN` | Comma-separated browser origins allowed in production | For production |
-| `NODE_ENV` | `development` / `production` | For production |
-
-> Without a registered account, the first account created via the public sign-up endpoint
-> becomes the system `owner`. Alternatively run `npm run seed:admin` to create the owner/admin
-> directly (it refuses to run when `ADMIN_PASSWORD` is not set).
+| `JWT_SECRET` | Secret key for signing auth tokens (any long random string) | Yes |
+| `ADMIN_PASSWORD` | Password for the owner/admin account (`npm run seed:admin`) | Yes |
+| `CORS_ORIGIN` | Comma-separated browser origins allowed in production | Production only |
+| `NODE_ENV` | `development` or `production` | Production only |
+| `STRIPE_SECRET_KEY` | Stripe secret key for card payments | For payments |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook endpoint secret | For payments |
+| `EMAIL_USER` | Gmail address for sending booking emails | For email |
+| `EMAIL_PASS` | Gmail app password ([create one here](https://myaccount.google.com/apppasswords)) | For email |
+| `EMAIL_ENABLED` | Set `true` to send real emails in development | No |
 
 ### 2. Frontend
 
 ```bash
 cd frontend
-cp .env.example .env   # then fill in your keys
+cp .env.example .env     # fill in your values
 npm install
-npm run dev            # http://localhost:5173
+npm run dev              # starts on http://localhost:5173
 ```
 
-`.env` keys:
+**Frontend environment variables:**
 
-| Key | Purpose | Required |
+| Variable | Purpose | Required |
 | --- | --- | --- |
-| `VITE_API_URL` | Backend base URL (`http://localhost:5000/api`) | Yes |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Card payments | For Stripe |
+| `VITE_API_URL` | Backend API base URL (e.g. `http://localhost:5000/api`) | Yes |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for card payments | For payments |
+
+---
 
 ## Deployment
 
-The app is split for hosting: the React frontend goes to **Vercel**, the Express API goes to **Render** (free tier).
+### Backend → Railway
 
-### 1. Backend → Render
-
-1. Push the repo to GitHub and create a new Render **Blueprint** (or Web Service) from it.
-   - Root directory: `backend`, start command: `npm start`. `render.yaml` is included and configures this automatically.
-2. Add the environment variables from `backend/.env.example` in the Render dashboard:
-   - `MONGO_URI` — MongoDB Atlas connection string
-   - `JWT_SECRET` — a long random string for signing auth tokens
-   - `ADMIN_PASSWORD` — bootstrap admin password (used by `npm run seed:admin`)
-   - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (register the webhook URL below)
-   - `EMAIL_USER`, `EMAIL_PASS`
-   - `EMAIL_ENABLED` — set `true` to allow real emails
+1. Push the repo to GitHub.
+2. Create a new Railway service from the repo. Set the **root directory** to `backend` and the start command to `npm start`.
+3. Add environment variables in the Railway dashboard:
+   - `MONGO_URI` — your MongoDB Atlas connection string
+   - `JWT_SECRET` — a long random string
+   - `ADMIN_PASSWORD` — password for the owner account
+   - `CORS_ORIGIN` — your Vercel frontend URL (e.g. `https://your-app.vercel.app`)
    - `NODE_ENV=production`
-   - `CORS_ORIGIN` — set to your Vercel frontend URL, e.g. `https://your-app.vercel.app`
-3. After deploy, note the API URL (e.g. `https://stayhub-api.onrender.com/api`).
-4. Register the Stripe webhook endpoint `https://your-api.onrender.com/api/stripe/webhook`
-   for the `payment_intent.succeeded` and `payment_intent.payment_failed` events, then copy the
-   `whsec_...` endpoint secret into `STRIPE_WEBHOOK_SECRET`. Use a live `sk_live_...` secret key
-   and a `pk_live_...` publishable key for real payments.
-5. Run the one-time seed once the service is up: `npm run seed:admin` (from the `backend`
-   directory on the deployed service, with `ADMIN_PASSWORD` set).
+   - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (if using payments)
+   - `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_ENABLED=true` (if using email)
+4. Railway provisions Node 20+ automatically (`.node-version` file is included).
+5. After deploy, note the API URL (e.g. `https://your-api.up.railway.app/api`).
 
-### 2. Frontend → Vercel
+### Frontend → Vercel
 
-1. Create a new Vercel project pointing at the `frontend` directory (it auto-detects Vite; `vercel.json` provides SPA rewrites).
-2. Add the environment variables (set at build time):
-   - `VITE_API_URL` — `https://your-api.onrender.com/api`
+1. Create a new Vercel project pointing at the `frontend` directory (Vite is auto-detected; `vercel.json` handles SPA rewrites).
+2. Add environment variables in the Vercel dashboard:
+   - `VITE_API_URL` — `https://your-api.up.railway.app/api`
    - `VITE_STRIPE_PUBLISHABLE_KEY` — your Stripe publishable key
-3. Deploy. The live URL is your Vercel project URL (e.g. `https://your-app.vercel.app`).
+3. Deploy. The live URL will be your Vercel project URL.
 
-> The first account that signs up becomes the system `owner` (only happens when the `User`
-> collection is empty), so sign up before inviting others — or use `npm run seed:admin`.
+> **Important:** `VITE_*` variables are baked at build time. If you change them in Vercel, you must trigger a redeploy.
 
-## Scripts
+### Stripe Webhook
 
-```bash
-# Backend
-npm run dev          # nodemon (auto-reload)
-npm start            # plain node
-npm test             # controller smoke tests (hotels, rooms, bookings, reviews, stripe, offers, accounts)
-npm run seed:admin   # create the owner/admin (requires ADMIN_PASSWORD)
-npm run seed:offers  # seed exclusive offers
+After deploying, register the webhook endpoint in the Stripe dashboard:
 
-# Frontend
-npm run dev          # dev server
-npm run build        # production build
-npm run lint         # oxlint
-npm run preview      # preview the build
+```
+https://your-api.up.railway.app/api/stripe/webhook
 ```
 
-> `npm test` runs against the MongoDB configured by `MONGO_URI` and writes test data to it —
-> never run it against a production database.
+Enable the `payment_intent.succeeded` and `payment_intent.payment_failed` events, then copy the `whsec_...` signing secret into `STRIPE_WEBHOOK_SECRET` on Railway.
 
-## Roles
+---
 
-- `user` — browse, book, review
-- `hotelOwner` — created automatically when a user lists their first hotel; manages own hotels/rooms, sees own bookings
-- `admin` — ManageBookings / ManageUsers / ManageHotels / ManageRooms dashboards (`/admin`); can promote users to admin and delete plain users, but cannot modify or delete other admins or the owner
-- `owner` — the very first account that signs up (when the `User` collection is empty); also holds admin powers and is the only role that can manage or delete admins. The owner account itself can never be demoted or deleted.
+## NPM Scripts
 
-> There is no public sign-up endpoint for the admin role. Promote a user from the existing
-> admin/owner account's Manage Users page, or run `npm run seed:admin` to create the owner/admin
-> from the start.
+### Backend
 
-## Important routes
+```bash
+npm run dev          # Start with nodemon (auto-reload)
+npm start            # Start with plain node
+npm run seed:admin   # Create the owner/admin account (requires ADMIN_PASSWORD)
+npm run seed:offers  # Seed exclusive offers
+npm test             # Run API smoke tests
+```
 
-| Route | Description |
-| --- | --- |
-| `GET /api/hotels` | Search hotels — filters: `city`, `rating`, `checkIn`, `checkOut`, `guests`, `minPrice`, `maxPrice`, `page`, `limit` |
-| `GET /api/hotels/stats` | Public aggregate stats (hotel count, cities, avg rating, confirmed stays) |
-| `POST /api/bookings` | Create booking (requires auth) |
-| `PUT /api/bookings/:id` | Update booking status (admin) |
-| `DELETE /api/reviews/:id` | Delete review (author, hotel owner, or admin) |
-| `POST /api/newsletter/subscribe` | Save a newsletter subscriber email |
-| `POST /api/stripe/webhook` | Stripe payment webhook (needs `STRIPE_WEBHOOK_SECRET`) |
+### Frontend
+
+```bash
+npm run dev          # Start Vite dev server
+npm run build        # Production build
+npm run lint         # Lint with oxlint
+npm run preview      # Preview the production build
+```
+
+> `npm test` runs against the database configured by `MONGO_URI`. Never run it against a production database.
+
+---
+
+## API Endpoints (Key Routes)
+
+| Method | Route | Description | Auth |
+| --- | --- | --- | --- |
+| `GET` | `/api/hotels` | Search hotels (filters: `city`, `rating`, `checkIn`, `checkOut`, `guests`, `minPrice`, `maxPrice`) | No |
+| `GET` | `/api/hotels/stats` | Public aggregate stats | No |
+| `POST` | `/api/bookings` | Create a booking | Yes |
+| `GET` | `/api/bookings/my` | Get current user's bookings | Yes |
+| `GET` | `/api/bookings/lookup/:code` | Look up booking by confirmation code | Yes |
+| `PUT` | `/api/bookings/:id` | Update booking status | Admin |
+| `DELETE` | `/api/reviews/:id` | Delete review (author, owner, or admin) | Yes |
+| `POST` | `/api/upload` | Upload an image file | Yes |
+| `POST` | `/api/newsletter/subscribe` | Subscribe to newsletter | No |
+| `POST` | `/api/stripe/webhook` | Stripe payment webhook | No (Stripe verified) |
+
+---
 
 ## Notes
 
-- Emails are sent via Nodemailer when `EMAIL_USER`/`EMAIL_PASS` are set and `NODE_ENV=production`
-  (or `EMAIL_ENABLED=true`). Outside production they are logged and skipped. Triggers:
-  - Welcome email on account creation
-  - "Booking request received" to the guest and a "New booking" notification to the hotel owner when a booking is created
-  - "Booking confirmed" to the guest after a successful Stripe payment
-  - "Booking cancelled" to the guest when a booking is cancelled
-  - "Profile updated" to the account holder after a name/photo change
-- Abandoned bookings (unpaid, created >72h ago or past their check-in) are cancelled
-  automatically every 6 hours.
-- Database images (`hotel.images` / `room.images` / offer `image`) are served by the backend
-  from `backend/public`; the frontend resolves them against `VITE_API_URL` and falls back to
-  bundled placeholders.
+- **Emails** are sent via Nodemailer when `EMAIL_USER`/`EMAIL_PASS` are set and `EMAIL_ENABLED=true` (or `NODE_ENV=production`). Triggers: welcome on signup, booking received, booking confirmed, booking cancelled, profile updated.
+- **Abandoned bookings** (unpaid, created > 72 hours ago or past check-in) are automatically cancelled every 6 hours.
+- **Image uploads** are stored in `backend/uploads/` (gitignored, auto-created on first upload). Max 5 MB per file, images only.
+- **Currency toggle** in the navbar switches all prices between PKR and USD. Selection persists in localStorage. Exchange rate: 1 USD = ~278 PKR.
+- **CORS** is fail-closed in production — requests are blocked unless `CORS_ORIGIN` lists the exact origin (no trailing slash).
+
+---
 
 ## Security
 
-- Rate limiting: auth/login endpoints (30 req / 15 min), newsletter (5 / hour), API (300 / 15 min).
-- `helmet` security headers, `compression`, `trust proxy`, and a 2 MB JSON body limit.
-- CORS is **fail-closed** in production — requests are blocked unless `CORS_ORIGIN` lists the origin.
-- Admin/owner update endpoints only accept a whitelist of fields (mass-assignment protection).
-- Stripe webhook verifies the signature, the payment intent id, and the amount, and is idempotent
-  (duplicate events are ignored).
-- Environment validation fails fast at boot when `MONGO_URI` / `JWT_SECRET` are missing.
-- The 401 / expired-token interceptor logs the user out automatically.
+- Rate limiting: auth endpoints (30 req / 15 min), newsletter (5 / hour), general API (300 / 15 min)
+- `helmet` security headers, `compression`, `trust proxy`, 2 MB JSON body limit
+- CORS is fail-closed in production — only configured origins can access the API
+- Admin/owner endpoints accept only whitelisted fields (mass-assignment protection)
+- Stripe webhook verifies signature, payment intent ID, and amount; duplicate events are ignored
+- Environment validation fails fast at boot when required variables are missing
+- 401 / expired-token interceptor automatically logs the user out

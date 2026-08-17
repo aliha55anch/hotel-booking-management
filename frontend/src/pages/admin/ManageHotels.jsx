@@ -7,9 +7,11 @@ import { PlusIcon, PencilIcon, TrashIcon, HotelIcon, StarIcon } from '../../comp
 import { getHotels, deleteHotel } from '../../services/hotelService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { formatPrice } from '../../lib/format.js'
+import { useCurrency } from '../../context/CurrencyContext.jsx'
 import { useAdmin } from '../../components/admin/adminContext.js'
 
 function HotelRow({ hotel, onEdit, onDelete }) {
+  const { currency } = useCurrency()
   return (
     <tr className="hover:bg-surface/60">
       <td className="px-4 py-3">
@@ -33,7 +35,7 @@ function HotelRow({ hotel, onEdit, onDelete }) {
         )}
       </td>
       <td className="px-4 py-3 font-semibold text-ink">
-        {hotel.priceFrom != null ? formatPrice(hotel.priceFrom) : '—'}
+        {hotel.priceFrom != null ? formatPrice(hotel.priceFrom, currency) : '—'}
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-1">

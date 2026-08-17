@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import { HotelIcon, MapPinIcon, StarIcon } from '../ui/icons.jsx'
 import { formatPrice } from '../../lib/format.js'
+import { useCurrency } from '../../context/CurrencyContext.jsx'
 import { hotelImageFor } from '../../lib/siteImages.js'
 
 export default function HotelCard({ hotel, image }) {
+  const { currency } = useCurrency()
   const src = image || hotelImageFor(hotel)
 
   return (
@@ -33,7 +35,7 @@ export default function HotelCard({ hotel, image }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-4">
-        <h3 className="line-clamp-2 font-heading text-sm font-semibold leading-snug text-ink">{hotel.name}</h3>
+        <h3 className="line-clamp-2 font-heading text-xs font-semibold leading-snug text-ink">{hotel.name}</h3>
         <p className="flex items-center gap-1 text-xs text-muted">
           <MapPinIcon className="h-3.5 w-3.5" />
           {hotel.city}
@@ -41,7 +43,7 @@ export default function HotelCard({ hotel, image }) {
         <div className="mt-auto flex items-baseline justify-between border-t border-line pt-3">
           {hotel.priceFrom ? (
             <>
-              <span className="text-lg font-semibold text-primary">{formatPrice(hotel.priceFrom)}</span>
+              <span className="text-lg font-semibold text-primary">{formatPrice(hotel.priceFrom, currency)}</span>
               <span className="text-xs text-muted"> / night</span>
             </>
           ) : (

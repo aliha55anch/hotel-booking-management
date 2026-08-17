@@ -7,6 +7,7 @@ import { CalendarIcon, TrashIcon } from '../../components/ui/icons.jsx'
 import { getAllBookings, updateBookingStatus, deleteBooking } from '../../services/bookingService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { formatPrice } from '../../lib/format.js'
+import { useCurrency } from '../../context/CurrencyContext.jsx'
 import { useAdmin } from '../../components/admin/adminContext.js'
 
 const formatDate = (iso) => {
@@ -36,6 +37,7 @@ const selectClass =
   'h-9 rounded-btn border border-line bg-background px-2 text-xs font-medium text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
 
 function BookingRow({ booking, token, canDelete, onChange, onDelete }) {
+  const { currency } = useCurrency()
   const [updating, setUpdating] = useState(false)
   const [rowError, setRowError] = useState(null)
 
@@ -67,7 +69,7 @@ function BookingRow({ booking, token, canDelete, onChange, onDelete }) {
       <td className="px-4 py-3 text-muted">
         {formatDate(booking.checkInDate)} → {formatDate(booking.checkOutDate)}
       </td>
-      <td className="px-4 py-3 font-semibold text-ink">{formatPrice(booking.totalPrice)}</td>
+      <td className="px-4 py-3 font-semibold text-ink">{formatPrice(booking.totalPrice, currency)}</td>
       <td className="px-4 py-3">
         <label className="flex items-center gap-2">
           <span className="sr-only">Booking status</span>
