@@ -17,7 +17,7 @@
     "test": "node tests/testHotels.js && node tests/testRooms.js && node tests/testBookings.js && node tests/testReviews.js && node tests/testStripe.js && node tests/testOffers.js && node tests/testAccounts.js"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.3",
+    "bcryptjs": "^2.4.3",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
