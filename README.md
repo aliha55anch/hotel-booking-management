@@ -241,3 +241,21 @@ npm run preview      # Preview the production build
 - Stripe webhook verifies signature, payment intent ID, and amount; duplicate events are ignored
 - Environment validation fails fast at boot when required variables are missing
 - 401 / expired-token interceptor automatically logs the user out
+
+---
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+--- 
+
+## Developed by: 
+
+Muhammad Ali Hassan 
+
+---
+
+## Support
+
+If you like this project, consider giving it a star on GitHub.
