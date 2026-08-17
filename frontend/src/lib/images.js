@@ -1,6 +1,12 @@
 import { API_URL } from './config.js'
 
-const apiOrigin = new URL(API_URL).origin
+const apiOrigin = (() => {
+  try {
+    return new URL(API_URL).origin
+  } catch {
+    return ''
+  }
+})()
 
 export const resolveImageUrl = (src) => {
   if (!src) return ''
