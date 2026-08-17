@@ -18,6 +18,7 @@ const reviewRoutes = require('./routes/reviewRoutes')
 const stripeRoutes = require('./routes/stripeRoutes')
 const newsletterRoutes = require('./routes/newsletterRoutes')
 const offerRoutes = require('./routes/offerRoutes')
+const uploadRoutes = require('./routes/uploadRoutes')
 const { notFound, errorHandler } = require('./middleware/errorMiddleware')
 const { cleanupExpiredBookings } = require('./controllers/bookingController')
 
@@ -44,7 +45,7 @@ const start = async () => {
   const isProduction = process.env.NODE_ENV === 'production'
   const allowedOrigins = (process.env.CORS_ORIGIN || '')
     .split(',')
-    .map((origin) => origin.trim())
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
     .filter(Boolean)
 
   app.use(
@@ -76,6 +77,8 @@ const start = async () => {
   app.use('/api/stripe', stripeRoutes.router)
   app.use('/api/newsletter', newsletterRoutes)
   app.use('/api/offers', offerRoutes)
+  app.use('/api/upload', uploadRoutes)
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '30d' }))
 
   app.get('/', (req, res) => {
     res.send('Hotel Booking API is running...')
