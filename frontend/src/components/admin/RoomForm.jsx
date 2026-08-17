@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import Modal from '../ui/Modal.jsx'
 import Button from '../ui/Button.jsx'
+import { PlusIcon, TrashIcon } from '../ui/icons.jsx'
 import { createRoom, updateRoom } from '../../services/roomService.js'
+import { uploadImages } from '../../services/uploadService.js'
 import { getApiErrorMessage } from '../../lib/errors.js'
 import { inputClass, textareaClass, labelClass } from './formClasses.js'
 
@@ -36,30 +38,58 @@ export default function RoomForm({ open, room, hotels, token, onClose, onSaved }
   } = useForm({ defaultValues: emptyValues })
   const [status, setStatus] = useState('idle')
   const [error, setErrorMsg] = useState(null)
+  const [files, setFiles] = useState([])
+  const [previews, setPreviews] = useState([])
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     if (open) {
       reset(room ? toValues(room) : emptyValues)
+      setFiles([])
+      setPreviews([])
+      if (fileInputRef.current) fileInputRef.current.value = ''
       setStatus('idle')
       setErrorMsg(null)
     }
   }, [open, room, reset])
 
-  const onSubmit = async (values) => {
-    const payload = {
-      hotel: values.hotel,
-      roomType: values.roomType?.trim(),
-      pricePerNight: Number(values.pricePerNight),
-      capacity: values.capacity ? Number(values.capacity) : undefined,
-      isAvailable: Boolean(values.isAvailable),
-      images: values.images ? values.images.split('\n').map((s) => s.trim()).filter(Boolean) : [],
-      amenities: values.amenities ? values.amenities.split(',').map((s) => s.trim()).filter(Boolean) : [],
-    }
+  const handleFileChange = (e) => {
+    const selected = Array.from(e.target.files)
+    if (selected.length === 0) return
+    setFiles((prev) => [...prev, ...selected])
+    setPreviews((prev) => [...prev, ...selected.map((f) => URL.createObjectURL(f))])
+  }
 
+  const removeFile = (index) => {
+    URL.revokeObjectURL(previews[index])
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+    setPreviews((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const onSubmit = async (values) => {
     setStatus('submitting')
     setErrorMsg(null)
 
     try {
+      let uploadedUrls = []
+      if (files.length > 0) {
+        uploadedUrls = await uploadImages(files, token)
+      }
+
+      const textUrls = values.images
+        ? values.images.split('\n').map((s) => s.trim()).filter(Boolean)
+        : []
+
+      const payload = {
+        hotel: values.hotel,
+        roomType: values.roomType?.trim(),
+        pricePerNight: Number(values.pricePerNight),
+        capacity: values.capacity ? Number(values.capacity) : undefined,
+        isAvailable: Boolean(values.isAvailable),
+        images: [...textUrls, ...uploadedUrls],
+        amenities: values.amenities ? values.amenities.split(',').map((s) => s.trim()).filter(Boolean) : [],
+      }
+
       if (editing) await updateRoom(room._id, payload, token)
       else await createRoom(payload, token)
       onSaved()
@@ -123,10 +153,56 @@ export default function RoomForm({ open, room, hotels, token, onClose, onSaved }
           />
         </label>
 
-        <label>
-          <span className={labelClass}>Image URLs</span>
-          <textarea className={textareaClass} rows={3} placeholder="One image URL per line" {...register('images')} />
-        </label>
+        <div className="space-y-2">
+          <span className={labelClass}>Images</span>
+          <div
+            className="flex flex-col items-center gap-2 rounded-card border-2 border-dashed border-line bg-surface/50 p-6 transition-colors hover:border-primary/40 cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <PlusIcon className="h-6 w-6 text-muted" />
+            <p className="text-sm text-muted">Click to upload images</p>
+            <p className="text-xs text-muted/60">JPG, PNG, WebP, GIF — max 5 MB each</p>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
+          {previews.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {previews.map((url, i) => (
+                <div key={i} className="relative group h-20 w-28">
+                  <img
+                    src={url}
+                    alt={`Upload ${i + 1}`}
+                    className="h-full w-full rounded-btn object-cover border border-line"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeFile(i)}
+                    className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-error text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <TrashIcon className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <label className="block">
+            <span className="text-xs text-muted">Or paste image URLs (one per line)</span>
+            <textarea
+              className={textareaClass}
+              rows={2}
+              placeholder="https://example.com/photo.jpg"
+              {...register('images')}
+            />
+          </label>
+        </div>
 
         <label className="flex items-center gap-2 text-sm text-ink">
           <input
