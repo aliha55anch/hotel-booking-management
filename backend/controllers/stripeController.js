@@ -9,14 +9,12 @@ const { isStaff } = require('../utils/roles')
 const createPaymentIntent = asyncHandler(async (req, res) => {
   const { bookingId } = req.body
 
-  const user = await findAccountById(req.auth.userId)
+  const [user, booking] = await Promise.all([findAccountById(req.auth.userId), Booking.findById(bookingId)])
 
   if (!user) {
     res.status(404)
     throw new Error('User not found')
   }
-
-  const booking = await Booking.findById(bookingId)
 
   if (!booking) {
     res.status(404)
@@ -118,16 +116,23 @@ const stripeWebhook = asyncHandler(async (req, res) => {
 
       await Booking.findByIdAndUpdate(bookingId, { paymentStatus: 'paid', status: 'confirmed' })
 
-      const populated = await Booking.findById(bookingId).populate('user', 'name email').populate('hotel').populate('room')
-
-      if (populated) {
-        await sendBookingConfirmedEmail({
-          to: populated.user?.email,
-          name: populated.user?.name,
-          booking: populated,
+      Booking.findById(bookingId)
+        .populate('user', 'name email')
+        .populate('hotel')
+        .populate('room')
+        .then((populated) => {
+          if (populated) {
+            return sendBookingConfirmedEmail({
+              to: populated.user?.email,
+              name: populated.user?.name,
+              booking: populated,
+            })
+          }
         })
-      }
-      break
+        .catch(() => {})
+
+      res.status(200).json({ received: true })
+      return
     }
     case 'payment_intent.payment_failed': {
       const intent = event.data.object

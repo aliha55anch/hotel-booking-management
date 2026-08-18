@@ -94,12 +94,12 @@ const forgotPassword = asyncHandler(async (req, res) => {
     expiresAt: new Date(Date.now() + RESET_CODE_TTL_MS),
   })
 
-  await sendPasswordResetCodeEmail({ to: user.email, name: user.name, code })
-
   res.status(200).json({
     success: true,
     message: 'A 6-digit password reset code has been sent to your email.',
   })
+
+  sendPasswordResetCodeEmail({ to: user.email, name: user.name, code }).catch(() => {})
 })
 
 const resetPassword = asyncHandler(async (req, res) => {

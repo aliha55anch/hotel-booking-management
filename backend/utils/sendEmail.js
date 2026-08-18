@@ -19,6 +19,22 @@ const isReservedAddress = (to) => {
   return RESERVED_DOMAINS.has(domain) || domain?.endsWith('.local')
 }
 
+let transporter = null
+
+const getTransporter = () => {
+  if (transporter) return transporter
+  const user = process.env.EMAIL_USER
+  const pass = process.env.EMAIL_PASS
+  if (!user || !pass) return null
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user, pass },
+    connectionTimeout: 10000,
+    greetingTimeout: 5000,
+  })
+  return transporter
+}
+
 const sendEmail = async ({ to, subject, html }) => {
   const user = process.env.EMAIL_USER
   const pass = process.env.EMAIL_PASS
@@ -39,13 +55,11 @@ const sendEmail = async ({ to, subject, html }) => {
     return
   }
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user, pass },
-  })
+  const tx = getTransporter()
+  if (!tx) return
 
   try {
-    await transporter.sendMail({
+    await tx.sendMail({
       from: `"StayHub" <${process.env.EMAIL_USER}>`,
       to,
       subject,

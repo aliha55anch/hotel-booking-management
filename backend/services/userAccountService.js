@@ -35,21 +35,23 @@ const decorate = (doc) => {
 const hasOwner = async () => (await Owner.countDocuments({ role: 'owner' })) > 0
 
 const findAccountById = async (id) => {
-  for (const model of ACCOUNT_MODELS) {
-    const doc = await model.findById(id)
-    if (doc) return decorate(doc)
+  try {
+    const doc = await Promise.any(ACCOUNT_MODELS.map((model) => model.findById(id).then((d) => { if (!d) throw new Error('not found'); return d })))
+    return decorate(doc)
+  } catch {
+    return null
   }
-  return null
 }
 
 const findAccountByEmail = async (email) => {
   if (!email) return null
   const normalized = String(email).trim().toLowerCase()
-  for (const model of ACCOUNT_MODELS) {
-    const doc = await model.findOne({ email: normalized })
-    if (doc) return decorate(doc)
+  try {
+    const doc = await Promise.any(ACCOUNT_MODELS.map((model) => model.findOne({ email: normalized }).then((d) => { if (!d) throw new Error('not found'); return d })))
+    return decorate(doc)
+  } catch {
+    return null
   }
-  return null
 }
 
 const listAccounts = async () => {
@@ -154,8 +156,11 @@ const verifyCredentials = async ({ email, password }) => {
   if (!email || !password) return null
   const normalized = String(email).trim().toLowerCase()
 
-  for (const model of ACCOUNT_MODELS) {
-    const doc = await model.findOne({ email: normalized }).select('+password')
+  const docs = await Promise.all(
+    ACCOUNT_MODELS.map((model) => model.findOne({ email: normalized }).select('+password'))
+  )
+
+  for (const doc of docs) {
     if (doc && doc.password) {
       const matches = await bcrypt.compare(password, doc.password)
       if (matches) return decorate(doc)

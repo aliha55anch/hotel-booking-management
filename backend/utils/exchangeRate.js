@@ -5,14 +5,20 @@ const TTL_MS = 60 * 60 * 1000
 let cached = { rate: null, fetchedAt: 0 }
 
 const fetchRate = async () => {
-  const response = await fetch(API_URL)
-  if (!response.ok) throw new Error(`Exchange rate API responded with ${response.status}`)
-  const data = await response.json()
-  const rate = data?.rates?.USD
-  if (data?.result !== 'success' || typeof rate !== 'number' || rate <= 0) {
-    throw new Error('Unexpected exchange rate payload')
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 5000)
+  try {
+    const response = await fetch(API_URL, { signal: controller.signal })
+    if (!response.ok) throw new Error(`Exchange rate API responded with ${response.status}`)
+    const data = await response.json()
+    const rate = data?.rates?.USD
+    if (data?.result !== 'success' || typeof rate !== 'number' || rate <= 0) {
+      throw new Error('Unexpected exchange rate payload')
+    }
+    return rate
+  } finally {
+    clearTimeout(timeout)
   }
-  return rate
 }
 
 // USD amount per 1 PKR, e.g. 0.0036. Cached for an hour; falls back to a

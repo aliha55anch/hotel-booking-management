@@ -20,14 +20,12 @@ const getLocalUser = async (userId) => {
 const createBooking = asyncHandler(async (req, res) => {
   const { room: roomId, checkInDate, checkOutDate, offer: offerId, packageOption: packageOptionId } = req.body
 
-  const user = await getLocalUser(req.auth.userId)
+  const [user, room] = await Promise.all([getLocalUser(req.auth.userId), Room.findById(roomId)])
 
   if (!user) {
     res.status(404)
     throw new Error('User not found')
   }
-
-  const room = await Room.findById(roomId)
 
   if (!room) {
     res.status(404)
@@ -47,34 +45,33 @@ const createBooking = asyncHandler(async (req, res) => {
     throw new Error('Check-out date must be after check-in date')
   }
 
-  const overlapping = await Booking.findOne({
-    room: room._id,
-    status: { $ne: 'cancelled' },
-    checkInDate: { $lt: checkOut },
-    checkOutDate: { $gt: checkIn },
-  })
+  const numberOfNights = Math.ceil((checkOut - checkIn) / NIGHT_MS)
+
+  let totalPrice = room.pricePerNight * numberOfNights
+  let offerPackageName = null
+  let offerPrice = null
+
+  const [overlapping, offerResult] = await Promise.all([
+    Booking.findOne({
+      room: room._id,
+      status: { $ne: 'cancelled' },
+      checkInDate: { $lt: checkOut },
+      checkOutDate: { $gt: checkIn },
+    }),
+    offerId && packageOptionId ? Offer.findById(offerId) : Promise.resolve(null),
+  ])
 
   if (overlapping) {
     res.status(400)
     throw new Error('Room not available for these dates')
   }
 
-  const numberOfNights = Math.ceil((checkOut - checkIn) / NIGHT_MS)
-
-  let totalPrice = room.pricePerNight * numberOfNights
-  let offerDoc = null
-  let offerPackageName = null
-  let offerPrice = null
-
-  if (offerId && packageOptionId) {
-    offerDoc = await Offer.findById(offerId)
-    if (offerDoc && offerDoc.active) {
-      const pkg = offerDoc.packageOptions.id(packageOptionId)
-      if (pkg) {
-        totalPrice = pkg.price
-        offerPackageName = pkg.name
-        offerPrice = pkg.price
-      }
+  if (offerResult && offerResult.active) {
+    const pkg = offerResult.packageOptions.id(packageOptionId)
+    if (pkg) {
+      totalPrice = pkg.price
+      offerPackageName = pkg.name
+      offerPrice = pkg.price
     }
   }
 
@@ -96,7 +93,7 @@ const createBooking = asyncHandler(async (req, res) => {
     status: 'pending',
     paymentStatus: 'unpaid',
     confirmationCode: generateCode(),
-    offer: offerDoc ? offerDoc._id : undefined,
+    offer: offerResult ? offerResult._id : undefined,
     packageOption: offerPackageName || undefined,
     offerPrice: offerPrice || undefined,
   })
@@ -104,20 +101,23 @@ const createBooking = asyncHandler(async (req, res) => {
   const hotel = await Hotel.findById(room.hotel).select('name owner ownerModel')
   const bookingForEmail = { ...booking.toObject(), hotel, room }
 
-  await sendBookingReceivedEmail({ to: user.email, name: user.name, booking: bookingForEmail })
+  res.status(201).json({ success: true, booking })
+
+  sendBookingReceivedEmail({ to: user.email, name: user.name, booking: bookingForEmail }).catch(() => {})
 
   if (hotel?.owner) {
-    const owner = await findAccountById(hotel.owner)
-    if (owner?.email) {
-      await sendBookingNotificationEmail({
-        to: owner.email,
-        ownerName: owner.name,
-        booking: bookingForEmail,
+    findAccountById(hotel.owner)
+      .then((owner) => {
+        if (owner?.email) {
+          return sendBookingNotificationEmail({
+            to: owner.email,
+            ownerName: owner.name,
+            booking: bookingForEmail,
+          })
+        }
       })
-    }
+      .catch(() => {})
   }
-
-  res.status(201).json({ success: true, booking })
 })
 
 const getMyBookings = asyncHandler(async (req, res) => {
@@ -221,13 +221,13 @@ const cancelBooking = asyncHandler(async (req, res) => {
     .populate('hotel')
     .populate('room')
 
-  await sendBookingCancelledEmail({
+  res.status(200).json({ success: true, booking })
+
+  sendBookingCancelledEmail({
     to: populated.user?.email,
     name: populated.user?.name,
     booking: populated,
-  })
-
-  res.status(200).json({ success: true, booking })
+  }).catch(() => {})
 })
 
 const updateBookingStatus = asyncHandler(async (req, res) => {
