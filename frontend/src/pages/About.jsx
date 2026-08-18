@@ -63,8 +63,8 @@ export default function About() {
   ]
   return (
     <>
-      <section className="relative -mt-18 overflow-hidden bg-linear-to-b from-primary-soft/70 via-background/50 to-background">
-        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-24 text-center sm:px-6 lg:px-8">
+      <section className="relative -mt-16 overflow-hidden bg-linear-to-b from-primary-soft/70 via-background/50 to-background sm:-mt-18">
+        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-16 text-center sm:px-6 sm:py-24 lg:px-8">
           <span className="flex h-14 w-14 items-center justify-center rounded-btn bg-primary text-white">
             <HotelIcon className="h-7 w-7" />
           </span>

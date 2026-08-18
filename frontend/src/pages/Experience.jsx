@@ -55,8 +55,8 @@ export default function Experience() {
 
   return (
     <>
-      <section className="relative -mt-18 overflow-hidden bg-linear-to-b from-primary-soft/70 via-background/50 to-background">
-        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-24 text-center sm:px-6 lg:px-8">
+      <section className="relative -mt-16 overflow-hidden bg-linear-to-b from-primary-soft/70 via-background/50 to-background sm:-mt-18">
+        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-6 px-4 py-16 text-center sm:px-6 sm:py-24 lg:px-8">
           <h1 className="font-heading text-4xl font-semibold text-ink sm:text-5xl">Experience StayHub</h1>
           <p className="max-w-xl text-base text-muted">
             Explore exclusive offers and hear from travellers who found their perfect stay with us.
@@ -117,7 +117,7 @@ export default function Experience() {
               </Link>
             ))
           ) : (
-            <div className="col-span-full rounded-card border border-line bg-surface p-12 text-center">
+            <div className="col-span-full rounded-card border border-line bg-surface p-6 text-center sm:p-12">
               <p className="text-sm text-muted">No exclusive offers are available right now. Check back soon.</p>
             </div>
           )}

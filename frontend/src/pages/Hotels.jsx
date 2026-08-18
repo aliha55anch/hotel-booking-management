@@ -154,7 +154,7 @@ export default function Hotels() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="font-heading text-3xl font-semibold text-ink">
+      <h1 className="font-heading text-2xl font-semibold text-ink sm:text-3xl">
         {city ? `Hotels in ${capitalize(city)}` : 'All hotels'}
       </h1>
       <p className="mt-2 text-sm text-muted">
@@ -163,13 +163,13 @@ export default function Hotels() {
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="mt-6 flex flex-col gap-2 rounded-card border border-line bg-surface p-3 sm:flex-row sm:items-end"
+        className="mt-6 grid grid-cols-1 gap-2 rounded-card border border-line bg-surface p-3 sm:grid-cols-2 md:flex md:flex-row md:items-end"
       >
         <label className="flex-1">
           <span className="mb-1 block text-xs font-medium text-muted">City</span>
           <input type="text" placeholder="e.g., Islamabad" className={`${inputClass} w-full`} {...register('city')} />
         </label>
-        <label className="sm:w-44">
+        <label className="md:w-44">
           <span className="mb-1 block text-xs font-medium text-muted">Rating</span>
           <select className={`${inputClass} w-full`} {...register('rating')}>
             {ratings.map((r) => (
@@ -179,19 +179,19 @@ export default function Hotels() {
             ))}
           </select>
         </label>
-        <label className="sm:w-40">
+        <label className="md:w-40">
           <span className="mb-1 block text-xs font-medium text-muted">Check-in</span>
           <input type="date" className={`${inputClass} w-full`} {...register('checkIn')} />
         </label>
-        <label className="sm:w-40">
+        <label className="md:w-40">
           <span className="mb-1 block text-xs font-medium text-muted">Check-out</span>
           <input type="date" className={`${inputClass} w-full`} {...register('checkOut')} />
         </label>
-        <label className="sm:w-28">
+        <label className="md:w-28">
           <span className="mb-1 block text-xs font-medium text-muted">Guests</span>
           <input type="number" min={1} placeholder="Any" className={`${inputClass} w-full`} {...register('guests')} />
         </label>
-        <div className="flex flex-col sm:w-56">
+        <div className="flex flex-col md:w-56">
           <span className="mb-1 block text-xs font-medium text-muted">Price / night</span>
           <div className="flex items-center gap-2">
             <input type="number" min={0} placeholder="Min" className={`${inputClass} w-full`} {...register('minPrice')} />
@@ -199,7 +199,7 @@ export default function Hotels() {
             <input type="number" min={0} placeholder="Max" className={`${inputClass} w-full`} {...register('maxPrice')} />
           </div>
         </div>
-        <Button type="submit" size="md">
+        <Button type="submit" size="md" className="w-full md:w-auto">
           <SearchIcon className="h-4 w-4" />
           Search
         </Button>
@@ -249,7 +249,7 @@ export default function Hotels() {
           )}
         </>
       ) : (
-        <div className="mt-8 flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-12 text-center">
+        <div className="mt-8 flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-6 text-center sm:p-12">
           <span className="flex h-14 w-14 items-center justify-center rounded-btn bg-primary-soft text-primary">
             <HotelIcon className="h-7 w-7" />
           </span>

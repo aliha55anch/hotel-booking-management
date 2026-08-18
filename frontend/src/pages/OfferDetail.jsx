@@ -157,7 +157,7 @@ export default function OfferDetail() {
   if (notFound) {
     return (
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-12 text-center">
+        <div className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-6 text-center sm:p-12">
           <span className="flex h-14 w-14 items-center justify-center rounded-btn bg-primary-soft text-primary">
             <FlameIcon className="h-7 w-7" />
           </span>
@@ -205,7 +205,7 @@ export default function OfferDetail() {
           <div className="relative aspect-16/9">
             <img src={offerImg(offer)} alt={offer.title} className="h-full w-full object-cover" />
             <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
-            <div className="absolute bottom-4 left-4 flex items-center gap-2">
+            <div className="absolute bottom-4 left-4 flex flex-wrap items-center gap-2">
               {offer.discountPercent > 0 && (
                 <span className="flex items-center gap-1 rounded-btn bg-error px-3 py-1 text-sm font-semibold text-white">
                   <FlameIcon className="h-4 w-4" />
@@ -223,7 +223,7 @@ export default function OfferDetail() {
         </div>
 
         <div>
-          <h1 className="font-heading text-3xl font-semibold text-ink">{offer.title}</h1>
+          <h1 className="font-heading text-2xl font-semibold text-ink sm:text-3xl">{offer.title}</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted">{offer.description}</p>
 
           {offer.highlights?.length > 0 && (
@@ -261,7 +261,7 @@ export default function OfferDetail() {
             </div>
           </div>
 
-          <aside className="sticky top-6 rounded-card border border-line bg-surface p-5">
+          <aside className="rounded-card border border-line bg-surface p-5 lg:sticky lg:top-6">
             <h2 className="font-heading text-lg font-semibold text-ink">Your package</h2>
             {selectedOption ? (
               <>
@@ -323,7 +323,7 @@ export default function OfferDetail() {
           </aside>
         </div>
       ) : (
-        <div className="mt-10 rounded-card border border-line bg-surface p-8 text-center">
+        <div className="mt-10 rounded-card border border-line bg-surface p-6 text-center sm:p-8">
           <p className="text-sm text-muted">Package details for this offer are being prepared.</p>
         </div>
       )}

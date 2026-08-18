@@ -367,7 +367,7 @@ export default function HotelDetail() {
   if (notFound) {
     return (
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-12 text-center">
+        <div className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-6 text-center sm:p-12">
           <span className="flex h-14 w-14 items-center justify-center rounded-btn bg-primary-soft text-primary">
             <HotelIcon className="h-7 w-7" />
           </span>
@@ -417,14 +417,14 @@ export default function HotelDetail() {
             )}
           </div>
           {gallery.length > 1 && (
-            <div className="flex flex-wrap gap-2 p-3">
+            <div className="flex gap-2 overflow-x-auto p-3 scrollbar-hide">
               {gallery.map((src, i) => (
                 <button
                   key={src}
                   type="button"
                   onClick={() => setActiveImage(src)}
                   aria-label={`View image ${i + 1}`}
-                  className={`overflow-hidden rounded-card border-2 transition-colors ${
+                  className={`shrink-0 overflow-hidden rounded-card border-2 transition-colors ${
                     src === activeImageSrc ? 'border-primary' : 'border-transparent hover:border-line'
                   }`}
                 >
@@ -437,7 +437,7 @@ export default function HotelDetail() {
 
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="font-heading text-3xl font-semibold text-ink">{hotel.name}</h1>
+            <h1 className="font-heading text-2xl font-semibold text-ink sm:text-3xl">{hotel.name}</h1>
             {hotel.rating > 0 && (
               <span className="flex shrink-0 items-center gap-1 rounded-btn bg-accent px-2 py-0.5 text-xs font-semibold text-ink">
                 <StarIcon className="h-3.5 w-3.5" />

@@ -124,7 +124,7 @@ function ProfileContent({ token }) {
   if (error) {
     return (
       <section className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="font-heading text-3xl font-semibold text-ink">Profile</h1>
+      <h1 className="font-heading text-2xl font-semibold text-ink sm:text-3xl">Profile</h1>
         <div className="mt-6 flex items-center justify-between rounded-card border border-line bg-surface p-4">
           <p className="text-sm text-error">{error}</p>
           <Button size="sm" onClick={() => setReloadKey((key) => key + 1)}>
@@ -137,11 +137,11 @@ function ProfileContent({ token }) {
 
   return (
     <section className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="font-heading text-3xl font-semibold text-ink">Profile</h1>
+        <h1 className="font-heading text-2xl font-semibold text-ink sm:text-3xl">Profile</h1>
       <p className="mt-1 text-sm text-muted">Update your display name and profile photo.</p>
 
-      <form onSubmit={handleSave} className="mt-6 space-y-6 rounded-card border border-line bg-background p-6 shadow-card">
-        <div className="flex items-center gap-5">
+      <form onSubmit={handleSave} className="mt-6 space-y-6 rounded-card border border-line bg-background p-4 shadow-card sm:p-6">
+        <div className="flex flex-col items-center gap-5 sm:flex-row">
           {preview ? (
             <img
               src={preview}

@@ -29,8 +29,8 @@ const SectionTitle = ({ title, subtitle, align }) => (
   <div
     className={`flex flex-col justify-center text-center ${align === 'left' ? 'md:items-start md:text-left' : 'items-center'}`}
   >
-    <h1 className="font-display text-4xl text-gray-900 md:text-[40px] md:leading-12">{title}</h1>
-    <p className="mt-2 max-w-174 text-sm text-gray-500/90 md:text-base">{subtitle}</p>
+    <h1 className="font-display text-[28px] leading-tight text-gray-900 sm:text-4xl md:text-[40px] md:leading-12">{title}</h1>
+    <p className="mt-2 max-w-174 text-xs text-gray-500/90 sm:text-sm md:text-base">{subtitle}</p>
   </div>
 )
 
@@ -81,7 +81,7 @@ function HeroSearch() {
   return (
     <form
       onSubmit={onSubmit}
-      className="mx-auto mt-8 grid w-full max-w-4xl grid-cols-1 gap-4 rounded-2xl bg-white/95 p-5 text-left text-gray-500 shadow-2xl shadow-black/30 backdrop-blur-md sm:grid-cols-2 lg:grid-cols-12 lg:items-end lg:gap-3 lg:rounded-3xl lg:p-4"
+      className="mx-auto mt-6 sm:mt-8 grid w-full max-w-4xl grid-cols-1 gap-3 rounded-2xl bg-white/95 p-4 text-left text-gray-500 shadow-2xl shadow-black/30 backdrop-blur-md sm:grid-cols-2 sm:gap-4 sm:p-5 lg:grid-cols-12 lg:items-end lg:gap-3 lg:rounded-3xl lg:p-4"
     >
       <div className="sm:col-span-1 lg:col-span-3">
         <SearchLabel icon={assets.locationIcon} htmlFor="destinationInput">
@@ -167,13 +167,13 @@ function HeroSearch() {
 
 function Hero() {
   return (
-    <section className="relative -mt-18 flex min-h-screen items-center justify-center bg-[url('/background.webp')] bg-cover bg-center bg-no-repeat text-white">
+    <section className="relative -mt-16 flex min-h-[100dvh] items-center justify-center bg-[url('/background.webp')] bg-cover bg-center bg-no-repeat text-white sm:-mt-18">
       <div className="absolute inset-0 bg-black/50" />
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center justify-center px-4 text-center sm:px-6 lg:px-8">
-        <span className="rounded-full bg-[#49B9FF]/50 px-3.5 py-1">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center justify-center px-5 text-center sm:px-6 lg:px-8">
+        <span className="rounded-full bg-[#49B9FF]/50 px-3 py-1 text-xs sm:text-sm">
           The Ultimate Hotel Experience
         </span>
-        <h1 className="mt-4 max-w-xl font-display text-2xl font-bold md:text-[56px] md:leading-14 md:font-extrabold">
+        <h1 className="mt-4 max-w-xl font-display text-[26px] leading-tight font-bold sm:text-2xl md:text-[56px] md:leading-14 md:font-extrabold">
           Discover Your Perfect Gateway Destination
         </h1>
         <p className="mt-4 max-w-130 text-sm md:text-base">
@@ -193,32 +193,32 @@ function RoomCard({ hotel, index }) {
   return (
     <Link
       to={`/hotels/${hotel._id}`}
-      className="relative block w-full max-w-70 overflow-hidden rounded-xl bg-white text-gray-500/90 shadow-[0px_4px_4px_rgba(0,0,0,0.05)]"
+      className="group relative block w-full overflow-hidden rounded-xl bg-white text-gray-500/90 shadow-[0px_4px_4px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-[0px_6px_16px_rgba(0,0,0,0.12)]"
     >
-      <img src={src} alt={hotel.name} draggable="false" loading="lazy" className="h-auto w-full object-cover" />
+      <img src={src} alt={hotel.name} draggable="false" loading="lazy" className="aspect-4/3 w-full object-cover" />
       {index % 2 === 0 && (
         <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800">
           Best Seller
         </span>
       )}
-      <div className="p-4 pt-5">
+      <div className="p-3 sm:p-4 pt-4 sm:pt-5">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate font-display text-xl font-medium text-gray-800">{hotel.name}</p>
-          <div className="flex shrink-0 items-center gap-1">
-            <img src={assets.starIconFilled} alt="star-icon" />
+          <p className="truncate font-display text-base sm:text-xl font-medium text-gray-800">{hotel.name}</p>
+          <div className="flex shrink-0 items-center gap-1 text-xs sm:text-sm">
+            <img src={assets.starIconFilled} alt="star-icon" className="h-3 w-3 sm:h-4 sm:w-4" />
             {hotel.rating || '4.5'}
           </div>
         </div>
-        <div className="mt-1 flex items-center gap-1 text-sm">
-          <img src={assets.locationIcon} alt="location-icon" />
+        <div className="mt-1 flex items-center gap-1 text-xs sm:text-sm">
+          <img src={assets.locationIcon} alt="location-icon" className="h-3 w-3 sm:h-4 sm:w-4" />
           <span className="truncate">{hotel.city || hotel.address}</span>
         </div>
-        <div className="mt-4 flex items-center justify-between">
-          <p>
-            <span className="text-xl text-gray-800">{hotel.priceFrom ? formatPrice(hotel.priceFrom, currency) : 'Rs ---'}</span>
-            /night
+        <div className="mt-3 sm:mt-4 flex items-center justify-between">
+          <p className="text-sm sm:text-base">
+            <span className="text-base sm:text-xl text-gray-800">{hotel.priceFrom ? formatPrice(hotel.priceFrom, currency) : 'Rs ---'}</span>
+            <span className="text-xs sm:text-sm">/night</span>
           </p>
-          <span className="cursor-pointer rounded border border-gray-300 px-4 py-2 text-sm font-medium transition-all hover:bg-gray-50">
+          <span className="cursor-pointer rounded border border-gray-300 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all hover:bg-gray-50">
             Book Now
           </span>
         </div>
@@ -262,11 +262,11 @@ function FeaturedDestinations() {
         {error && <p className="mt-8 text-sm text-red-500">Couldn&apos;t load hotels: {error}</p>}
 
         {loading ? (
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-6">
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="w-full max-w-70 animate-pulse overflow-hidden rounded-xl bg-white shadow-[0px_4px_4px_rgba(0,0,0,0.05)]">
+              <div key={i} className="animate-pulse overflow-hidden rounded-xl bg-white shadow-[0px_4px_4px_rgba(0,0,0,0.05)]">
                 <div className="aspect-4/3 bg-slate-200" />
-                <div className="space-y-3 p-4 pt-5">
+                <div className="space-y-3 p-3 sm:p-4 pt-4 sm:pt-5">
                   <div className="h-5 w-3/4 rounded bg-slate-200" />
                   <div className="h-4 w-1/2 rounded bg-slate-200" />
                   <div className="h-4 w-1/3 rounded bg-slate-200" />
@@ -275,8 +275,8 @@ function FeaturedDestinations() {
             ))}
           </div>
         ) : hotels.length > 0 ? (
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-6">
-            {hotels.slice(0, 4).map((hotel, index) => (
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+            {hotels.slice(0, 8).map((hotel, index) => (
               <RoomCard key={hotel._id} hotel={hotel} index={index} />
             ))}
           </div>
@@ -286,7 +286,7 @@ function FeaturedDestinations() {
 
         <Link
           to="/hotels"
-          className="mt-10 cursor-pointer rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium transition-all hover:bg-gray-50"
+          className="mt-8 sm:mt-10 w-full sm:w-auto cursor-pointer rounded border border-gray-300 bg-white px-4 py-2.5 text-center text-sm font-medium transition-all hover:bg-gray-50"
         >
           View All Destinations
         </Link>
@@ -347,12 +347,12 @@ function ExclusiveOffers() {
           </Link>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="flex min-h-64 animate-pulse items-end rounded-xl bg-slate-200 px-4 pb-5 pt-12"
+                className="flex min-h-52 animate-pulse items-end rounded-xl bg-slate-200 px-4 pb-5 pt-10 sm:min-h-64 sm:pt-12"
               >
                 <div className="w-full space-y-2">
                   <div className="h-5 w-1/2 rounded bg-slate-300" />
@@ -364,7 +364,7 @@ function ExclusiveOffers() {
             offers.map((offer) => (
               <div
                 key={offer._id}
-                className="group relative flex min-h-64 flex-col items-start justify-between gap-1 rounded-xl bg-cover bg-center bg-no-repeat px-4 pt-12 text-white md:pt-18"
+                className="group relative flex min-h-52 flex-col items-start justify-between gap-1 rounded-xl bg-cover bg-center bg-no-repeat px-4 pt-10 text-white sm:min-h-64 sm:pt-12 md:pt-18"
                 style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${resolveImageUrl(offer.image)})` }}
               >
                 {offer.discountPercent > 0 && (
@@ -373,8 +373,8 @@ function ExclusiveOffers() {
                   </span>
                 )}
                 <div>
-                  <p className="font-display text-2xl font-medium">{offer.title}</p>
-                  <p>{offer.description}</p>
+                  <p className="font-display text-lg sm:text-2xl font-medium">{offer.title}</p>
+                  <p className="text-sm sm:text-base">{offer.description}</p>
                   {offer.expiryDate && (
                     <p className="mt-3 text-xs text-white/70">Expires {formatExpiry(offer.expiryDate)}</p>
                   )}
@@ -423,11 +423,11 @@ function Testimonials() {
           subtitle="Discover why discerning travelers consistently choose StayHub for their exclusive and luxurious accommodations around the world."
         />
 
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-6">
+        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((t) => (
-            <figure key={t.id} className="w-full max-w-90 rounded-xl bg-white p-6 shadow">
+            <figure key={t.id} className="rounded-xl bg-white p-5 sm:p-6 shadow">
               <div className="flex items-center gap-3">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 font-display text-sm font-semibold text-gray-600">
+                <span className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 font-display text-xs sm:text-sm font-semibold text-gray-600">
                   {t.name
                     .split(' ')
                     .map((n) => n[0])
@@ -435,12 +435,14 @@ function Testimonials() {
                     .join('')}
                 </span>
                 <div>
-                  <p className="font-display text-xl text-gray-900">{t.name}</p>
-                  <p className="text-gray-500">{t.address}</p>
+                  <p className="font-display text-base sm:text-xl text-gray-900">{t.name}</p>
+                  <p className="text-xs sm:text-sm text-gray-500">{t.address}</p>
                 </div>
               </div>
-              <Stars rating={t.rating} />
-              <p className="mt-4 max-w-90 text-gray-500">&quot;{t.review}&quot;</p>
+              <div className="mt-2">
+                <Stars rating={t.rating} />
+              </div>
+              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-gray-500">&quot;{t.review}&quot;</p>
             </figure>
           ))}
         </div>
@@ -470,27 +472,27 @@ function StayInspired() {
   }
 
   return (
-    <section className="mx-2 my-12 flex flex-col items-center rounded-2xl bg-gray-900 px-4 py-10 text-white md:py-12 lg:mx-auto lg:w-full lg:max-w-5xl">
+    <section className="mx-3 my-10 flex flex-col items-center rounded-2xl bg-gray-900 px-5 py-10 text-white sm:mx-2 md:py-12 lg:mx-auto lg:w-full lg:max-w-5xl">
       <SectionTitle
         title="Stay Inspired"
         subtitle="Join our newsletter and be the first to discover new destinations, exclusive offers, and travel inspiration."
       />
       <form
         onSubmit={onSubmit}
-        className="mt-6 flex w-full max-w-lg flex-col items-center justify-center gap-4 md:flex-row"
+        className="mt-6 flex w-full max-w-lg flex-col items-center justify-center gap-3 sm:gap-4 md:flex-row"
       >
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full max-w-66 rounded border border-white/20 bg-white/10 px-4 py-2.5 text-white outline-none"
+          className="w-full rounded border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none sm:max-w-66"
           placeholder="Enter your email"
           required
         />
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="group flex cursor-pointer items-center justify-center gap-2 rounded bg-black px-4 py-2.5 transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 md:px-7"
+          className="group flex w-full cursor-pointer items-center justify-center gap-2 rounded bg-black px-4 py-2.5 text-sm font-medium transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto md:px-7"
         >
           {status === 'submitting' ? 'Subscribing...' : 'Subscribe'}
           {status !== 'submitting' && (

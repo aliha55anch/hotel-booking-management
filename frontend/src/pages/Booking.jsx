@@ -164,7 +164,7 @@ export default function Booking() {
   if (error && !hotel) {
     return (
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-12 text-center">
+        <div className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-6 text-center sm:p-12">
           <div>
             <h1 className="font-heading text-xl font-semibold text-ink">Couldn&apos;t load booking</h1>
             <p className="mt-1 text-sm text-muted">{error}</p>
@@ -188,7 +188,7 @@ export default function Booking() {
         <div>
           {hotel && (
             <div className="flex flex-wrap items-center gap-4 rounded-card border border-line bg-surface p-4">
-              <div className="h-20 w-28 shrink-0 overflow-hidden rounded-card bg-surface">
+              <div className="h-16 w-24 shrink-0 overflow-hidden rounded-card bg-surface sm:h-20 sm:w-28">
                 {hotel.images?.[0] ? (
                   <img src={hotel.images[0]} alt={hotel.name} className="h-full w-full object-cover" />
                 ) : (
@@ -275,7 +275,7 @@ export default function Booking() {
                 return (
                   <label
                     key={room._id}
-                    className={`flex cursor-pointer items-center gap-4 rounded-card border p-4 transition-colors ${
+                    className={`flex cursor-pointer flex-col gap-3 rounded-card border p-4 transition-colors sm:flex-row sm:items-center sm:gap-4 ${
                       active ? 'border-primary bg-primary-soft/40' : 'border-line bg-background hover:border-primary/50'
                     }`}
                   >
@@ -298,10 +298,10 @@ export default function Booking() {
                         )}
                       </p>
                     </div>
-                    <div className="shrink-0 text-right">
+                    <div className="flex items-center justify-between gap-2 sm:flex-col sm:items-end sm:text-right">
                       <p className="text-lg font-semibold text-primary">{formatPrice(room.pricePerNight, currency)}</p>
                       <p className="text-xs text-muted">/ night</p>
-                      <p className="mt-0.5 text-xs font-medium text-ink">{formatPrice(roomTotal, currency)} total</p>
+                      <p className="text-xs font-medium text-ink">{formatPrice(roomTotal, currency)} total</p>
                     </div>
                   </label>
                 )

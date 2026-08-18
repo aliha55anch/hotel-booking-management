@@ -22,8 +22,8 @@ function BookingsSkeleton() {
 function EmptyState() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="font-heading text-3xl font-semibold text-ink">My Bookings</h1>
-      <div className="mt-6 flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-12 text-center">
+      <h1 className="font-heading text-2xl font-semibold text-ink sm:text-3xl">My Bookings</h1>
+      <div className="mt-6 flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-6 text-center sm:p-12">
         <span className="flex h-14 w-14 items-center justify-center rounded-btn bg-primary-soft text-primary">
           <CalendarIcon className="h-7 w-7" />
         </span>
@@ -87,7 +87,7 @@ function BookingsContent({ token }) {
   if (error) {
     return (
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="font-heading text-3xl font-semibold text-ink">My Bookings</h1>
+        <h1 className="font-heading text-2xl font-semibold text-ink sm:text-3xl">My Bookings</h1>
         <div className="mt-6 flex items-center justify-between rounded-card border border-line bg-surface p-4">
           <p className="text-sm text-error">{error}</p>
           <Button size="sm" onClick={() => setReloadKey((key) => key + 1)}>
@@ -102,8 +102,8 @@ function BookingsContent({ token }) {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="font-heading text-3xl font-semibold text-ink">My Bookings</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="font-heading text-2xl font-semibold text-ink sm:text-3xl">My Bookings</h1>
         <Button to="/hotels" variant="secondary" size="sm">
           Browse hotels
         </Button>
