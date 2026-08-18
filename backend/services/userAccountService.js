@@ -90,7 +90,7 @@ const createAccount = async ({ name, email, image, role, password } = {}) => {
   const decorated = decorate(doc)
 
   if (email) {
-    await sendWelcomeEmail({ to: email, name: account.name })
+    sendWelcomeEmail({ to: email, name: account.name }).catch(() => {})
   }
 
   return decorated
