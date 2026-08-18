@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import Modal from '../components/ui/Modal.jsx'
 import RoomCard from '../components/hotel/RoomCard.jsx'
 import AmenitiesList from '../components/hotel/AmenitiesList.jsx'
-import { MapPinIcon, StarIcon, HotelIcon, ChevronLeftIcon, CalendarIcon, TrashIcon } from '../components/ui/icons.jsx'
+import { MapPinIcon, StarIcon, HotelIcon, ChevronLeftIcon, CalendarIcon, TrashIcon, FlameIcon } from '../components/ui/icons.jsx'
 import { getHotelById } from '../services/hotelService.js'
 import { getRoomsByHotel } from '../services/roomService.js'
 import { getReviewsByHotel, createReview, deleteReview } from '../services/reviewService.js'
@@ -28,7 +28,7 @@ const todayISO = () => {
 const modalInputClass =
   'w-full rounded-btn border border-line bg-background px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
 
-function BookingModal({ hotel, open, onClose }) {
+function BookingModal({ hotel, open, onClose, offerId, packageId }) {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [checkIn, setCheckIn] = useState('')
@@ -60,7 +60,7 @@ function BookingModal({ hotel, open, onClose }) {
         return
       }
 
-      const paymentUrl = `/booking?hotel=${hotel._id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`
+      const paymentUrl = `/booking?hotel=${hotel._id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}${offerId ? `&offer=${offerId}` : ''}${packageId ? `&package=${packageId}` : ''}`
 
       if (!user) {
         onClose()
@@ -292,7 +292,10 @@ function ReviewList({ reviews, canDelete, onDelete, deletingId }) {
 
 export default function HotelDetail() {
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
   const { currency } = useCurrency()
+  const offerId = searchParams.get('offer') || null
+  const packageId = searchParams.get('package') || null
 
   const [hotel, setHotel] = useState(null)
   const [rooms, setRooms] = useState([])
@@ -400,10 +403,18 @@ export default function HotelDetail() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <Button to="/hotels" variant="ghost" size="sm">
+      <Button to={offerId ? `/offers/${offerId}` : '/hotels'} variant="ghost" size="sm">
         <ChevronLeftIcon className="h-4 w-4" />
-        Back to hotels
+        {offerId ? 'Back to offer' : 'Back to hotels'}
       </Button>
+
+      {offerId && (
+        <div className="mt-4 flex items-center gap-2 rounded-card border border-primary/30 bg-primary-soft/40 px-4 py-2.5 text-sm text-primary">
+          <FlameIcon className="h-4 w-4 shrink-0" />
+          <span className="font-medium">Special offer applied</span>
+          <span className="text-muted">— complete your booking below to use this offer.</span>
+        </div>
+      )}
 
       <div className="mt-4 grid items-start gap-8 lg:grid-cols-[1.6fr_1fr]">
         <div className="overflow-hidden rounded-card border border-line bg-surface">
@@ -519,7 +530,7 @@ export default function HotelDetail() {
         />
       </section>
 
-      <BookingModal hotel={hotel} open={showBooking} onClose={() => setShowBooking(false)} />
+      <BookingModal hotel={hotel} open={showBooking} onClose={() => setShowBooking(false)} offerId={offerId} packageId={packageId} />
     </section>
   )
 }

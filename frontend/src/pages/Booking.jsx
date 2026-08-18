@@ -9,9 +9,11 @@ import {
   StarIcon,
   ChevronLeftIcon,
   CheckIcon,
+  FlameIcon,
 } from '../components/ui/icons.jsx'
 import { getHotelById } from '../services/hotelService.js'
 import { checkAvailability, createBooking } from '../services/bookingService.js'
+import { getOfferById } from '../services/offerService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
 import { formatPrice } from '../lib/format.js'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -40,6 +42,8 @@ export default function Booking() {
   const initialCheckIn = searchParams.get('checkIn') || ''
   const initialCheckOut = searchParams.get('checkOut') || ''
   const initialGuests = Number(searchParams.get('guests')) || 1
+  const offerId = searchParams.get('offer') || null
+  const packageId = searchParams.get('package') || null
 
   const [checkIn, setCheckIn] = useState(initialCheckIn)
   const [checkOut, setCheckOut] = useState(initialCheckOut)
@@ -48,6 +52,8 @@ export default function Booking() {
 
   const [hotel, setHotel] = useState(null)
   const [rooms, setRooms] = useState([])
+  const [offer, setOffer] = useState(null)
+  const [offerPkg, setOfferPkg] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -81,6 +87,34 @@ export default function Booking() {
 
     return () => { cancelled = true }
   }, [hotelId, navigate])
+
+  useEffect(() => {
+    if (!offerId) {
+      setOffer(null)
+      setOfferPkg(null)
+      return
+    }
+
+    let cancelled = false
+    getOfferById(offerId)
+      .then((res) => {
+        if (cancelled) return
+        const o = res.offer || res
+        setOffer(o)
+        if (packageId) {
+          const pkg = o.packageOptions?.find((p) => p._id === packageId) || null
+          setOfferPkg(pkg)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setOffer(null)
+          setOfferPkg(null)
+        }
+      })
+
+    return () => { cancelled = true }
+  }, [offerId, packageId])
 
   useEffect(() => {
     if (!hotelId || !hasDates) {
@@ -124,7 +158,8 @@ export default function Booking() {
 
   const selectedRoom = rooms.find((r) => r._id === roomId)
   const nights = hasDates ? Math.max(1, Math.round((new Date(checkOut) - new Date(checkIn)) / MS_PER_DAY)) : 0
-  const total = selectedRoom ? nights * selectedRoom.pricePerNight : 0
+  const hasOfferPrice = Boolean(offerPkg && offerPkg.price)
+  const total = hasOfferPrice ? offerPkg.price : (selectedRoom ? nights * selectedRoom.pricePerNight : 0)
 
   const handleConfirm = async () => {
     if (!user) {
@@ -139,7 +174,7 @@ export default function Booking() {
 
     try {
       await createBooking(
-        { room: selectedRoom._id, checkInDate: checkIn, checkOutDate: checkOut },
+        { room: selectedRoom._id, checkInDate: checkIn, checkOutDate: checkOut, offer: offerId || undefined, packageOption: packageId || undefined },
         token
       )
       navigate('/my-bookings', { replace: true })
@@ -177,10 +212,18 @@ export default function Booking() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <Button to={hotel ? `/hotels/${hotel._id}` : '/hotels'} variant="ghost" size="sm">
+      <Button to={offerId ? `/offers/${offerId}` : hotel ? `/hotels/${hotel._id}` : '/hotels'} variant="ghost" size="sm">
         <ChevronLeftIcon className="h-4 w-4" />
-        Back to hotel
+        {offerId ? 'Back to offer' : 'Back to hotel'}
       </Button>
+
+      {offer && (
+        <div className="mt-4 flex items-center gap-2 rounded-card border border-primary/30 bg-primary-soft/40 px-4 py-2.5 text-sm text-primary">
+          <FlameIcon className="h-4 w-4 shrink-0" />
+          <span className="font-medium">{offer.title}</span>
+          {offerPkg && <span className="text-muted">— {offerPkg.name}</span>}
+        </div>
+      )}
 
       <h1 className="mt-4 font-heading text-2xl font-semibold text-ink">Booking summary</h1>
 
@@ -345,12 +388,31 @@ export default function Booking() {
               </div>
 
               <div className="border-t border-line pt-3">
-                <div className="flex items-center justify-between">
-                  <dt className="text-muted">
-                    {formatPrice(selectedRoom.pricePerNight, currency)} × {nights} night{nights > 1 ? 's' : ''}
-                  </dt>
-                  <dd className="font-medium text-ink">{formatPrice(total, currency)}</dd>
-                </div>
+                {hasOfferPrice ? (
+                  <>
+                    {selectedRoom && (
+                      <div className="flex items-center justify-between">
+                        <dt className="text-muted line-through">
+                          {formatPrice(selectedRoom.pricePerNight * nights, currency)}
+                        </dt>
+                        <dd className="text-muted line-through">{formatPrice(selectedRoom.pricePerNight * nights, currency)}</dd>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <dt className="text-muted">
+                        {offerPkg.name}{offerPkg.nights ? ` (${offerPkg.nights} nights)` : ''}
+                      </dt>
+                      <dd className="font-medium text-ink">{formatPrice(offerPkg.price, currency)}</dd>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <dt className="text-muted">
+                      {formatPrice(selectedRoom.pricePerNight, currency)} × {nights} night{nights > 1 ? 's' : ''}
+                    </dt>
+                    <dd className="font-medium text-ink">{formatPrice(total, currency)}</dd>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <dt className="text-muted">Taxes & fees</dt>
                   <dd className="font-medium text-ink">Included</dd>

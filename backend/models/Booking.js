@@ -55,6 +55,16 @@ const bookingSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
+    offer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Offer',
+    },
+    packageOption: {
+      type: String,
+    },
+    offerPrice: {
+      type: Number,
+    },
   },
   {
     timestamps: true,

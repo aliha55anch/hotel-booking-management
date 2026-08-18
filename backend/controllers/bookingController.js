@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler')
 const Booking = require('../models/Booking')
 const Room = require('../models/Room')
 const Hotel = require('../models/Hotel')
+const Offer = require('../models/Offer')
 const { findAccountById } = require('../services/userAccountService')
 const {
   sendBookingReceivedEmail,
@@ -17,7 +18,7 @@ const getLocalUser = async (userId) => {
 }
 
 const createBooking = asyncHandler(async (req, res) => {
-  const { room: roomId, checkInDate, checkOutDate } = req.body
+  const { room: roomId, checkInDate, checkOutDate, offer: offerId, packageOption: packageOptionId } = req.body
 
   const user = await getLocalUser(req.auth.userId)
 
@@ -59,7 +60,23 @@ const createBooking = asyncHandler(async (req, res) => {
   }
 
   const numberOfNights = Math.ceil((checkOut - checkIn) / NIGHT_MS)
-  const totalPrice = room.pricePerNight * numberOfNights
+
+  let totalPrice = room.pricePerNight * numberOfNights
+  let offerDoc = null
+  let offerPackageName = null
+  let offerPrice = null
+
+  if (offerId && packageOptionId) {
+    offerDoc = await Offer.findById(offerId)
+    if (offerDoc && offerDoc.active) {
+      const pkg = offerDoc.packageOptions.id(packageOptionId)
+      if (pkg) {
+        totalPrice = pkg.price
+        offerPackageName = pkg.name
+        offerPrice = pkg.price
+      }
+    }
+  }
 
   const generateCode = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -79,6 +96,9 @@ const createBooking = asyncHandler(async (req, res) => {
     status: 'pending',
     paymentStatus: 'unpaid',
     confirmationCode: generateCode(),
+    offer: offerDoc ? offerDoc._id : undefined,
+    packageOption: offerPackageName || undefined,
+    offerPrice: offerPrice || undefined,
   })
 
   const hotel = await Hotel.findById(room.hotel).select('name owner ownerModel')
@@ -111,6 +131,7 @@ const getMyBookings = asyncHandler(async (req, res) => {
   const bookings = await Booking.find({ user: user._id })
     .populate('room')
     .populate('hotel')
+    .populate('offer', 'title')
     .sort({ createdAt: -1 })
 
   res.status(200).json({ success: true, count: bookings.length, bookings })

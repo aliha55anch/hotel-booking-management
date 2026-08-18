@@ -299,7 +299,7 @@ export default function OfferDetail() {
 
             {offer.active && selectedOption ? (
               <Button
-                to={selectedOption.hotel?._id ? `/hotels/${selectedOption.hotel._id}` : '/hotels'}
+                to={selectedOption.hotel?._id ? `/hotels/${selectedOption.hotel._id}?offer=${offer._id}&package=${selectedOption._id}` : '/hotels'}
                 size="lg"
                 className="mt-6 w-full"
               >

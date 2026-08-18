@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import QRCode from 'qrcode'
 import Button from '../ui/Button.jsx'
-import { BedIcon, CalendarIcon, CheckIcon } from '../ui/icons.jsx'
+import { BedIcon, CalendarIcon, CheckIcon, FlameIcon } from '../ui/icons.jsx'
 import { formatPrice } from '../../lib/format.js'
 import { useCurrency } from '../../context/CurrencyContext.jsx'
 import { imageFor } from '../../lib/siteImages.js'
@@ -94,6 +94,13 @@ export default function BookingCard({ booking, onCancel, cancelling }) {
           <span className={`rounded-btn px-2.5 py-0.5 text-xs font-semibold ${paymentStyles[paymentStatus] || paymentStyles.unpaid}`}>
             {paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1)}
           </span>
+          {booking.offer && (
+            <span className="flex items-center gap-1 rounded-btn bg-primary-soft/50 px-2.5 py-0.5 text-xs font-semibold text-primary">
+              <FlameIcon className="h-3 w-3" />
+              {booking.offer.title || 'Offer'}
+              {booking.packageOption && ` — ${booking.packageOption}`}
+            </span>
+          )}
         </div>
 
         {code && !cancelled && (
