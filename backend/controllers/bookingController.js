@@ -352,7 +352,7 @@ const lookupBooking = asyncHandler(async (req, res) => {
   const booking = await Booking.findOne({ confirmationCode: code })
     .populate('user', 'name email')
     .populate('room')
-    .populate('hotel', 'name city address')
+    .populate('hotel', 'name city address images')
 
   if (!booking) {
     res.status(404)

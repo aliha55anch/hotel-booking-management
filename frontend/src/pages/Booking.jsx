@@ -16,6 +16,8 @@ import { checkAvailability, createBooking } from '../services/bookingService.js'
 import { getOfferById } from '../services/offerService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
 import { formatPrice } from '../lib/format.js'
+import { hotelPrimaryImage, roomPrimaryImage } from '../lib/images.js'
+import { imageFor } from '../lib/siteImages.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useCurrency } from '../context/CurrencyContext.jsx'
 
@@ -232,8 +234,8 @@ export default function Booking() {
           {hotel && (
             <div className="flex flex-wrap items-center gap-4 rounded-card border border-line bg-surface p-4">
               <div className="h-16 w-24 shrink-0 overflow-hidden rounded-card bg-surface sm:h-20 sm:w-28">
-                {hotel.images?.[0] ? (
-                  <img src={hotel.images[0]} alt={hotel.name} className="h-full w-full object-cover" />
+                {hotelPrimaryImage(hotel) ? (
+                  <img src={hotelPrimaryImage(hotel)} alt={hotel.name} className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-muted">
                     <BedIcon className="h-6 w-6" />
@@ -330,6 +332,15 @@ export default function Booking() {
                       onChange={() => setRoomId(room._id)}
                       className="accent-primary"
                     />
+                    <div className="h-16 w-20 shrink-0 overflow-hidden rounded-btn bg-surface sm:h-20 sm:w-24">
+                      {(roomPrimaryImage(room) || imageFor(room._id)) ? (
+                        <img src={roomPrimaryImage(room) || imageFor(room._id)} alt={room.roomType} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-muted">
+                          <BedIcon className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1">
                       <p className="font-heading font-semibold text-ink">{room.roomType}</p>
                       <p className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">

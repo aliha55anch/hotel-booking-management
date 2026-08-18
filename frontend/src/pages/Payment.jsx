@@ -17,6 +17,8 @@ import { checkAvailability, createBooking } from '../services/bookingService.js'
 import { createPaymentIntent, getExchangeRate } from '../services/stripeService.js'
 import { getApiErrorMessage } from '../lib/errors.js'
 import { formatPrice, formatUsd } from '../lib/format.js'
+import { hotelPrimaryImage, roomPrimaryImage } from '../lib/images.js'
+import { imageFor } from '../lib/siteImages.js'
 import { STRIPE_PUBLISHABLE_KEY } from '../lib/config.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useCurrency } from '../context/CurrencyContext.jsx'
@@ -87,8 +89,17 @@ function CheckoutLayout({ hotel, rooms, checkIn, checkOut, guests, initialRoomId
 
       <div className="mt-6 grid items-start gap-8 lg:grid-cols-[1.5fr_1fr]">
         <div>
-          <div className="flex flex-wrap items-center gap-2 rounded-card border border-line bg-surface p-4">
-            <div>
+          <div className="flex flex-wrap items-center gap-4 rounded-card border border-line bg-surface p-4">
+            <div className="h-16 w-24 shrink-0 overflow-hidden rounded-card bg-surface sm:h-20 sm:w-28">
+              {hotelPrimaryImage(hotel) ? (
+                <img src={hotelPrimaryImage(hotel)} alt={hotel.name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-muted">
+                  <BedIcon className="h-6 w-6" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
               <p className="font-heading text-lg font-semibold text-ink">{hotel.name}</p>
               <p className="mt-0.5 flex items-center gap-1.5 text-sm text-muted">
                 <MapPinIcon className="h-4 w-4" />
@@ -149,6 +160,15 @@ function CheckoutLayout({ hotel, rooms, checkIn, checkOut, guests, initialRoomId
                       onChange={() => setRoomId(room._id)}
                       className="accent-primary"
                     />
+                    <div className="h-16 w-20 shrink-0 overflow-hidden rounded-btn bg-surface sm:h-20 sm:w-24">
+                      {(roomPrimaryImage(room) || imageFor(room._id)) ? (
+                        <img src={roomPrimaryImage(room) || imageFor(room._id)} alt={room.roomType} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-muted">
+                          <BedIcon className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1">
                       <p className="font-heading font-semibold text-ink">{room.roomType}</p>
                       <p className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
