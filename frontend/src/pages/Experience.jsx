@@ -4,7 +4,9 @@ import Button from '../components/ui/Button.jsx'
 import { StarIcon, CalendarIcon, CheckIcon, ArrowRightIcon } from '../components/ui/icons.jsx'
 import { testimonials } from '../assets/assets.js'
 import { getOffers } from '../services/offerService.js'
+import { createReview } from '../services/reviewService.js'
 import { resolveImageUrl } from '../lib/images.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const formatExpiry = (value) => {
   if (!value) return ''
@@ -33,6 +35,12 @@ function Stars({ rating }) {
 export default function Experience() {
   const [offers, setOffers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [reviewText, setReviewText] = useState('')
+  const [reviewRating, setReviewRating] = useState(5)
+  const [submitting, setSubmitting] = useState(false)
+  const [reviewSuccess, setReviewSuccess] = useState(false)
+  const [reviewError, setReviewError] = useState('')
+  const { token } = useAuth()
 
   useEffect(() => {
     let cancelled = false
@@ -53,6 +61,26 @@ export default function Experience() {
     }
   }, [])
 
+  const handleSubmitReview = async (e) => {
+    e.preventDefault()
+    if (!reviewText.trim()) return
+
+    setSubmitting(true)
+    setReviewError('')
+    setReviewSuccess(false)
+
+    try {
+      await createReview({ rating: reviewRating, review: reviewText.trim() }, token)
+      setReviewSuccess(true)
+      setReviewText('')
+      setReviewRating(5)
+    } catch (err) {
+      setReviewError(err.response?.data?.message || 'Failed to submit review. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <>
       <section className="relative -mt-16 overflow-hidden bg-linear-to-b from-primary-soft/70 via-background/50 to-background sm:-mt-18">
@@ -63,6 +91,105 @@ export default function Experience() {
           </p>
           <Button to="/hotels">Find your stay</Button>
         </div>
+      </section>
+
+      <section className="bg-surface">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="font-heading text-2xl font-semibold text-ink">What travellers say</h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-muted">
+              Real experiences from guests who booked their stays through StayHub.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {testimonials.map((t) => (
+              <figure
+                key={t.id}
+                className="flex flex-col gap-4 rounded-card border border-line bg-background p-6 shadow-card"
+              >
+                <Stars rating={t.rating} />
+                <blockquote className="flex-1 text-sm leading-relaxed text-ink">
+                  "{t.review}"
+                </blockquote>
+                <figcaption className="flex items-center gap-3 border-t border-line pt-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+                    {t.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join('')}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-ink">{t.name}</p>
+                    <p className="text-xs text-muted">{t.address}</p>
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+
+          <div className="mt-10 flex flex-col items-center gap-3 text-center">
+            <p className="flex items-center gap-2 text-sm font-medium text-primary">
+              <CheckIcon className="h-4 w-4" />
+              Every review comes from a verified stay
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h2 className="font-heading text-2xl font-semibold text-ink">Share your experience</h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-muted">
+            {token ? 'Tell us about your stay — your review helps other travellers.' : 'Sign in to leave a review and share your experience.'}
+          </p>
+        </div>
+
+        {token ? (
+          <form onSubmit={handleSubmitReview} className="mx-auto mt-8 max-w-lg space-y-5">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-ink">Your rating</label>
+              <div className="flex gap-1">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setReviewRating(i + 1)}
+                    className="cursor-pointer"
+                    aria-label={`Rate ${i + 1} star${i > 0 ? 's' : ''}`}
+                  >
+                    <StarIcon className={`h-6 w-6 transition-colors ${i < reviewRating ? 'text-accent' : 'text-muted/30 hover:text-accent/50'}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="review-text" className="mb-1 block text-sm font-medium text-ink">Your review</label>
+              <textarea
+                id="review-text"
+                rows={4}
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                required
+                placeholder="Share details about your experience..."
+                className="w-full rounded-card border border-line bg-background px-4 py-3 text-sm text-ink placeholder:text-muted/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            {reviewError && <p className="text-sm text-error">{reviewError}</p>}
+            {reviewSuccess && <p className="text-sm text-green-600">Review submitted successfully!</p>}
+
+            <Button type="submit" disabled={submitting || !reviewText.trim()}>
+              {submitting ? 'Submitting...' : 'Submit review'}
+            </Button>
+          </form>
+        ) : (
+          <div className="mt-8 flex justify-center">
+            <Button to="/login">Sign in to leave a review</Button>
+          </div>
+        )}
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -121,54 +248,6 @@ export default function Experience() {
               <p className="text-sm text-muted">No exclusive offers are available right now. Check back soon.</p>
             </div>
           )}
-        </div>
-      </section>
-
-      <section className="bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="font-heading text-2xl font-semibold text-ink">What travellers say</h2>
-            <p className="mx-auto mt-2 max-w-xl text-sm text-muted">
-              Real experiences from guests who booked their stays through StayHub.
-            </p>
-          </div>
-
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((t) => (
-              <figure
-                key={t.id}
-                className="flex flex-col gap-4 rounded-card border border-line bg-background p-6 shadow-card"
-              >
-                <Stars rating={t.rating} />
-                <blockquote className="flex-1 text-sm leading-relaxed text-ink">
-                  “{t.review}”
-                </blockquote>
-                <figcaption className="flex items-center gap-3 border-t border-line pt-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
-                    {t.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .slice(0, 2)
-                      .join('')}
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-ink">{t.name}</p>
-                    <p className="text-xs text-muted">{t.address}</p>
-                  </div>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-
-          <div className="mt-10 flex flex-col items-center gap-3 text-center">
-            <p className="flex items-center gap-2 text-sm font-medium text-primary">
-              <CheckIcon className="h-4 w-4" />
-              Every review comes from a verified stay
-            </p>
-            <Button to="/hotels" variant="secondary">
-              Book your own experience
-            </Button>
-          </div>
         </div>
       </section>
     </>

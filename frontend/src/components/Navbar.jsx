@@ -47,6 +47,7 @@ function NavLinks({ solid, onNavigate, items }) {
 
 function AccountLinks({ solid, onNavigate }) {
   const { user } = useAuth()
+  if (!user) return null
   const role = user?.role || null
   const visible = accountLinks.filter((link) => !link.roles || link.roles.includes(role))
   return <NavLinks solid={solid} onNavigate={onNavigate} items={visible} />
@@ -162,23 +163,23 @@ export default function Navbar() {
           : 'border-transparent bg-transparent text-white'
       }`}
     >
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
+      <nav className="mx-auto grid h-16 max-w-7xl grid-cols-3 items-center px-4 sm:px-6 lg:px-8">
+        <Link to="/" className="flex items-center gap-2.5 justify-self-start" onClick={() => setOpen(false)}>
           <FaviconIcon className="h-7 w-auto" />
           <span className="font-heading text-xl font-semibold">StayHub</span>
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center justify-center gap-8 md:flex">
           <NavLinks solid={solid} items={links} />
           <AccountLinks solid={solid} />
         </div>
 
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center justify-end gap-4 md:flex">
           <CurrencyToggle solid={solid} />
           <AuthArea solid={solid} />
         </div>
 
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-2 md:hidden justify-self-end">
           <CurrencyToggle solid={solid} />
           <button
             type="button"
@@ -243,30 +244,35 @@ export default function Navbar() {
 
                 <div className="my-5 border-t border-line" />
 
-                <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted">Account</p>
-                <div className="space-y-1">
-                  {(() => {
-                    const { user } = useAuth()
-                    const role = user?.role || null
-                    const visible = accountLinks.filter((l) => !l.roles || l.roles.includes(role))
-                    return visible.map((link) => (
-                      <NavLink
-                        key={link.to}
-                        to={link.to}
-                        onClick={() => setOpen(false)}
-                        className={({ isActive }) =>
-                          `flex items-center rounded-btn px-3 py-2.5 text-sm font-medium transition-colors ${
-                            isActive
-                              ? 'bg-primary-soft text-primary'
-                              : 'text-ink hover:bg-surface'
-                          }`
-                        }
-                      >
-                        {link.label}
-                      </NavLink>
-                    ))
-                  })()}
-                </div>
+                {(() => {
+                  const { user } = useAuth()
+                  if (!user) return null
+                  const role = user?.role || null
+                  const visible = accountLinks.filter((l) => !l.roles || l.roles.includes(role))
+                  return (
+                    <>
+                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted">Account</p>
+                      <div className="space-y-1">
+                        {visible.map((link) => (
+                          <NavLink
+                            key={link.to}
+                            to={link.to}
+                            onClick={() => setOpen(false)}
+                            className={({ isActive }) =>
+                              `flex items-center rounded-btn px-3 py-2.5 text-sm font-medium transition-colors ${
+                                isActive
+                                  ? 'bg-primary-soft text-primary'
+                                  : 'text-ink hover:bg-surface'
+                              }`
+                            }
+                          >
+                            {link.label}
+                          </NavLink>
+                        ))}
+                      </div>
+                    </>
+                  )
+                })()}
               </div>
 
               <div className="border-t border-line px-5 py-5">

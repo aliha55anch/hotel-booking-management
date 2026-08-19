@@ -263,15 +263,6 @@ export default function Hotels() {
         </div>
       )}
 
-      <div className="mt-10 flex flex-col items-center justify-between gap-4 rounded-card border border-line bg-primary-soft/40 p-8 text-center sm:flex-row sm:text-left">
-        <div>
-          <h2 className="font-heading text-xl font-semibold text-ink">Own a hotel?</h2>
-          <p className="mt-1 text-sm text-muted">List it on StayHub and start taking bookings today.</p>
-        </div>
-        <Button to="/owner" className="shrink-0">
-          Become a partner
-        </Button>
-      </div>
     </section>
   )
 }
