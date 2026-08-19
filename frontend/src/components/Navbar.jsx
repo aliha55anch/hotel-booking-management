@@ -163,8 +163,8 @@ export default function Navbar() {
           : 'border-transparent bg-transparent text-white'
       }`}
     >
-      <nav className="mx-auto grid h-16 max-w-7xl grid-cols-3 items-center px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="flex items-center gap-2.5 justify-self-start" onClick={() => setOpen(false)}>
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link to="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
           <FaviconIcon className="h-7 w-auto" />
           <span className="font-heading text-xl font-semibold">StayHub</span>
         </Link>
@@ -179,7 +179,7 @@ export default function Navbar() {
           <AuthArea solid={solid} />
         </div>
 
-        <div className="flex items-center gap-2 md:hidden justify-self-end">
+        <div className="ml-auto flex items-center gap-2 md:hidden">
           <CurrencyToggle solid={solid} />
           <button
             type="button"
