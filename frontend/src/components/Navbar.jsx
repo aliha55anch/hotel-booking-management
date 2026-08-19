@@ -169,7 +169,7 @@ export default function Navbar() {
           <span className="font-heading text-xl font-semibold">StayHub</span>
         </Link>
 
-        <div className="hidden items-center justify-center gap-8 md:flex">
+        <div className="hidden items-center justify-center gap-4 lg:gap-5 xl:gap-6 md:flex">
           <NavLinks solid={solid} items={links} />
           <AccountLinks solid={solid} />
         </div>
