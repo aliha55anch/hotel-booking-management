@@ -203,7 +203,7 @@ function RoomCard({ hotel, index }) {
       )}
       <div className="p-3 sm:p-4 pt-4 sm:pt-5">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate font-display text-base sm:text-xl font-medium text-gray-800">{hotel.name}</p>
+          <p className="truncate font-display text-sm sm:text-base font-medium text-gray-800">{hotel.name}</p>
           <div className="flex shrink-0 items-center gap-1 text-xs sm:text-sm">
             <img src={assets.starIconFilled} alt="star-icon" className="h-3 w-3 sm:h-4 sm:w-4" />
             {hotel.rating || '4.5'}
