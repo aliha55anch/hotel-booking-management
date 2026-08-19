@@ -29,7 +29,6 @@ coverage/
 
 # Deployment artifacts
 .vercel/
-.netlify/
 
 # Editor directories and files
 .vscode/*
