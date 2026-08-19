@@ -25,7 +25,7 @@ function renderNavLink(link, solid, onNavigate) {
       to={link.to}
       end={link.end}
       onClick={onNavigate}
-      className="group flex flex-col gap-0.5 text-sm font-medium"
+      className="group flex flex-col gap-0.5 whitespace-nowrap text-sm font-medium"
     >
       {({ isActive }) => (
         <>
