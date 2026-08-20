@@ -132,7 +132,7 @@ const getMyBookings = asyncHandler(async (req: Request, res: Response) => {
   const bookings = await Booking.find({ user: user._id })
     .populate('room')
     .populate('hotel')
-    .populate('offer', 'title')
+    .populate('offer', 'title image')
     .sort({ createdAt: -1 })
 
   res.status(200).json({ success: true, count: bookings.length, bookings })

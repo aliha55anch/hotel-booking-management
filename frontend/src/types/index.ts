@@ -51,7 +51,7 @@ export interface PackageOption {
   price: number
   originalPrice?: number
   includes?: string[]
-  hotel?: string
+  hotel?: string | Hotel
 }
 
 export interface Offer {

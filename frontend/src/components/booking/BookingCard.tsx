@@ -5,7 +5,7 @@ import { BedIcon, CalendarIcon, CheckIcon, FlameIcon } from '../ui/icons'
 import { formatPrice } from '../../lib/format'
 import { useCurrency } from '../../context/CurrencyContext'
 import { imageFor } from '../../lib/siteImages'
-import { roomPrimaryImage, hotelPrimaryImage } from '../../lib/images'
+import { roomPrimaryImage, hotelPrimaryImage, resolveImageUrl } from '../../lib/images'
 import type { Booking, Hotel, Room, Offer, CurrencyContextValue } from '@/types'
 
 interface IconProps {
@@ -45,7 +45,8 @@ export default function BookingCard({ booking, onCancel, cancelling }: BookingCa
   const status = booking.status || 'pending'
   const paymentStatus = booking.paymentStatus || 'unpaid'
   const cancelled = status === 'cancelled'
-  const image = roomPrimaryImage(booking.room as Room) || hotelPrimaryImage(booking.hotel as Hotel) || imageFor(booking._id)
+  const offerImage = typeof booking.offer === 'object' ? (booking.offer as Offer).image : undefined
+  const image = offerImage ? resolveImageUrl(offerImage) : roomPrimaryImage(booking.room as Room) || hotelPrimaryImage(booking.hotel as Hotel) || imageFor(booking._id)
   const code = booking.confirmationCode
 
   useEffect(() => {

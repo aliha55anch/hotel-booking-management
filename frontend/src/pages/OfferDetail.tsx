@@ -16,6 +16,17 @@ import { getApiErrorMessage } from '../lib/errors'
 import { resolveImageUrl } from '../lib/images'
 import { formatPrice } from '../lib/format'
 import { useCurrency } from '../context/CurrencyContext'
+import type { Hotel } from '@/types'
+
+function hotelId(hotel: string | Hotel | undefined): string | undefined {
+  if (!hotel) return undefined
+  return typeof hotel === 'string' ? hotel : hotel._id
+}
+
+function hotelName(hotel: string | Hotel | undefined): string {
+  if (!hotel) return ''
+  return typeof hotel === 'string' ? hotel : hotel.name || ''
+}
 
 const formatDate = (value: string) => {
   if (!value) return ''
@@ -308,7 +319,7 @@ export default function OfferDetail() {
 
             {offer.active && selectedOption ? (
               <Button
-                to={selectedOption.hotel ? `/hotels/${selectedOption.hotel}?offer=${offer._id}&package=${selectedOption._id}` : '/hotels'}
+                to={hotelId(selectedOption.hotel) ? `/hotels/${hotelId(selectedOption.hotel)}?offer=${offer._id}&package=${selectedOption._id}` : '/hotels'}
                 size="lg"
                 className="mt-6 w-full"
               >
@@ -321,11 +332,11 @@ export default function OfferDetail() {
               </Button>
             )}
 
-            {selectedOption?.hotel && (
+            {hotelId(selectedOption?.hotel) && (
               <p className="mt-3 text-center text-xs text-muted">
                 Stay at{' '}
-                <Link to={`/hotels/${selectedOption.hotel}`} className="font-medium text-primary hover:underline">
-                  {selectedOption.hotel}
+                <Link to={`/hotels/${hotelId(selectedOption.hotel)}`} className="font-medium text-primary hover:underline">
+                  {hotelName(selectedOption.hotel)}
                 </Link>
               </p>
             )}

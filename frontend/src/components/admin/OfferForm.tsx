@@ -66,7 +66,7 @@ const toValues = (offer: Offer): OfferFormValues => ({
     originalPrice: option.originalPrice != null ? String(option.originalPrice) : '',
     description: option.description || '',
     includes: (option.includes || []).join(', '),
-    hotel: option.hotel || '',
+    hotel: typeof option.hotel === 'string' ? option.hotel : option.hotel?._id || '',
   })),
 })
 
