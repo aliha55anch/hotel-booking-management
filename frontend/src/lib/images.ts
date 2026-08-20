@@ -9,9 +9,11 @@ const apiOrigin: string = (() => {
   }
 })()
 
+const frontendAssets = ['/packages/', '/hotelrooms/']
+
 export const resolveImageUrl = (src: string): string => {
   if (!src) return ''
-  if (src.startsWith('/')) return `${apiOrigin}${src}`
+  if (src.startsWith('/') && !frontendAssets.some((prefix) => src.startsWith(prefix))) return `${apiOrigin}${src}`
   return src
 }
 
