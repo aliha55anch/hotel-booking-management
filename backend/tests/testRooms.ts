@@ -1,0 +1,107 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
+import connectDB from '../config/db'
+import { createRoom, updateRoom, deleteRoom } from '../controllers/roomController'
+import { createHotel } from '../controllers/hotelController'
+import Room from '../models/Room'
+import Hotel from '../models/Hotel'
+import { getTestAdmin } from './testHelpers'
+
+interface MockRes {
+  statusCode?: number
+  body?: any
+  status: (code: number) => MockRes
+  json: (data: any) => MockRes
+  next: (err: any) => MockRes
+}
+
+const mockRes = (): MockRes => {
+  const res: MockRes = {
+    status(code: number) {
+      res.statusCode = code
+      return res
+    },
+    json(data: any) {
+      res.body = data
+      return res
+    },
+    next(err: any) {
+      res.statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500
+      res.body = { message: err.message }
+      return res
+    },
+  }
+  return res
+}
+
+const run = async (): Promise<void> => {
+  await connectDB()
+
+  const admin = await getTestAdmin()
+  const adminId = admin._id
+
+  let res = mockRes()
+  await createHotel(
+    {
+      auth: { userId: adminId },
+      body: {
+        name: 'Pearl Continental',
+        city: 'Islamabad',
+        address: 'Club Road',
+        amenities: ['WiFi', 'Pool'],
+      },
+    } as any,
+    res as any,
+    res.next
+  )
+  const hotel = res.body.hotel
+  const hotelId = hotel._id.toString()
+
+  res = mockRes()
+  await createRoom(
+    {
+      auth: { userId: adminId },
+      body: {
+        hotel: hotelId,
+        roomType: 'Deluxe',
+        pricePerNight: 150,
+        capacity: 2,
+        images: ['room1.jpg'],
+        amenities: ['AC', 'WiFi'],
+      },
+    } as any,
+    res as any,
+    res.next
+  )
+  const room = res.body.room
+  console.log('CREATE:', res.statusCode, '| hotel matches:', room.hotel.toString() === hotelId, '| price:', room.pricePerNight)
+
+  const roomId = room._id.toString()
+
+  res = mockRes()
+  await updateRoom(
+    { auth: { userId: adminId }, params: { id: roomId }, body: { pricePerNight: 200, roomType: 'Suite' } } as any,
+    res as any,
+    res.next
+  )
+  console.log('UPDATE:', res.statusCode, '| type:', res.body.room.roomType, '| price:', res.body.room.pricePerNight)
+
+  res = mockRes()
+  await deleteRoom({ auth: { userId: adminId }, params: { id: roomId } } as any, res as any, res.next)
+  console.log('DELETE:', res.statusCode, '| message:', res.body.message)
+
+  const gone = await Room.findById(roomId)
+  console.log('CONFIRM DELETED:', gone === null)
+
+  const created = await Room.findOne({ roomType: 'Deluxe' })
+  console.log('NO ORPHAN:', created === null)
+
+  await Hotel.findByIdAndDelete(hotelId)
+  process.exit(0)
+}
+
+run().catch((err: Error) => {
+  console.error(err)
+  process.exit(1)
+})

@@ -5,16 +5,20 @@
   "license": "ISC",
   "author": "",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "server.ts",
   "engines": {
     "node": ">=20.19.0"
   },
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "seed:admin": "node scripts/seedAdmin.js",
-    "seed:offers": "node scripts/seedOffers.js",
-    "test": "node tests/testHotels.js && node tests/testRooms.js && node tests/testBookings.js && node tests/testReviews.js && node tests/testStripe.js && node tests/testOffers.js && node tests/testAccounts.js"
+    "start": "ts-node server.ts",
+    "dev": "nodemon --exec ts-node server.ts",
+    "typecheck": "tsc --noEmit",
+    "seed:admin": "ts-node scripts/seedAdmin.ts",
+    "seed:offers": "ts-node scripts/seedOffers.ts",
+    "seed:hotels": "ts-node scripts/seedHotels.ts",
+    "clearUsers": "ts-node scripts/clearUsers.ts",
+    "setPassword": "ts-node scripts/setPassword.ts",
+    "test": "ts-node tests/testHotels.ts && ts-node tests/testRooms.ts && ts-node tests/testBookings.ts && ts-node tests/testReviews.ts && ts-node tests/testStripe.ts && ts-node tests/testOffers.ts && ts-node tests/testAccounts.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -32,7 +36,18 @@
     "stripe": "^22.5.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/compression": "^1.8.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/express-rate-limit": "^5.1.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^26.2.0",
+    "@types/nodemailer": "^8.0.1",
     "c8": "^12.0.0",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

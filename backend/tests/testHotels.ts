@@ -1,0 +1,115 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
+import connectDB from '../config/db'
+import { createHotel, updateHotel, deleteHotel, getAllHotels } from '../controllers/hotelController'
+import { createRoom } from '../controllers/roomController'
+import Hotel from '../models/Hotel'
+import Room from '../models/Room'
+import { getTestAdmin } from './testHelpers'
+
+interface MockRes {
+  statusCode?: number
+  body?: any
+  status: (code: number) => MockRes
+  json: (data: any) => MockRes
+  next: (err: any) => MockRes
+}
+
+const mockRes = (): MockRes => {
+  const res: MockRes = {
+    status(code: number) {
+      res.statusCode = code
+      return res
+    },
+    json(data: any) {
+      res.body = data
+      return res
+    },
+    next(err: any) {
+      res.statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500
+      res.body = { message: err.message }
+      return res
+    },
+  }
+  return res
+}
+
+const run = async (): Promise<void> => {
+  await connectDB()
+  const admin = await getTestAdmin()
+  const adminId = admin._id
+
+  const staleHotels = await Hotel.find({ name: 'Pearl Continental' }).select('_id')
+  const staleIds = staleHotels.map((hotel) => hotel._id)
+  if (staleIds.length) {
+    await Room.deleteMany({ hotel: { $in: staleIds } })
+    await Hotel.deleteMany({ name: 'Pearl Continental' })
+    console.log('CLEANED stale test data:', staleIds.length, 'hotel(s)')
+  }
+
+  let res = mockRes()
+  await createHotel(
+    {
+      auth: { userId: adminId },
+      body: {
+        name: 'Pearl Continental',
+        description: 'Five star',
+        city: 'Islamabad',
+        address: 'Club Road',
+        amenities: ['WiFi', 'Pool', 'Parking'],
+      },
+    } as any,
+    res as any,
+    res.next
+  )
+  const hotel = res.body.hotel
+  console.log('CREATE:', res.statusCode, 'owner matches admin:', hotel.owner.toString() === adminId.toString(), '| city:', hotel.city)
+
+  const hotelId = hotel._id.toString()
+
+  res = mockRes()
+  await createRoom(
+    {
+      auth: { userId: adminId },
+      body: { hotel: hotelId, roomType: 'Deluxe', pricePerNight: 150, capacity: 2 },
+    } as any,
+    res as any,
+    res.next
+  )
+  console.log('ROOM CREATE:', res.statusCode, '| price:', res.body.room.pricePerNight)
+
+  res = mockRes()
+  await getAllHotels({ query: { limit: 100 } } as any, res as any, res.next)
+  const listed = res.body.hotels.find((h: any) => h._id.toString() === hotelId)
+  console.log('LIST WITH PRICEFROM:', res.statusCode, '| priceFrom:', listed.priceFrom, '| matches room price:', listed.priceFrom === 150)
+
+  res = mockRes()
+  await updateHotel(
+    {
+      auth: { userId: adminId },
+      params: { id: hotelId },
+      body: { description: 'Updated desc', city: 'Rawalpindi' },
+    } as any,
+    res as any,
+    res.next
+  )
+  console.log('UPDATE:', res.statusCode, '| city:', res.body.hotel.city, '| desc:', res.body.hotel.description)
+
+  res = mockRes()
+  await deleteHotel({ auth: { userId: adminId }, params: { id: hotelId } } as any, res as any, res.next)
+  console.log('DELETE:', res.statusCode, '| message:', res.body.message)
+
+  const gone = await Hotel.findById(hotelId)
+  console.log('CONFIRM DELETED:', gone === null)
+
+  const created = await Hotel.findOne({ name: 'Pearl Continental' })
+  console.log('NO ORPHAN:', created === null)
+
+  process.exit(0)
+}
+
+run().catch((err: Error) => {
+  console.error(err)
+  process.exit(1)
+})

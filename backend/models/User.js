@@ -1,6 +1,0 @@
-const mongoose = require('mongoose')
-const accountSchema = require('./accountSchema')
-
-const User = mongoose.model('User', accountSchema, 'users')
-
-module.exports = User
