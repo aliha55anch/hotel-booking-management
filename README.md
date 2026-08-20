@@ -1,6 +1,6 @@
 # StayHub — Hotel Booking System
 
-A full-stack hotel booking platform where users can browse hotels, book rooms, and pay online. Hotel owners manage their properties through a dedicated dashboard. Built with React + Vite on the frontend and Express + MongoDB on the backend.
+A full-stack hotel booking platform where users can browse hotels, book rooms, and pay online. Hotel owners manage their properties through a dedicated dashboard. Built with React + Vite on the frontend and Express + MongoDB on the backend. Entire codebase is written in **TypeScript**.
 
 **Live:** [https://stayhubhotel.vercel.app](https://stayhubhotel.vercel.app)
 
@@ -10,8 +10,8 @@ A full-stack hotel booking platform where users can browse hotels, book rooms, a
 
 | Layer | Technologies |
 | --- | --- |
-| Frontend | React 19, Vite 8, Tailwind CSS v4, React Router, React Hook Form, Stripe.js, QRCode |
-| Backend | Node.js (>= 20), Express 5, Mongoose 9, JSON Web Tokens, bcryptjs, Multer, Nodemailer |
+| Frontend | React 19, Vite 8, TypeScript 5.9, Tailwind CSS v4, React Router 7, React Hook Form, Stripe.js, QRCode |
+| Backend | Node.js (>= 20.19), TypeScript 5.9, Express 5, Mongoose 9, JSON Web Tokens, bcryptjs, Multer 2, Nodemailer |
 | Database | MongoDB (Atlas or local) |
 | Payments | Stripe (card payments with webhook verification) |
 | Hosting | Vercel (frontend) + Railway (backend) |
@@ -26,6 +26,7 @@ A full-stack hotel booking platform where users can browse hotels, book rooms, a
 - Book rooms with date selection and real-time availability checking
 - View booking summary with confirmation code and QR code before confirming
 - Cancel bookings from the My Bookings page
+- Browse exclusive offers and promotions
 - Toggle between PKR and USD currency from the navbar
 - Secure authentication with JWT (register, login, forgot/reset password)
 
@@ -54,24 +55,33 @@ A full-stack hotel booking platform where users can browse hotels, book rooms, a
 ```
 Hotel Booking System/
 ├── backend/
+│   ├── config/             # Database connection, environment validation
 │   ├── controllers/        # Route handlers (auth, hotels, rooms, bookings, etc.)
-│   ├── middleware/          # Auth, role checks, upload config, error handling
-│   ├── models/             # Mongoose schemas (User, Hotel, Room, Booking, Review, Offer)
+│   ├── middleware/          # Auth, role checks, upload config, error handling, rate limiting
+│   ├── models/             # Mongoose schemas (User, Hotel, Room, Booking, Review, Offer, etc.)
 │   ├── routes/             # Express route definitions
-│   ├── scripts/            # Seed scripts (admin, offers)
-│   ├── tests/              # API smoke tests
+│   ├── scripts/            # Seed scripts (admin, offers, hotels) and utilities
+│   ├── tests/              # API smoke tests (TypeScript)
+│   ├── types/              # Custom TypeScript declarations
 │   ├── uploads/            # Uploaded images (gitignored, auto-created)
-│   ├── server.js           # Entry point
+│   ├── server.ts           # Entry point
+│   ├── tsconfig.json       # TypeScript configuration
 │   └── .env.example        # Environment variable template
 └── frontend/
     ├── src/
-    │   ├── components/     # Reusable UI (Navbar, Footer, forms, cards)
+    │   ├── components/     # Reusable UI (Navbar, Footer, forms, cards, ErrorBoundary)
+    │   │   ├── admin/      # Admin layout components
+    │   │   ├── owner/      # Owner layout components
+    │   │   ├── booking/    # Booking-related components
+    │   │   ├── hotel/      # Hotel-related components
+    │   │   └── ui/         # Shared UI primitives (Button, Modal, icons)
     │   ├── context/        # React contexts (Auth, Currency)
-    │   ├── lib/            # Utilities (format, config, image helpers)
+    │   ├── lib/            # Utilities (config, errors, format, images, siteImages, token)
     │   ├── pages/          # Route pages (Home, Hotels, Booking, admin/, owner/)
     │   ├── services/       # API service functions (axios calls)
-    │   ├── App.jsx         # Route definitions
-    │   └── main.jsx        # Entry point with providers
+    │   ├── App.tsx         # Route definitions
+    │   └── main.tsx        # Entry point with providers
+    ├── tsconfig.json       # TypeScript configuration
     ├── vercel.json         # SPA rewrites for Vercel
     └── .env.example        # Environment variable template
 ```
@@ -96,7 +106,7 @@ Hotel Booking System/
 
 ### Prerequisites
 
-- Node.js >= 20
+- Node.js >= 20.19
 - MongoDB (local instance or [Atlas](https://www.mongodb.com/atlas) cluster)
 
 ### 1. Backend
@@ -117,6 +127,7 @@ npm run dev              # starts on http://localhost:5000
 | `ADMIN_PASSWORD` | Password for the owner/admin account (`npm run seed:admin`) | Yes |
 | `CORS_ORIGIN` | Comma-separated browser origins allowed in production | Production only |
 | `NODE_ENV` | `development` or `production` | Production only |
+| `PORT` | Server port (defaults to 5000) | No |
 | `STRIPE_SECRET_KEY` | Stripe secret key for card payments | For payments |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook endpoint secret | For payments |
 | `EMAIL_USER` | Gmail address for sending booking emails | For email |
@@ -155,7 +166,7 @@ npm run dev              # starts on http://localhost:5173
    - `NODE_ENV=production`
    - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (if using payments)
    - `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_ENABLED=true` (if using email)
-4. Railway provisions Node 20+ automatically (`.node-version` file is included).
+4. Railway provisions Node 20+ automatically.
 5. After deploy, note the API URL (e.g. `https://your-api.up.railway.app/api`).
 
 ### Frontend → Vercel
@@ -185,10 +196,14 @@ Enable the `payment_intent.succeeded` and `payment_intent.payment_failed` events
 ### Backend
 
 ```bash
-npm run dev          # Start with nodemon (auto-reload)
-npm start            # Start with plain node
+npm run dev          # Start with nodemon + ts-node (auto-reload)
+npm start            # Start with ts-node
+npm run typecheck    # Run TypeScript type checking
 npm run seed:admin   # Create the owner/admin account (requires ADMIN_PASSWORD)
 npm run seed:offers  # Seed exclusive offers
+npm run seed:hotels  # Seed sample hotels
+npm run clearUsers   # Clear all non-admin users
+npm run setPassword  # Reset a user's password
 npm test             # Run API smoke tests
 ```
 
@@ -196,8 +211,9 @@ npm test             # Run API smoke tests
 
 ```bash
 npm run dev          # Start Vite dev server
-npm run build        # Production build
+npm run build        # Type check + production build
 npm run lint         # Lint with oxlint
+npm run typecheck    # Run TypeScript type checking
 npm run preview      # Preview the production build
 ```
 
@@ -218,6 +234,7 @@ npm run preview      # Preview the production build
 | `DELETE` | `/api/reviews/:id` | Delete review (author, owner, or admin) | Yes |
 | `POST` | `/api/upload` | Upload an image file | Yes |
 | `POST` | `/api/newsletter/subscribe` | Subscribe to newsletter | No |
+| `GET` | `/api/offers` | List exclusive offers | No |
 | `POST` | `/api/stripe/webhook` | Stripe payment webhook | No (Stripe verified) |
 
 ---
@@ -241,6 +258,7 @@ npm run preview      # Preview the production build
 - Stripe webhook verifies signature, payment intent ID, and amount; duplicate events are ignored
 - Environment validation fails fast at boot when required variables are missing
 - 401 / expired-token interceptor automatically logs the user out
+- Strict TypeScript throughout both frontend and backend for type safety
 
 ---
 
@@ -248,11 +266,11 @@ npm run preview      # Preview the production build
 
 This project is open source and available under the [MIT License](LICENSE).
 
---- 
+---
 
-## Developed by: 
+## Developed by:
 
-Muhammad Ali Hassan 
+Muhammad Ali Hassan
 
 ---
 
