@@ -41,13 +41,21 @@ export default function BookingCard({ booking, onCancel, cancelling }: BookingCa
   const [showQr, setShowQr] = useState<boolean>(false)
   const [qrDataUrl, setQrDataUrl] = useState<string>('')
   const [copied, setCopied] = useState<boolean>(false)
+  const [primaryFailed, setPrimaryFailed] = useState<boolean>(false)
 
   const status = booking.status || 'pending'
   const paymentStatus = booking.paymentStatus || 'unpaid'
   const cancelled = status === 'cancelled'
   const offerImage = typeof booking.offer === 'object' ? (booking.offer as Offer).image : undefined
-  const image = offerImage ? resolveImageUrl(offerImage) : roomPrimaryImage(booking.room as Room) || hotelPrimaryImage(booking.hotel as Hotel) || imageFor(booking._id)
+  const primaryImage = offerImage
+    ? resolveImageUrl(offerImage)
+    : roomPrimaryImage(booking.room as Room) || hotelPrimaryImage(booking.hotel as Hotel)
+  const image = !primaryFailed && primaryImage ? primaryImage : imageFor(booking._id)
   const code = booking.confirmationCode
+
+  useEffect(() => {
+    setPrimaryFailed(false)
+  }, [primaryImage])
 
   useEffect(() => {
     if (showQr && code) {
@@ -77,6 +85,7 @@ export default function BookingCard({ booking, onCancel, cancelling }: BookingCa
             src={image}
             alt={hotelName || 'Room'}
             loading="lazy"
+            onError={() => setPrimaryFailed(true)}
             className="h-full w-full object-cover"
           />
         ) : (
