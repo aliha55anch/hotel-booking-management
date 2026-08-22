@@ -1,6 +1,6 @@
 # StayHub — Hotel Booking System
 
-A full-stack hotel booking platform where users can browse hotels, book rooms, and pay online. Hotel owners manage their properties through a dedicated dashboard. Built with React + Vite on the frontend and Express + MongoDB on the backend. Entire codebase is written in **TypeScript**.
+A full-stack hotel booking platform where users can browse hotels, book rooms, and pay online. Hotel owners manage their properties through a dedicated dashboard. Built with React + Vite on the frontend and Express + MongoDB on the backend.
 
 **Live:** [https://stayhubhotel.vercel.app](https://stayhubhotel.vercel.app)
 
@@ -262,12 +262,6 @@ npm run preview      # Preview the production build
 
 ---
 
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
 ## Developed by:
 
 Muhammad Ali Hassan
@@ -277,3 +271,9 @@ Muhammad Ali Hassan
 ## Support
 
 If you like this project, consider giving it a star on GitHub.
+
+---
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
