@@ -4,7 +4,6 @@ import { formatPrice } from '../../lib/format'
 import { useCurrency } from '../../context/CurrencyContext'
 import { hotelImageFor } from '../../lib/siteImages'
 import type { Hotel } from '@/types'
-import type { CurrencyCode } from '@/types'
 
 interface HotelCardProps {
   hotel: Hotel & { priceFrom?: number }

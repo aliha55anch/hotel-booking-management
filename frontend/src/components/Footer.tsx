@@ -1,10 +1,6 @@
 import { Link } from 'react-router-dom'
 import { HotelIcon, MapPinIcon, MailIcon, PhoneIcon } from './ui/icons'
 
-interface IconProps {
-  className?: string
-}
-
 const quickLinks: { to: string; label: string }[] = [
   { to: '/', label: 'Home' },
   { to: '/hotels', label: 'Hotels' },

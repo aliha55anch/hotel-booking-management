@@ -10,7 +10,6 @@ import { resolveImageUrl } from '../lib/images'
 import { hotelRoomImages } from '../lib/siteImages'
 import { formatPrice } from '../lib/format'
 import { useCurrency } from '../context/CurrencyContext'
-import type { CurrencyContextValue } from '@/types'
 
 const cities = [
   'Islamabad',

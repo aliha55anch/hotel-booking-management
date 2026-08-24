@@ -9,7 +9,7 @@ import { getApiErrorMessage } from '@/lib/errors'
 import { formatPrice } from '@/lib/format'
 import { useCurrency } from '@/context/CurrencyContext'
 import { useAdmin } from '@/components/admin/adminContext'
-import type { Hotel, CurrencyCode } from '@/types'
+import type { Hotel } from '@/types'
 
 interface HotelRowProps {
   hotel: Hotel & { priceFrom?: number }

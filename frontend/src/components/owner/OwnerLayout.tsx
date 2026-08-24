@@ -6,7 +6,7 @@ import { getMyProfile } from '../../services/userService'
 import { getApiErrorMessage } from '../../lib/errors'
 import { OwnerContext } from './ownerContext'
 import { MenuIcon, CloseIcon, GridIcon, HotelIcon, BedIcon, CalendarIcon, UsersIcon, AlertIcon, LogoutIcon } from '../ui/icons'
-import type { User, OwnerContextValue } from '@/types'
+import type { User } from '@/types'
 
 interface IconProps {
   className?: string

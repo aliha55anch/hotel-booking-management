@@ -11,7 +11,7 @@ import { formatPrice } from '@/lib/format'
 import { useCurrency } from '@/context/CurrencyContext'
 import { useOwner } from '@/components/owner/ownerContext'
 import { inputClass } from '@/components/admin/formClasses'
-import type { Hotel, Room, CurrencyCode } from '@/types'
+import type { Hotel, Room } from '@/types'
 
 interface RoomRowProps {
   room: Room

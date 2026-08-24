@@ -6,11 +6,7 @@ import { formatPrice } from '../../lib/format'
 import { useCurrency } from '../../context/CurrencyContext'
 import { imageFor } from '../../lib/siteImages'
 import { roomPrimaryImage, hotelPrimaryImage, resolveImageUrl } from '../../lib/images'
-import type { Booking, Hotel, Room, Offer, CurrencyContextValue } from '@/types'
-
-interface IconProps {
-  className?: string
-}
+import type { Booking, Hotel, Room, Offer } from '@/types'
 
 interface BookingCardProps {
   booking: Booking

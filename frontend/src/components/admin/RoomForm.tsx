@@ -93,7 +93,7 @@ export default function RoomForm({ open, room, hotels, token, onClose, onSaved }
     try {
       let uploadedUrls: string[] = []
       if (files.length > 0) {
-        uploadedUrls = await uploadImages(files, token)
+        uploadedUrls = await uploadImages(files)
       }
 
       const textUrls = values.images

@@ -203,5 +203,3 @@ export {
   listAccounts,
   hasOwner,
 }
-
-export type { DecoratedAccount }

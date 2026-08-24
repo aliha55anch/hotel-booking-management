@@ -5,11 +5,6 @@ const CurrencyContext = createContext<CurrencyContextValue | null>(null)
 
 const PKR_TO_USD = 0.0036
 
-const currencies: Record<CurrencyCode, { symbol: string; locale: string; label: string }> = {
-  PKR: { symbol: 'Rs', locale: 'en-PK', label: 'PKR' },
-  USD: { symbol: '$', locale: 'en-US', label: 'USD' },
-}
-
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrency] = useState<CurrencyCode>(() => {
     try {

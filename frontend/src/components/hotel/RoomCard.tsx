@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useCurrency } from '../../context/CurrencyContext'
 import { imageFor } from '../../lib/siteImages'
 import { roomPrimaryImage } from '../../lib/images'
-import type { Room, CurrencyCode } from '@/types'
+import type { Room } from '@/types'
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24
 

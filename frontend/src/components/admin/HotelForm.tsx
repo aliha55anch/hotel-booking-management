@@ -92,7 +92,7 @@ export default function HotelForm({ open, hotel, token, onClose, onSaved }: Hote
     try {
       let uploadedUrls: string[] = []
       if (files.length > 0) {
-        uploadedUrls = await uploadImages(files, token)
+        uploadedUrls = await uploadImages(files)
       }
 
       const textUrls = values.images

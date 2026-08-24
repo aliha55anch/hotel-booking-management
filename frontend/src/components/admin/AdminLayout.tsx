@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Link, Outlet, Navigate } from 'react-router-dom'
-import type { ReactNode } from 'react'
 import Button from '../ui/Button'
 import { useAuth } from '../../context/AuthContext'
 import { getMyProfile } from '../../services/userService'

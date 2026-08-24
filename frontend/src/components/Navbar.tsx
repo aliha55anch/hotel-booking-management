@@ -1,13 +1,9 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
-import { MenuIcon, CloseIcon, FaviconIcon, LogoutIcon } from './ui/icons'
+import { FaviconIcon, LogoutIcon } from './ui/icons'
 import { useAuth } from '../context/AuthContext'
 import { useCurrency } from '../context/CurrencyContext'
-import type { User, UserRole } from '@/types'
-
-interface IconProps {
-  className?: string
-}
+import type { UserRole } from '@/types'
 
 interface NavLinkItem {
   to: string
@@ -276,35 +272,7 @@ export default function Navbar() {
 
                 <div className="my-5 border-t border-line" />
 
-                {(() => {
-                  const { user } = useAuth()
-                  if (!user) return null
-                  const role: UserRole | null = user?.role || null
-                  const visible = accountLinks.filter((l) => !l.roles || (role && l.roles.includes(role)))
-                  return (
-                    <>
-                      <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted">Account</p>
-                      <div className="space-y-1">
-                        {visible.map((link) => (
-                          <NavLink
-                            key={link.to}
-                            to={link.to}
-                            onClick={() => setOpen(false)}
-                            className={({ isActive }) =>
-                              `flex items-center rounded-btn px-3 py-2.5 text-sm font-medium transition-colors ${
-                                isActive
-                                  ? 'bg-primary-soft text-primary'
-                                  : 'text-ink hover:bg-surface'
-                              }`
-                            }
-                          >
-                            {link.label}
-                          </NavLink>
-                        ))}
-                      </div>
-                    </>
-                  )
-                })()}
+                <MobileAccountLinks onNavigate={() => setOpen(false)} />
               </div>
 
               <div className="border-t border-line px-5 py-5">
@@ -320,6 +288,36 @@ export default function Navbar() {
 
 interface MobileAuthAreaProps {
   onNavigate?: () => void
+}
+
+function MobileAccountLinks({ onNavigate }: MobileAuthAreaProps) {
+  const { user } = useAuth()
+  if (!user) return null
+  const role: UserRole | null = user?.role || null
+  const visible = accountLinks.filter((l) => !l.roles || (role && l.roles.includes(role)))
+  return (
+    <>
+      <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted">Account</p>
+      <div className="space-y-1">
+        {visible.map((link) => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            onClick={onNavigate}
+            className={({ isActive }) =>
+              `flex items-center rounded-btn px-3 py-2.5 text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-primary-soft text-primary'
+                  : 'text-ink hover:bg-surface'
+              }`
+            }
+          >
+            {link.label}
+          </NavLink>
+        ))}
+      </div>
+    </>
+  )
 }
 
 function MobileAuthArea({ onNavigate }: MobileAuthAreaProps) {

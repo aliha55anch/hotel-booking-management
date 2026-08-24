@@ -9,7 +9,7 @@ import { HotelIcon, CalendarIcon, WalletIcon, PlusIcon } from '@/components/ui/i
 import { getApiErrorMessage } from '@/lib/errors'
 import { formatPrice } from '@/lib/format'
 import { useCurrency } from '@/context/CurrencyContext'
-import type { Booking, CurrencyCode } from '@/types'
+import type { Booking } from '@/types'
 
 const formatDate = (iso?: string): string => {
   if (!iso) return ''
